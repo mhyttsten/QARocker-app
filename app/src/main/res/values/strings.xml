@@ -17,7 +17,7 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
     <!-- Titles -->
-    <string name="app_name">SRRocker_0.5</string>
+    <string name="app_name">Memory Rocker</string>
     <string name="title_crossfade">Simple Crossfade</string>
     <string name="title_card_flip">Card Flip</string>
     <string name="title_screen_slide">Screen Slide</string>
@@ -48,5 +48,6 @@
     <!-- Other strings -->
     <string name="card_front_title">This is the question</string>
     <string name="card_back_title">This is the answer</string>
+    <string name="title_activity_display_set_list">Display Set List</string>
 
 </resources>

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.android.animationsdemo;
+package com.pf.mr;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -29,7 +29,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.firebase.client.DataSnapshot;
@@ -62,18 +61,18 @@ public class CardFlipActivity extends Activity
      */
     private boolean mShowingBack = false;
 
-    private String mQuizName;
-    private QuizDeck mQuiz;
-    private QA mCurrentQA;
-    private E_Quiz mE_Quiz;
+    private String mSetName;
+    private QL_Set mQLSet;
+    private E_Set mESet;
+    private E_Term mCurrentETerm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_card_flip);
 
-        mQuizName = getIntent().getStringExtra(Intent.EXTRA_TITLE);
-        Firebase ref = new Firebase(MainActivity.DB + "/quizzes");
+        mSetName = getIntent().getStringExtra(Intent.EXTRA_TITLE);
+        Firebase ref = new Firebase(Constants.FPATH_SETS);
         Query qref = ref.orderByKey();
         qref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -82,12 +81,12 @@ public class CardFlipActivity extends Activity
                 Log.e(LOG_TAG, "Result count: " + qs.getChildrenCount());
                 Iterator<DataSnapshot> iter = qs.getChildren().iterator();
                 while (iter.hasNext()) {
-                    E_Quiz q = (E_Quiz) iter.next().getValue(E_Quiz.class);
-                    if (q.mName.equals(mQuizName)) {
-                        mE_Quiz = q;
+                    QL_Set s = (QL_Set) iter.next().getValue(QL_Set.class);
+                    if (s.title.equals(mSetName)) {
+                        mQLSet = s;
                     }
                 }
-                mQuiz = new QuizDeck(mE_Quiz);
+                mESet = new E_Set(mQLSet);
                 startNextRound();
             }
 
@@ -101,15 +100,15 @@ public class CardFlipActivity extends Activity
         // If there is no saved instance state, add a fragment representing the
         // front of the card to this activity. If there is saved instance state,
         // this fragment will have already been added to the activity.
-        boolean hasNext = mQuiz.hasNext();
+        boolean hasNext = mESet.hasNext();
         if (!hasNext) {
             // TODO: We should enter the report screen / practice even if nothing is due
             finish();
             return;
         }
-        mCurrentQA = mQuiz.next();
+        mCurrentETerm = mESet.next();
         CardFrontFragment cardFront = new CardFrontFragment();
-        cardFront.setQ(mCurrentQA.getQ());
+        cardFront.setQ(mCurrentETerm.getQ());
 
         // Force stack to be empty
         while (getFragmentManager().popBackStackImmediate()) {
@@ -173,7 +172,7 @@ public class CardFlipActivity extends Activity
         // the card, uses custom animations, and is part of the fragment manager's back stack.
 
         CardBackFragment cardBack = new CardBackFragment();
-        cardBack.setA(mCurrentQA.getA());
+        cardBack.setA(mCurrentETerm.getA());
 
         getFragmentManager()
                 .beginTransaction()
@@ -219,22 +218,22 @@ public class CardFlipActivity extends Activity
 
     public void clickNoClue(View v) {
         Log.i(LOG_TAG, "clickNoClue");
-        mCurrentQA.setLastAnswer(QA.AS_NO_CLUE);
-        mQuiz.reportAnswer(mCurrentQA);
+        mCurrentETerm.setLastAnswer(E_Term.AS_NO_CLUE);
+        mESet.reportAnswer(mCurrentETerm);
         startNextRound();
     }
 
     public void clickKnewIt(View v) {
         Log.i(LOG_TAG, "clickKnewIt");
-        mCurrentQA.setLastAnswer(QA.AS_KNEW_IT);
-        mQuiz.reportAnswer(mCurrentQA);
+        mCurrentETerm.setLastAnswer(E_Term.AS_KNEW_IT);
+        mESet.reportAnswer(mCurrentETerm);
         startNextRound();
     }
 
     public void clickNailedIt(View v) {
         Log.i(LOG_TAG, "clickNailedIt");
-        mCurrentQA.setLastAnswer(QA.AS_NAILED_IT);
-        mQuiz.reportAnswer(mCurrentQA);
+        mCurrentETerm.setLastAnswer(E_Term.AS_NAILED_IT);
+        mESet.reportAnswer(mCurrentETerm);
         startNextRound();
     }
 

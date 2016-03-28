@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.example.android.animationsdemo;
+package com.pf.mr;
 
-import android.app.Activity;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -32,38 +31,28 @@ import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-
-// Hello just added this
-// Testing new initial
-// Testing yet another commit
 
 /**
  * The launchpad activity for this sample project. This activity launches other activities that
  * demonstrate implementations of common animations.
  */
-public class MainActivity extends ListActivity {
-    public static String LOG_TAG = MainActivity.class.getSimpleName();
-
-    public static final String DB = "https://brilliant-fire-9867.firebaseio.com";
+public class DisplaySetListActivity extends ListActivity {
+    public static String LOG_TAG = DisplaySetListActivity.class.getSimpleName();
 
     private List<String> mQuizList = new ArrayList<>();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Firebase.setAndroidContext(this);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Misc.resetDB();
 
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_display_set_list);
 
         /*
         mQuizList.add("T1");
@@ -71,7 +60,7 @@ public class MainActivity extends ListActivity {
         mQuizList.add("T3");
         */
 
-        Firebase ref = new Firebase(DB + "/quizzes");
+        Firebase ref = new Firebase(Constants.FPATH_SETS);
         Query qref = ref.orderByKey();
 
         qref.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -81,14 +70,14 @@ public class MainActivity extends ListActivity {
                 Log.e(LOG_TAG, "Result count: " + qs.getChildrenCount());
                 Iterator<DataSnapshot> iter = qs.getChildren().iterator();
                 while (iter.hasNext()) {
-                    E_Quiz q = (E_Quiz)iter.next().getValue(E_Quiz.class);
-                    Log.i(LOG_TAG, q.toString());
-                    if (!mQuizList.contains(q.mName)) {
-                        mQuizList.add(q.mName);
+                    QL_Set s = (QL_Set)iter.next().getValue(QL_Set.class);
+                    Log.i(LOG_TAG, s.toString());
+                    if (!mQuizList.contains(s.title)) {
+                        mQuizList.add(s.title);
                     }
                 }
-                MainActivity.this.setListAdapter(new ArrayAdapter<String>(
-                        MainActivity.this,
+                DisplaySetListActivity.this.setListAdapter(new ArrayAdapter<String>(
+                        DisplaySetListActivity.this,
                         android.R.layout.simple_list_item_1,
                         android.R.id.text1,
                         mQuizList));
@@ -105,7 +94,7 @@ public class MainActivity extends ListActivity {
         String name = mQuizList.get(position);
 
         // Launch the sample associated with this list position.
-        Intent i = new Intent(MainActivity.this, CardFlipActivity.class);
+        Intent i = new Intent(DisplaySetListActivity.this, CardFlipActivity.class);
         i.putExtra(Intent.EXTRA_TITLE, name);
         startActivity(i);
     }

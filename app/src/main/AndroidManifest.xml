@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.animationsdemo">
+    package="com.pf.mr">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -20,13 +20,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".CardFlipActivity"
+        <activity
+            android:name=".DisplaySetListActivity"
+            android:label="@string/title_activity_display_set_list"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.pf.mr.DisplaySetListActivity" />
+        </activity>
+        <activity
+            android:name=".CardFlipActivity"
             android:label="@string/title_card_flip"
             android:parentActivityName=".MainActivity"
             android:theme="@style/DarkTheme">
-            <meta-data android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.pf.mr.DisplaySetListActivity" />
         </activity>
     </application>
 
