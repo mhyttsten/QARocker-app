@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.List;
 
 // Hello just added this
+// Testing new initial
 
 /**
  * The launchpad activity for this sample project. This activity launches other activities that
