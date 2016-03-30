@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.pf.mr;
+package com.pf.mr.activities;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -23,21 +23,35 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.NavUtils;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
+import com.pf.mr.datamodel.StatTermForUser;
+import com.pf.mr.utils.Constants;
+import com.pf.mr.R;
+import com.pf.mr.datamodel.QLSet;
+import com.pf.mr.datamodel.QLTerm;
+import com.pf.mr.execmodel.ESet;
+import com.pf.mr.execmodel.ETerm;
+import com.pf.mr.utils.Misc;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Demonstrates a "card-flip" animation using custom fragment transactions ({@link
@@ -61,17 +75,29 @@ public class CardFlipActivity extends Activity
      */
     private boolean mShowingBack = false;
 
+    private String mUserEmail;
+
     private String mSetName;
-    private QL_Set mQLSet;
-    private E_Set mESet;
-    private E_Term mCurrentETerm;
+    private QLSet mQLSet;
+    private ESet mESet;
+    private ETerm mCurrentETerm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_card_flip);
 
+        Firebase.setAndroidContext(this);
+
+        mUserEmail = getIntent().getStringExtra(Constants.USER_EMAIL);
+        Log.i(LOG_TAG, "User email: " + mUserEmail);
         mSetName = getIntent().getStringExtra(Intent.EXTRA_TITLE);
+
+        getTermData();
+    }
+
+
+    public void getTermData() {
         Firebase ref = new Firebase(Constants.FPATH_SETS);
         Query qref = ref.orderByKey();
         qref.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -81,12 +107,45 @@ public class CardFlipActivity extends Activity
                 Log.e(LOG_TAG, "Result count: " + qs.getChildrenCount());
                 Iterator<DataSnapshot> iter = qs.getChildren().iterator();
                 while (iter.hasNext()) {
-                    QL_Set s = (QL_Set) iter.next().getValue(QL_Set.class);
+                    QLSet s = (QLSet) iter.next().getValue(QLSet.class);
                     if (s.title.equals(mSetName)) {
                         mQLSet = s;
                     }
                 }
-                mESet = new E_Set(mQLSet);
+                getTermStats();
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+            }
+        });
+    }
+
+    public void getTermStats() {
+        Firebase ref = new Firebase(Constants.FPATH_STATFORUSER)
+                .child(String.valueOf(mQLSet.id))
+                .child(Constants.EMAIL_TO_FIREBASEPATH(mUserEmail));
+        Query qref = ref.orderByKey();
+        qref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot qs) {
+                List<StatTermForUser> terms = null;
+                // Data is ordered by increasing height, so we want the first entry
+                Iterator<DataSnapshot> iter = qs.getChildren().iterator();
+                while (iter.hasNext()) {
+                    StatTermForUser stfu = iter.next().getValue(StatTermForUser.class);
+                    if (terms == null) {
+                        terms = new ArrayList<StatTermForUser>();
+                    }
+                    terms.add(stfu);
+//                    HashMap hm = (HashMap)iter.next().getValue(StatTermForUser.class);
+//                    Iterator<String> iterSet = hm.keySet().iterator();
+//                    while (iterSet.hasNext()) {
+//                        String setKey = iterSet.next();
+//                        Log.i(LOG_TAG, "setKey: " + setKey);
+//                    }
+                }
+                mESet = new ESet(mQLSet, mUserEmail, terms);
                 startNextRound();
             }
 
@@ -96,18 +155,23 @@ public class CardFlipActivity extends Activity
         });
     }
 
+
+    //----
+    // After all above retrievals have been completed
+
     public void startNextRound() {
         // If there is no saved instance state, add a fragment representing the
         // front of the card to this activity. If there is saved instance state,
         // this fragment will have already been added to the activity.
         boolean hasNext = mESet.hasNext();
         if (!hasNext) {
-            // TODO: We should enter the report screen / practice even if nothing is due
-            finish();
+            Intent i = Misc.getIntentWithUserId(this, RehearsalFinishedActivity.class, mUserEmail);
+            startActivity(i);
             return;
         }
         mCurrentETerm = mESet.next();
         CardFrontFragment cardFront = new CardFrontFragment();
+        mCurrentETerm.setQuestionDisplayedTimer();
         cardFront.setQ(mCurrentETerm.getQ());
 
         // Force stack to be empty
@@ -218,21 +282,21 @@ public class CardFlipActivity extends Activity
 
     public void clickNoClue(View v) {
         Log.i(LOG_TAG, "clickNoClue");
-        mCurrentETerm.setLastAnswer(E_Term.AS_NO_CLUE);
+        mCurrentETerm.setAnswerGiven(ETerm.AS_NO_CLUE);
         mESet.reportAnswer(mCurrentETerm);
         startNextRound();
     }
 
     public void clickKnewIt(View v) {
         Log.i(LOG_TAG, "clickKnewIt");
-        mCurrentETerm.setLastAnswer(E_Term.AS_KNEW_IT);
+        mCurrentETerm.setAnswerGiven(ETerm.AS_KNEW_IT);
         mESet.reportAnswer(mCurrentETerm);
         startNextRound();
     }
 
     public void clickNailedIt(View v) {
         Log.i(LOG_TAG, "clickNailedIt");
-        mCurrentETerm.setLastAnswer(E_Term.AS_NAILED_IT);
+        mCurrentETerm.setAnswerGiven(ETerm.AS_NAILED_IT);
         mESet.reportAnswer(mCurrentETerm);
         startNextRound();
     }
@@ -257,6 +321,7 @@ public class CardFlipActivity extends Activity
             v.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    Toast.makeText(getActivity(), "Hello 1", Toast.LENGTH_LONG).show();
                     ((CardFlipActivity) getActivity()).flipCard();
                 }
             });
@@ -277,12 +342,24 @@ public class CardFlipActivity extends Activity
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
+            Toast.makeText(getActivity(), "Hello 2 entered", Toast.LENGTH_LONG).show();
             View v = inflater.inflate(R.layout.fragment_card_back, container, false);
+
+//            ScrollView tw = (ScrollView)v.findViewById(R.id.scroll_view_id);
+//            v.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    Toast.makeText(getActivity(), "Hello 2", Toast.LENGTH_LONG).show();
+//                    ((CardFlipActivity) getActivity()).flipCard();
+//                }
+//            });
+
             TextView tw = (TextView)v.findViewById(android.R.id.text1);
             tw.setText(mA);
-            v.setOnClickListener(new View.OnClickListener() {
+            tw.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    Toast.makeText(getActivity(), "Hello 2", Toast.LENGTH_LONG).show();
                     ((CardFlipActivity) getActivity()).flipCard();
                 }
             });

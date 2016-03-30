@@ -11,7 +11,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -21,22 +21,30 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".DisplaySetListActivity"
+            android:name=".activities.DisplaySetListActivity"
             android:label="@string/title_activity_display_set_list"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pf.mr.DisplaySetListActivity" />
+                android:value=".activities.DisplaySetListActivity" />
         </activity>
         <activity
-            android:name=".CardFlipActivity"
+            android:name=".activities.CardFlipActivity"
             android:label="@string/title_card_flip"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".activities.MainActivity"
             android:theme="@style/DarkTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pf.mr.DisplaySetListActivity" />
+                android:value=".activities.DisplaySetListActivity" />
         </activity>
+        <activity
+            android:name=".activities.SignInActivity"
+            android:label="@string/title_activity_sign_in"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activities.RehearsalFinishedActivity"
+            android:label="@string/title_activity_rehearsal_finished"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

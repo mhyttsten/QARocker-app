@@ -20,37 +20,53 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@android:color/black"
-    android:padding="16dp">
-
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:background="@android:color/black"
-        android:padding="16dp">
+    android:padding="0dp">
 
 
+        <!--<ScrollView-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="match_parent"-->
+            <!--android:layout_weight="0">-->
+            <!--<TextView android:id="@android:id/text1"-->
+                <!--style="?android:textAppearanceLarge"-->
+                <!--android:gravity="center"-->
+                <!--android:textStyle="bold"-->
+                <!--android:textColor="#fff"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="@string/card_back_title"-->
+                <!--android:layout_gravity="center"-->
+                <!--android:layout_weight="2" />-->
+        <!--</ScrollView>-->
+
+
+        <ScrollView
+            android:id="@+id/scroll_view_id"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
         <TextView android:id="@android:id/text1"
             style="?android:textAppearanceLarge"
-            android:gravity="center"
             android:textStyle="bold"
             android:textColor="#fff"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/card_back_title"
-            android:layout_gravity="center"
-            android:layout_weight="2" />
-
+            android:text="@string/card_back_title"/>
+        </ScrollView>
 
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@android:color/black"
-            android:padding="16dp"
+            android:paddingTop="16dp"
             android:gravity="bottom"
-            android:layout_gravity="bottom"
-            android:layout_weight="1">
+            android:layout_gravity="bottom">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="@android:color/darker_gray"/>
 
             <TextView style="?android:textAppearanceLarge"
                 android:gravity="center"
@@ -66,14 +82,14 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:background="@android:color/black"
-                android:padding="16dp"
+                android:padding="0dp"
                 android:layout_gravity="center"
                 android:gravity="center">
 
                 <Button
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Had No Clue!"
+                    android:text="No Clue!"
                     android:layout_weight="1"
                     android:layout_gravity="center_vertical|left"
                     android:onClick="clickNoClue"/>
@@ -95,6 +111,4 @@
 
             </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
-
 </LinearLayout>

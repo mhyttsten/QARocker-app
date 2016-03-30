@@ -1,4 +1,7 @@
-package com.pf.mr;
+package com.pf.mr.utils;
+
+import android.content.Context;
+import android.content.Intent;
 
 import java.lang.reflect.Field;
 
@@ -6,6 +9,12 @@ import java.lang.reflect.Field;
  * Created by magnushyttsten on 3/25/16.
  */
 public class Misc {
+
+    public static Intent getIntentWithUserId(Context context, Class c, String userId) {
+        Intent i = new Intent(context, c);
+        i.putExtra(Constants.USER_EMAIL, userId);
+        return i;
+    }
 
 
     public static String toString(Object o) throws Exception {

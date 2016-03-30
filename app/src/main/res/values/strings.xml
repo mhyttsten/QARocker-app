@@ -49,5 +49,15 @@
     <string name="card_front_title">This is the question</string>
     <string name="card_back_title">This is the answer</string>
     <string name="title_activity_display_set_list">Display Set List</string>
+    <string name="title_activity_sign_in">SignInActivity</string>
+
+    <string name="desc_google_icon">Google Logo</string>
+    <string name="title_text">Google Sign-In\nQuickstart</string>
+    <string name="signed_out">Signed out</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="loading">Loading…</string>
+    <string name="signed_in_fmt">Signed in as: %s</string>
+    <string name="title_activity_rehearsal_finished">RehearsalFinishedActivity</string>
 
 </resources>

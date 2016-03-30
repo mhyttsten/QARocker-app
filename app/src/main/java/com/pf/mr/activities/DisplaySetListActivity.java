@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.pf.mr;
+package com.pf.mr.activities;
 
 import android.app.ListActivity;
 import android.content.Intent;
@@ -29,6 +29,9 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
+import com.pf.mr.utils.Constants;
+import com.pf.mr.R;
+import com.pf.mr.datamodel.QLSet;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -42,6 +45,7 @@ public class DisplaySetListActivity extends ListActivity {
     public static String LOG_TAG = DisplaySetListActivity.class.getSimpleName();
 
     private List<String> mQuizList = new ArrayList<>();
+    private String mUserEmail;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -52,13 +56,10 @@ public class DisplaySetListActivity extends ListActivity {
     public void onResume() {
         super.onResume();
 
+        Firebase.setAndroidContext(this);
         setContentView(R.layout.activity_display_set_list);
 
-        /*
-        mQuizList.add("T1");
-        mQuizList.add("T2");
-        mQuizList.add("T3");
-        */
+        mUserEmail = getIntent().getStringExtra(Constants.USER_EMAIL);
 
         Firebase ref = new Firebase(Constants.FPATH_SETS);
         Query qref = ref.orderByKey();
@@ -70,7 +71,7 @@ public class DisplaySetListActivity extends ListActivity {
                 Log.e(LOG_TAG, "Result count: " + qs.getChildrenCount());
                 Iterator<DataSnapshot> iter = qs.getChildren().iterator();
                 while (iter.hasNext()) {
-                    QL_Set s = (QL_Set)iter.next().getValue(QL_Set.class);
+                    QLSet s = (QLSet)iter.next().getValue(QLSet.class);
                     Log.i(LOG_TAG, s.toString());
                     if (!mQuizList.contains(s.title)) {
                         mQuizList.add(s.title);
@@ -96,6 +97,7 @@ public class DisplaySetListActivity extends ListActivity {
         // Launch the sample associated with this list position.
         Intent i = new Intent(DisplaySetListActivity.this, CardFlipActivity.class);
         i.putExtra(Intent.EXTRA_TITLE, name);
+        i.putExtra(Constants.USER_EMAIL, mUserEmail);
         startActivity(i);
     }
 

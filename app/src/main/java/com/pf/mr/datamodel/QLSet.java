@@ -1,18 +1,18 @@
-package com.pf.mr;
+package com.pf.mr.datamodel;
 
 import java.util.List;
 
 /**
  * Created by magnushyttsten on 3/26/16.
  */
-public class QL_Set {
+public class QLSet {
 
     public long access_type;
     public String can_edit;
     public String created_by;
     public String created_date;
 
-    public QL_Creator creator;
+    public QLCreator creator;
 
     public long creator_id;
     public String description;
@@ -29,7 +29,7 @@ public class QL_Set {
     public String published_date;
     public long term_count;
 
-    public List<QL_Term> terms;
+    public List<QLTerm> terms;
 
     public String title;
     public String url;

@@ -1,0 +1,11 @@
+// TODO: [P0] Fix sign in screen
+// TODO: [P0] CardFlip should be scrollable
+// TODO: [P0] App Icons
+// TODO: [P0] Get a test Quizlet account and populate
+
+// TODO: [P1] Upload to Google Play
+
+// TODO: [P2] If user tested through all cards, we should reinitialize from DB to see if any more are due
+// TODO: [P2] User should be able to sign out
+// TODO: [P2]We should use ID tokens instead of email address as user key
+

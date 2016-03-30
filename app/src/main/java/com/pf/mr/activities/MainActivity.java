@@ -14,26 +14,13 @@
  * limitations under the License.
  */
 
-package com.pf.mr;
+package com.pf.mr.activities;
 
 import android.app.Activity;
-import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 
-import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.Query;
-import com.firebase.client.ValueEventListener;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * The launchpad activity for this sample project. This activity launches other activities that
@@ -47,11 +34,6 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
 
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        startActivity(new Intent(this, DisplaySetListActivity.class));
+        startActivity(new Intent(this, SignInActivity.class));
     }
 }
