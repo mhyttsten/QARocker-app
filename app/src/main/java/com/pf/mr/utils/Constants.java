@@ -15,6 +15,8 @@ public class Constants {
 
     public static final String USER_TOKEN = APP_ID + ".User_IDToken";
     public static final String USER_EMAIL = APP_ID + ".User_Email";
+    public static final String SETNAME = APP_ID + ".SetName";
+    public static final String SETID = APP_ID + ".SetId";
 
     public static final String EMAIL_TO_FIREBASEPATH(String email) {
         String emod = email.replace("_", "__");

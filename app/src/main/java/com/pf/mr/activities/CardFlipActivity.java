@@ -91,7 +91,7 @@ public class CardFlipActivity extends Activity
 
         mUserEmail = getIntent().getStringExtra(Constants.USER_EMAIL);
         Log.i(LOG_TAG, "User email: " + mUserEmail);
-        mSetName = getIntent().getStringExtra(Intent.EXTRA_TITLE);
+        mSetName = getIntent().getStringExtra(Constants.SETNAME);
 
         getTermData();
     }
@@ -166,6 +166,7 @@ public class CardFlipActivity extends Activity
         boolean hasNext = mESet.hasNext();
         if (!hasNext) {
             Intent i = Misc.getIntentWithUserId(this, RehearsalFinishedActivity.class, mUserEmail);
+            i.putExtra(Constants.SETID, String.valueOf(mQLSet.id));
             startActivity(i);
             finish();
             return;

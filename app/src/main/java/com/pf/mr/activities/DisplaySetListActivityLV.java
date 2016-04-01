@@ -24,15 +24,14 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import android.support.design.widget.NavigationView;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
-import com.pf.mr.utils.Constants;
 import com.pf.mr.R;
 import com.pf.mr.datamodel.QLSet;
+import com.pf.mr.utils.Constants;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -42,8 +41,8 @@ import java.util.List;
  * The launchpad activity for this sample project. This activity launches other activities that
  * demonstrate implementations of common animations.
  */
-public class DisplaySetListActivity extends ListActivity {
-    public static String LOG_TAG = DisplaySetListActivity.class.getSimpleName();
+public class DisplaySetListActivityLV extends ListActivity {
+    public static String LOG_TAG = DisplaySetListActivityLV.class.getSimpleName();
 
     private List<String> mQuizList = new ArrayList<>();
     private String mUserEmail;
@@ -78,8 +77,8 @@ public class DisplaySetListActivity extends ListActivity {
                         mQuizList.add(s.title);
                     }
                 }
-                DisplaySetListActivity.this.setListAdapter(new ArrayAdapter<String>(
-                        DisplaySetListActivity.this,
+                DisplaySetListActivityLV.this.setListAdapter(new ArrayAdapter<String>(
+                        DisplaySetListActivityLV.this,
                         android.R.layout.simple_list_item_1,
                         android.R.id.text1,
                         mQuizList));
@@ -96,8 +95,8 @@ public class DisplaySetListActivity extends ListActivity {
         String name = mQuizList.get(position);
 
         // Launch the sample associated with this list position.
-        Intent i = new Intent(DisplaySetListActivity.this, CardFlipActivity.class);
-        i.putExtra(Constants.SETNAME, name);
+        Intent i = new Intent(DisplaySetListActivityLV.this, CardFlipActivity.class);
+        i.putExtra(Intent.EXTRA_TITLE, name);
         i.putExtra(Constants.USER_EMAIL, mUserEmail);
         startActivity(i);
     }

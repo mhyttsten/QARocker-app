@@ -1,10 +1,12 @@
-Quizlet.com: guttesting / planetm00nshot
+// Quizlet.com: gutesting / planetm00nshot
 
-// TODO: [P0] Fix sign in screen
-// TODO: [P0] App Icons
-// TODO: [P0] Get a test Quizlet account and populate
+// TODO: [P0] Alternative DB from main screen (you enter DB name, backend populates many DBs)
+// TODO: [P0] Logout
 
-// TODO: [P1] Upload to Google Play
+// TODO: [P1] Show real statistics
+// TODO: [P1] Add All
+
+// TODO: [P1] Enable statistics from main screen
 
 // TODO: [P2] If user tested through all cards, we should reinitialize from DB to see if any more are due
 // TODO: [P2] User should be able to sign out

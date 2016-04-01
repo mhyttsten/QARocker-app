@@ -18,22 +18,23 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-import com.pf.mr.utils.Constants;
 import com.pf.mr.R;
+import com.pf.mr.utils.Constants;
 
 /**
  * Activity to demonstrate basic retrieval of the Google user's ID, email address, and basic
  * profile.
  */
-public class SignInActivity extends AppCompatActivity implements
+public class ZOld_SignInActivity { /* extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener {
 
-    private static final String TAG = SignInActivity.class.getSimpleName();
+    private static final String TAG = ZOld_SignInActivity.class.getSimpleName();
     private static final int RC_SIGN_IN = 9001;
 
     private GoogleSignInAccount mAccount;
     private GoogleApiClient mGoogleApiClient;
+    private TextView mStatusTextView;
     private ProgressDialog mProgressDialog;
 
     @Override
@@ -42,7 +43,7 @@ public class SignInActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_sign_in);
 
         // Views
-        // mStatusTextView = (TextView) findViewById(R.id.status);
+        mStatusTextView = (TextView) findViewById(R.id.status);
 
         // Button listeners
         findViewById(R.id.sign_in_button).setOnClickListener(this);
@@ -61,7 +62,7 @@ public class SignInActivity extends AppCompatActivity implements
         // Build a GoogleApiClient with access to the Google Sign-In API and the
         // options specified by gso.
         mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
+                .enableAutoManage(this , this )
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
         // [END build_client]
@@ -125,7 +126,7 @@ public class SignInActivity extends AppCompatActivity implements
         if (result.isSuccess()) {
             // Signed in successfully, show authenticated UI.
             mAccount = result.getSignInAccount();
-            // mStatusTextView.setText(getString(R.string.signed_in_fmt, mAccount.getDisplayName()));
+            mStatusTextView.setText(getString(R.string.signed_in_fmt, mAccount.getDisplayName()));
             updateUI(true);
         } else {
             // Signed out, show unauthenticated UI.
@@ -194,6 +195,9 @@ public class SignInActivity extends AppCompatActivity implements
 
     private void updateUI(boolean signedIn) {
         if (signedIn) {
+            findViewById(R.id.sign_in_button).setVisibility(View.GONE);
+            findViewById(R.id.sign_out_and_disconnect).setVisibility(View.VISIBLE);
+
             Log.i(TAG, "Email: " + mAccount.getEmail());
             Log.i(TAG, "Token: " + mAccount.getIdToken());
 
@@ -204,6 +208,10 @@ public class SignInActivity extends AppCompatActivity implements
             i.putExtra(Constants.USER_TOKEN, mAccount.getIdToken());
             i.putExtra(Constants.USER_EMAIL, mAccount.getEmail());
             startActivity(i);
+        } else {
+            mStatusTextView.setText(R.string.signed_out);
+            findViewById(R.id.sign_in_button).setVisibility(View.VISIBLE);
+            findViewById(R.id.sign_out_and_disconnect).setVisibility(View.GONE);
         }
     }
 
@@ -221,4 +229,5 @@ public class SignInActivity extends AppCompatActivity implements
 //                break;
         }
     }
+    */
 }
