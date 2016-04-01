@@ -23,10 +23,11 @@ public class RehearsalFinishedActivity extends AppCompatActivity {
     }
 
     public void clickToMain(View v) {
-        Intent i = Misc.getIntentWithUserId(
-                this,
-                DisplaySetListActivity.class,
-                getIntent().getStringExtra(Constants.USER_EMAIL));
-        startActivity(i);
+//        Intent i = Misc.getIntentWithUserId(
+//                this,
+//                DisplaySetListActivity.class,
+//                getIntent().getStringExtra(Constants.USER_EMAIL));
+//        startActivity(i);
+        finish();
     }
 }

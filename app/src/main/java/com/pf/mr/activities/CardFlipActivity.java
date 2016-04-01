@@ -167,6 +167,7 @@ public class CardFlipActivity extends Activity
         if (!hasNext) {
             Intent i = Misc.getIntentWithUserId(this, RehearsalFinishedActivity.class, mUserEmail);
             startActivity(i);
+            finish();
             return;
         }
         mCurrentETerm = mESet.next();
@@ -321,7 +322,6 @@ public class CardFlipActivity extends Activity
             v.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(getActivity(), "Hello 1", Toast.LENGTH_LONG).show();
                     ((CardFlipActivity) getActivity()).flipCard();
                 }
             });
@@ -342,24 +342,13 @@ public class CardFlipActivity extends Activity
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            Toast.makeText(getActivity(), "Hello 2 entered", Toast.LENGTH_LONG).show();
             View v = inflater.inflate(R.layout.fragment_card_back, container, false);
-
-//            ScrollView tw = (ScrollView)v.findViewById(R.id.scroll_view_id);
-//            v.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    Toast.makeText(getActivity(), "Hello 2", Toast.LENGTH_LONG).show();
-//                    ((CardFlipActivity) getActivity()).flipCard();
-//                }
-//            });
 
             TextView tw = (TextView)v.findViewById(android.R.id.text1);
             tw.setText(mA);
             tw.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(getActivity(), "Hello 2", Toast.LENGTH_LONG).show();
                     ((CardFlipActivity) getActivity()).flipCard();
                 }
             });
