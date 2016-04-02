@@ -44,7 +44,11 @@
         <activity
             android:name=".activities.RehearsalFinishedActivity"
             android:label="@string/title_activity_rehearsal_finished"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".activities.DisplaySetListRVActivity"
+            android:label="@string/title_activity_display_set_list_rv"
+            android:theme="@style/AppTheme.NoActionBar" />
     </application>
 
 </manifest>
