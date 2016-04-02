@@ -132,7 +132,7 @@ public class DisplaySetListRVActivity extends AppCompatActivity {
                     String name = tw.getText().toString();
                     Log.i(TAG, "I was clicked, with text: " + name);
 
-                    // Launch the sample associated with this list position.
+                    // Launch the sample, associated with this list position.
                     if (!name.equals("All")) {
                         Intent i = new Intent(mParent, CardFlipActivity.class);
                         i.putExtra(Constants.SETNAME, name);
