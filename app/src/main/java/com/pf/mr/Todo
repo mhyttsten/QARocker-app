@@ -2,6 +2,7 @@
 
 // TODO: [P0] Alternative DB from main screen (you enter DB name, backend populates many DBs)
 // TODO: [P0] Logout
+// TODO: [P0] Disable Google SignIn button until it is confirmed that we need to do Google SignIn
 
 // TODO: [P1] Show real statistics
 // TODO: [P1] Add All
@@ -10,5 +11,9 @@
 
 // TODO: [P2] If user tested through all cards, we should reinitialize from DB to see if any more are due
 // TODO: [P2] User should be able to sign out
-// TODO: [P2]We should use ID tokens instead of email address as user key
+// TODO: [P2] We should use ID tokens instead of email address as user key
+
+// Optimizations
+// TODO: [P2] Get only the set names (make App Engine read from Firebase after insert, also inserting Set table
+// TODO: [P2] When getting QA from single set, just read QAs for that Set (not all Sets)
 
