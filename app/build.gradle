@@ -6,10 +6,9 @@ android {
     sourceSets {
         main {
             res.srcDirs = [
-                    'src/main/res',
                     'src/main/res-main',
                     // Then you create
-                    'src/main/res-screen/display-sets'
+                    'src/main/res-screens/display-set-stats'
             ]
         }
     }

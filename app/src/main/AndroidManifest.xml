@@ -11,16 +11,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".activities.MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
             android:name=".activities.DisplaySetListActivity"
             android:label="@string/title_activity_display_set_list"
             android:theme="@style/AppTheme.NoActionBar" >
@@ -42,7 +32,7 @@
             android:label="@string/title_activity_sign_in"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".activities.RehearsalFinishedActivity"
+            android:name=".activities.display_set_stats.RehearsalFinishedActivity"
             android:label="@string/title_activity_rehearsal_finished"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity

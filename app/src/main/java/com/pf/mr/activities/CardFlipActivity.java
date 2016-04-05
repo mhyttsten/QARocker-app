@@ -30,7 +30,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ScrollView;
 import android.widget.Scroller;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,17 +39,16 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
+import com.pf.mr.activities.display_set_stats.RehearsalFinishedActivity;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.utils.Constants;
 import com.pf.mr.R;
 import com.pf.mr.datamodel.QLSet;
-import com.pf.mr.datamodel.QLTerm;
 import com.pf.mr.execmodel.ESet;
 import com.pf.mr.execmodel.ETerm;
 import com.pf.mr.utils.Misc;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -215,7 +213,7 @@ public class CardFlipActivity extends Activity
             case android.R.id.home:
                 // Navigate "up" the demo structure to the launchpad activity.
                 // See http://developer.android.com/design/patterns/navigation.html for more.
-                NavUtils.navigateUpTo(this, new Intent(this, MainActivity.class));
+                NavUtils.navigateUpTo(this, new Intent(this, DisplaySetListNVRVActivity.class));
                 return true;
 
             case R.id.action_flip:

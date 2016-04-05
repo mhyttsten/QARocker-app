@@ -1,4 +1,4 @@
-package com.pf.mr.activities;
+package com.pf.mr.activities.display_set_stats;
 
 import android.content.Intent;
 import android.os.Bundle;
