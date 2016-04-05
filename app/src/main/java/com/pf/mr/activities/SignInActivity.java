@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -129,6 +130,7 @@ public class SignInActivity extends AppCompatActivity implements
             updateUI(true);
         } else {
             // Signed out, show unauthenticated UI.
+            // result.getStatus().
             updateUI(false);
         }
     }
@@ -201,7 +203,7 @@ public class SignInActivity extends AppCompatActivity implements
             Log.i(TAG, "System.currentTimeMillis: " + new java.util.Date().getTime());
 
 //            Intent i =  new Intent(this, DisplaySetListActivity.class);
-            Intent i =  new Intent(this, DisplaySetListRVActivity.class);
+            Intent i =  new Intent(this, DisplaySetListNVRVActivity.class);
             i.putExtra(Constants.USER_TOKEN, mAccount.getIdToken());
             i.putExtra(Constants.USER_EMAIL, mAccount.getEmail());
             startActivity(i);

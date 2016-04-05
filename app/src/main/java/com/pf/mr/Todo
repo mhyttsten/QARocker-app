@@ -1,8 +1,11 @@
 // Quizlet.com: gutesting / planetm00nshot
 
+// TODO: [P0] Clicking on Answer does not flip card unless you pinpoint the TextView
+
 // TODO: [P0] Alternative DB from main screen (you enter DB name, backend populates many DBs)
 // TODO: [P0] Logout
 // TODO: [P0] Disable Google SignIn button until it is confirmed that we need to do Google SignIn
+
 
 // TODO: [P1] Show real statistics
 // TODO: [P1] Add All

@@ -31,6 +31,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ScrollView;
+import android.widget.Scroller;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -346,10 +347,19 @@ public class CardFlipActivity extends Activity
             View v = inflater.inflate(R.layout.fragment_card_back, container, false);
 
             TextView tw = (TextView)v.findViewById(android.R.id.text1);
+            tw.setScroller(new Scroller(getActivity()));
+            //tw.setMaxLines(1);
+            tw.setVerticalScrollBarEnabled(true);
+            tw.setMovementMethod(new ScrollingMovementMethod());
             tw.setText(mA);
+
+            //ScrollView sv = (ScrollView)v.findViewById(R.id.scroll_view_id);
+            //sv.requestDisallowInterceptTouchEvent(true);
+
             tw.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    Toast.makeText(getActivity(), "ehll", Toast.LENGTH_SHORT).show();
                     ((CardFlipActivity) getActivity()).flipCard();
                 }
             });
