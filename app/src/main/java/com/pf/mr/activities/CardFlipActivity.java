@@ -23,11 +23,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.NavUtils;
+import android.support.v4.view.GestureDetectorCompat;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Scroller;
@@ -47,6 +50,7 @@ import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.execmodel.ESet;
 import com.pf.mr.execmodel.ETerm;
 import com.pf.mr.utils.Misc;
+import android.view.GestureDetector.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -61,8 +65,37 @@ import java.util.List;
  * presses the system Back button or the "photo" action bar button.</p>
  */
 public class CardFlipActivity extends Activity
-        implements FragmentManager.OnBackStackChangedListener {
-    public static final String LOG_TAG = CardFlipActivity.class.getSimpleName();
+        implements FragmentManager.OnBackStackChangedListener,
+        GestureDetector.OnDoubleTapListener,
+        GestureDetector.OnGestureListener {
+    public static final String TAG = CardFlipActivity.class.getSimpleName();
+
+
+
+    public boolean onDown(MotionEvent me) { return true; }
+    public boolean onFling(MotionEvent me1, MotionEvent me2, float vx, float vy) { return false; }
+    public void onLongPress(MotionEvent me) { }
+    public boolean onScroll(MotionEvent me1, MotionEvent me2, float dx, float dy) { return false; }
+    public void onShowPress(MotionEvent me) { }
+    public boolean onSingleTapUp(MotionEvent me) {
+        Log.i(TAG, "onSingleTapUp");
+        Toast.makeText(this, "onSingleTapUp", Toast.LENGTH_SHORT).show();
+        return true;
+    }
+
+    public boolean onTouchEvent(MotionEvent me) {
+        mDetector.onTouchEvent(me);
+        Log.i(TAG, "HERE");
+        return super.onTouchEvent(me);
+    }
+
+    public boolean onDoubleTap(MotionEvent me) { return false; }
+    public boolean onDoubleTapEvent(MotionEvent me) { return false; }
+    public boolean onSingleTapConfirmed(MotionEvent me) {
+        Log.i(TAG, "onSingleTapConfirmed");
+        Toast.makeText(this, "onSingleTapConfirmed", Toast.LENGTH_SHORT).show();
+        return false;
+    }
 
     /**
      * A handler object, used for deferring UI operations.
@@ -80,6 +113,7 @@ public class CardFlipActivity extends Activity
     private QLSet mQLSet;
     private ESet mESet;
     private ETerm mCurrentETerm;
+    private GestureDetectorCompat mDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,8 +122,12 @@ public class CardFlipActivity extends Activity
 
         Firebase.setAndroidContext(this);
 
+        Log.i(TAG, "Now setting GestureDetector");
+        mDetector = new GestureDetectorCompat(this, this);
+        mDetector.setOnDoubleTapListener(this);
+
         mUserEmail = getIntent().getStringExtra(Constants.USER_EMAIL);
-        Log.i(LOG_TAG, "User email: " + mUserEmail);
+        Log.i(TAG, "User email: " + mUserEmail);
         mSetName = getIntent().getStringExtra(Constants.SETNAME);
 
         getTermData();
@@ -103,7 +141,7 @@ public class CardFlipActivity extends Activity
             @Override
             public void onDataChange(DataSnapshot qs) {
                 // Data is ordered by increasing height, so we want the first entry
-                Log.e(LOG_TAG, "Result count: " + qs.getChildrenCount());
+                Log.e(TAG, "Result count: " + qs.getChildrenCount());
                 Iterator<DataSnapshot> iter = qs.getChildren().iterator();
                 while (iter.hasNext()) {
                     QLSet s = (QLSet) iter.next().getValue(QLSet.class);
@@ -137,12 +175,6 @@ public class CardFlipActivity extends Activity
                         terms = new ArrayList<StatTermForUser>();
                     }
                     terms.add(stfu);
-//                    HashMap hm = (HashMap)iter.next().getValue(StatTermForUser.class);
-//                    Iterator<String> iterSet = hm.keySet().iterator();
-//                    while (iterSet.hasNext()) {
-//                        String setKey = iterSet.next();
-//                        Log.i(LOG_TAG, "setKey: " + setKey);
-//                    }
                 }
                 mESet = new ESet(mQLSet, mUserEmail, terms);
                 startNextRound();
@@ -211,9 +243,7 @@ public class CardFlipActivity extends Activity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                // Navigate "up" the demo structure to the launchpad activity.
-                // See http://developer.android.com/design/patterns/navigation.html for more.
-                NavUtils.navigateUpTo(this, new Intent(this, DisplaySetListNVRVActivity.class));
+                finish();
                 return true;
 
             case R.id.action_flip:
@@ -282,21 +312,21 @@ public class CardFlipActivity extends Activity
     }
 
     public void clickNoClue(View v) {
-        Log.i(LOG_TAG, "clickNoClue");
+        Log.i(TAG, "clickNoClue");
         mCurrentETerm.setAnswerGiven(ETerm.AS_NO_CLUE);
         mESet.reportAnswer(mCurrentETerm);
         startNextRound();
     }
 
     public void clickKnewIt(View v) {
-        Log.i(LOG_TAG, "clickKnewIt");
+        Log.i(TAG, "clickKnewIt");
         mCurrentETerm.setAnswerGiven(ETerm.AS_KNEW_IT);
         mESet.reportAnswer(mCurrentETerm);
         startNextRound();
     }
 
     public void clickNailedIt(View v) {
-        Log.i(LOG_TAG, "clickNailedIt");
+        Log.i(TAG, "clickNailedIt");
         mCurrentETerm.setAnswerGiven(ETerm.AS_NAILED_IT);
         mESet.reportAnswer(mCurrentETerm);
         startNextRound();

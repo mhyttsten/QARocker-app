@@ -6,12 +6,12 @@ package com.pf.mr.utils;
 public class Constants {
     public static final String APP_ID = "com.pf.mr";
 
-    public static final String FPATH_BASE        = "https://brilliant-fire-9867.firebaseio.com/";
-    public static final String FPATH_SETS        = "https://brilliant-fire-9867.firebaseio.com/sets";
-    public static final String FPATH_TOKEN2EMAIL = "https://brilliant-fire-9867.firebaseio.com/token2email";
+    // public static final String FPATH_BASE        = "https://ql-magnushyttsten.firebaseio.com/";
+    public static final String FPATH_BASE        = "https://ql-gutester.firebaseio.com/";
+    public static final String FPATH_SETS        = FPATH_BASE + "/sets";
 
-    public static final String FPATH_STATFORUSER = "https://brilliant-fire-9867.firebaseio.com/statforuser";
-    public static final String FPATH_STATFORRAW  = "https://brilliant-fire-9867.firebaseio.com/statforraw";
+    public static final String FPATH_STATFORUSER = FPATH_BASE + "/statforuser";
+    public static final String FPATH_STATFORRAW  = FPATH_BASE + "/statforraw";
 
     public static final String USER_TOKEN = APP_ID + ".User_IDToken";
     public static final String USER_EMAIL = APP_ID + ".User_Email";

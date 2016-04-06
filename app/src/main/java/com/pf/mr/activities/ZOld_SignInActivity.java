@@ -204,7 +204,7 @@ public class ZOld_SignInActivity { /* extends AppCompatActivity implements
             Log.i(TAG, "System.currentTimeMillis: " + System.currentTimeMillis());
             Log.i(TAG, "System.currentTimeMillis: " + new java.util.Date().getTime());
 
-            Intent i =  new Intent(this, DisplaySetListActivity.class);
+            Intent i =  new Intent(this, DisplaySetListNVRVActivity.class);
             i.putExtra(Constants.USER_TOKEN, mAccount.getIdToken());
             i.putExtra(Constants.USER_EMAIL, mAccount.getEmail());
             startActivity(i);

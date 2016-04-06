@@ -40,11 +40,6 @@ public class RehearsalFinishedActivity extends AppCompatActivity {
                     .child(Constants.EMAIL_TO_FIREBASEPATH(userEmail));
             forUser.setValue(null);
         }
-//        Intent i = Misc.getIntentWithUserId(
-//                this,
-//                DisplaySetListActivity.class,
-//                getIntent().getStringExtra(Constants.USER_EMAIL));
-//        startActivity(i);
         finish();
     }
 }

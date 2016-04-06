@@ -23,11 +23,11 @@
             <!--android:title="Home" />-->
 
         <item
-            android:id="@+id/logout"
+            android:id="@+id/nv_logout"
             android:icon="@drawable/ic_exit_to_app_black_24dp"
             android:title="Logout" />
         <item
-            android:id="@+id/settings"
+            android:id="@+id/nv_settings"
             android:icon="@drawable/ic_settings_black_24dp"
             android:title="Settings" />
     </group>

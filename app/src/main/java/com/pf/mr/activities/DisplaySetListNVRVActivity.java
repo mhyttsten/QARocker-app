@@ -32,6 +32,7 @@ import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 import com.pf.mr.R;
+import com.pf.mr.activities.settings.SettingsActivity;
 import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.utils.Constants;
 
@@ -80,7 +81,18 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity {
                 new NavigationView.OnNavigationItemSelectedListener() {
                     @Override
                     public boolean onNavigationItemSelected(MenuItem menuItem) {
+                        // menuItem.setChecked(true);
                         mDrawerLayout.closeDrawers();
+                        switch (menuItem.getItemId()) {
+                            case R.id.nv_settings:
+                                Intent i = new Intent(DisplaySetListNVRVActivity.this, SettingsActivity.class);
+                                startActivity(i);
+                                return true;
+                            case R.id.nv_logout:
+                                return true;
+
+                        }
+
                         return true;
                     }
                 });

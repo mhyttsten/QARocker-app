@@ -8,15 +8,17 @@ android {
             res.srcDirs = [
                     'src/main/res-main',
                     // Then you create
+                    'src/main/res-screens/settings',
                     'src/main/res-screens/display-set-stats'
             ]
         }
     }
 
-//    lintOptions {
-//        checkReleaseBuilds false
-//        abortOnError false
-//    }
+    // To avoid Style Resource definition cycle for
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
 
     packagingOptions {
         exclude 'META-INF/LICENSE'
@@ -31,8 +33,8 @@ android {
         applicationId "com.pf.mr"
         minSdkVersion 15
         targetSdkVersion 23
-        versionCode 4
-        versionName "4"
+        versionCode 5
+        versionName "5"
     }
     buildTypes {
         release {
