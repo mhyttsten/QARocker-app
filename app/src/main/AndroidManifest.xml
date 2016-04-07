@@ -23,11 +23,11 @@
             android:name=".activities.CardFlipActivity"
             android:label="@string/title_card_flip"
             android:parentActivityName=".activities.DisplaySetListNVRVActivity"
-            android:theme="@style/DarkTheme">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activities.DisplaySetListNVRVActivity" />
-        </activity>
+            android:theme="@style/DarkTheme" />
+            <!--<meta-data-->
+                <!--android:name="android.support.PARENT_ACTIVITY"-->
+                <!--android:value=".activities.DisplaySetListNVRVActivity" />-->
+        <!--</activity>-->
         <activity
             android:name=".activities.display_set_stats.RehearsalFinishedActivity"
             android:label="@string/title_activity_rehearsal_finished"

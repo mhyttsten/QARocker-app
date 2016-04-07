@@ -55,6 +55,9 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.i(TAG, "DisplaySetListNVRVActivity.onCreate");
+
         setContentView(R.layout.activity_display_set_list_nvrv);
         Firebase.setAndroidContext(this);
 
@@ -86,6 +89,7 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity {
                         switch (menuItem.getItemId()) {
                             case R.id.nv_settings:
                                 Intent i = new Intent(DisplaySetListNVRVActivity.this, SettingsActivity.class);
+                                // i.putExtra(Constants.USER_EMAIL, DisplaySetListNVRVActivity.this.mUserEmail);
                                 startActivity(i);
                                 return true;
                             case R.id.nv_logout:
@@ -124,7 +128,6 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity {
                 Iterator<DataSnapshot> iter = qs.getChildren().iterator();
                 while (iter.hasNext()) {
                     QLSet s = (QLSet) iter.next().getValue(QLSet.class);
-                    Log.i(TAG, s.toString());
                     if (!mQuizList.contains(s.title)) {
                         mQuizList.add(s.title);
                     }
