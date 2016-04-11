@@ -10,4 +10,13 @@
     <color name="blue_grey_800">#37474F</color>
     <color name="blue_grey_900">#263238</color>
     <color name="grey">#D3D3D3</color>
+
+
+    <color name="red">#CC0000</color>
+    <color name="orange">#FF9933</color>
+    <color name="yellow">#FFFF00</color>
+    <color name="greenish">#B2FF66</color>
+    <color name="green">#00CC00</color>
+    <color name="blue">#0000FF</color>
+
 </resources>

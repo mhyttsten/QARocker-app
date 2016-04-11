@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.pf.mr.activities;
+package com.pf.mr.screens;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -22,7 +22,6 @@ import android.app.FragmentManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.NavUtils;
 import android.support.v4.view.GestureDetectorCompat;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -42,7 +41,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
-import com.pf.mr.activities.display_set_stats.RehearsalFinishedActivity;
+import com.pf.mr.screens.display_set_stats.RehearsalFinishedActivity;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.utils.Constants;
 import com.pf.mr.R;
@@ -50,7 +49,6 @@ import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.execmodel.ESet;
 import com.pf.mr.execmodel.ETerm;
 import com.pf.mr.utils.Misc;
-import android.view.GestureDetector.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -69,8 +67,6 @@ public class CardFlipActivity extends Activity
         GestureDetector.OnDoubleTapListener,
         GestureDetector.OnGestureListener {
     public static final String TAG = CardFlipActivity.class.getSimpleName();
-
-
 
     public boolean onDown(MotionEvent me) { return true; }
     public boolean onFling(MotionEvent me1, MotionEvent me2, float vx, float vy) { return false; }
@@ -135,7 +131,7 @@ public class CardFlipActivity extends Activity
 
 
     public void getTermData() {
-        Firebase ref = new Firebase(Constants.FPATH_SETS);
+        Firebase ref = new Firebase(Constants.FPATH_SETS());
         Query qref = ref.orderByKey();
         qref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -159,7 +155,7 @@ public class CardFlipActivity extends Activity
     }
 
     public void getTermStats() {
-        Firebase ref = new Firebase(Constants.FPATH_STATFORUSER)
+        Firebase ref = new Firebase(Constants.FPATH_STATFORUSER())
                 .child(String.valueOf(mQLSet.id))
                 .child(Constants.EMAIL_TO_FIREBASEPATH(mUserEmail));
         Query qref = ref.orderByKey();
@@ -387,7 +383,7 @@ public class CardFlipActivity extends Activity
             tw.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(getActivity(), "ehll", Toast.LENGTH_SHORT).show();
+                    // Toast.makeText(getActivity(), "ehll", Toast.LENGTH_SHORT).show();
                     ((CardFlipActivity) getActivity()).flipCard();
                 }
             });

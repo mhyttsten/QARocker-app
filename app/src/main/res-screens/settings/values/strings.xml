@@ -1,0 +1,9 @@
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <string name="pref_key_database">key_database</string>
+    <string name="pref_database">Database</string>
+    <string name="pref_database_summary">Database to use</string>
+
+</resources>
+
+

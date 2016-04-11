@@ -1,0 +1,54 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".screens.five_vertical_bars.FiveVerticalBarsFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="bottom|center_horizontal">
+
+        <View android:layout_width="16dp" android:layout_height="match_parent"></View>
+        <TextView
+            android:id="@+id/fvb_col1"
+            style="@style/FiveVerticalBarsStyle"
+            android:background="@color/red"
+            android:gravity="bottom|center" />
+
+        <View android:layout_width="16dp" android:layout_height="match_parent"/>
+        <TextView
+            android:id="@+id/fvb_col2"
+            style="@style/FiveVerticalBarsStyle"
+            android:background="@color/orange"
+            android:textStyle="bold"
+            android:gravity="bottom|center" />
+        <View android:layout_width="16dp" android:layout_height="match_parent"/>
+
+        <TextView
+            android:id="@+id/fvb_col3"
+            style="@style/FiveVerticalBarsStyle"
+            android:background="@color/yellow"
+            android:textStyle="bold"
+            android:gravity="bottom|center" />
+        <View android:layout_width="16dp" android:layout_height="match_parent"/>
+
+        <TextView
+            android:id="@+id/fvb_col4"
+            style="@style/FiveVerticalBarsStyle"
+            android:background="@color/blue"
+            android:textStyle="bold"
+            android:gravity="bottom|center" />
+        <View android:layout_width="16dp" android:layout_height="match_parent"/>
+
+        <TextView
+            android:id="@+id/fvb_col5"
+            style="@style/FiveVerticalBarsStyle"
+            android:background="@color/green"
+            android:textStyle="bold"
+            android:gravity="bottom|center" />
+        <View android:layout_width="16dp" android:layout_height="match_parent"/>
+
+    </LinearLayout>
+</FrameLayout>

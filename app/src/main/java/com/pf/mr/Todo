@@ -1,17 +1,16 @@
 // Quizlet.com: gutesting / planetm00nshot
 
 
-// TODO: [P0] Write Settings/Preferences Alternative DB from main screen (you enter DB name, backend populates many DBs)
-// TODO: [P0] Logout
-// TODO: [P0] Disable Google SignIn button until it is confirmed that we need to do Google SignIn
-
 // TODO: [P1] Show real statistics
 // TODO: [P1] Add All
 
 // TODO: [P1] Enable statistics from main screen
 
+
 // --------------
 
+// TODO: Setname "All" should be from resources file
+// TODO: Move all hardcoded things to strings.xml
 // TODO: [P2] If user tested through all cards, we should reinitialize from DB to see if any more are due
 // TODO: [P2] User should be able to sign out
 // TODO: [P2] We should use ID tokens instead of email address as user key

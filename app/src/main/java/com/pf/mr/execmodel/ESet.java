@@ -15,6 +15,7 @@ import java.util.List;
 public class ESet {
 
     public QLSet mQ;
+
     private List<ETerm> mETermsDue = new ArrayList<>();
     private List<ETerm> mETermsNew = new ArrayList<>();
 

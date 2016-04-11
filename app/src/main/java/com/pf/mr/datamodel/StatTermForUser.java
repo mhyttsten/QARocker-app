@@ -8,19 +8,19 @@ import com.pf.mr.utils.Constants;
 public class StatTermForUser {
 
     // Leitner boxes
-    public static final long LB_0 = 0; // Never tested
-    public static final long LB_1 = 1; // Always needs rehearsal
-    public static final long LB_2 = 2; // Wait 12 hours
-    public static final long LB_3 = 3; // Wait 7 days
-    public static final long LB_4 = 4; // Wait 28 days
-    public static final long LB_5 = 5; // Wait 365 days
+    public static final int LB_0 = 0; // Never tested
+    public static final int LB_1 = 1; // Always needs rehearsal
+    public static final int LB_2 = 2; // Wait 12 hours
+    public static final int LB_3 = 3; // Wait 7 days
+    public static final int LB_4 = 4; // Wait 28 days
+    public static final int LB_5 = 5; // Wait 365 days
     // NC (no clue), KI (knew it), NI (nailed it)
 
     public long setId;
     public long termId;
     public String email;
 
-    public long leitnerBox;
+    public int leitnerBox;
     public long nextRehearsalTime;
     public String getNextRehearsalTimeReadable() { return new java.util.Date(nextRehearsalTime).toString(); }
     public void setNextRehearsalTimeReadable(String s) { }
@@ -32,7 +32,7 @@ public class StatTermForUser {
     public long answerTimeTotal;
     public long answerTimeAverage;
 
-    public void updateData(long pLeitnerBox,
+    public void updateData(int pLeitnerBox,
                            long pNextRehearsalTime,
                            long pNoClueCount,
                            long pKnewItCount,
@@ -54,7 +54,7 @@ public class StatTermForUser {
             long pSetId,
             long pTermId,
             String pEmail,
-            long pLeitnerBox,
+            int pLeitnerBox,
             long pNextRehearsalTime,
             long pNoClueCount,
             long pKnewItCount,

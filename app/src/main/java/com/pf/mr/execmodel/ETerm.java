@@ -72,8 +72,8 @@ public class ETerm {
         long duration = endTimer - mStartTimer;
 
         mLastAnswer = answer;
-        long leitnerBoxBefore = mStat.leitnerBox;
-        long leitnerBoxAfter = leitnerBoxBefore;
+        int leitnerBoxBefore = mStat.leitnerBox;
+        int leitnerBoxAfter = leitnerBoxBefore;
 
         long newNextRehearsalTime = mStat.nextRehearsalTime;
 
@@ -140,7 +140,7 @@ public class ETerm {
                 newTotalTime, newAverageTime);
 
         // Store in StatForUser table
-        Firebase forUser = new Firebase(Constants.FPATH_STATFORUSER)
+        Firebase forUser = new Firebase(Constants.FPATH_STATFORUSER())
                 .child(String.valueOf(mStat.setId))
                 .child(Constants.EMAIL_TO_FIREBASEPATH(mStat.email))
                 .child(String.valueOf(mStat.termId));
@@ -151,7 +151,7 @@ public class ETerm {
                 mStat.setId, mStat.termId, mStat.email,
                 leitnerBoxBefore, leitnerBoxAfter,
                 answer, duration);
-        Firebase forRaw = new Firebase(Constants.FPATH_STATFORRAW)
+        Firebase forRaw = new Firebase(Constants.FPATH_STATFORRAW())
                 .child(String.valueOf(mStat.setId))
                 .child(String.valueOf(mStat.termId))
                 .child(String.valueOf(Constants.EMAIL_TO_FIREBASEPATH(mStat.email))

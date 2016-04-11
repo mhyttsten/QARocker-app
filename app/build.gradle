@@ -9,7 +9,8 @@ android {
                     'src/main/res-main',
                     // Then you create
                     'src/main/res-screens/settings',
-                    'src/main/res-screens/display-set-stats'
+                    'src/main/res-screens/display-set-stats',
+                    'src/main/res-screens/five-vertical-bars'
             ]
         }
     }
@@ -51,11 +52,16 @@ dependencies {
     // compile 'com.android.support:design:23.1.1'
     compile 'com.android.support:appcompat-v7:24.0.0-alpha1'
     compile 'com.android.support:design:24.0.0-alpha1'
+    compile 'com.android.support:preference-v7:23.0.1'
     compile 'com.google.android.gms:play-services-auth:8.4.0'
     compile 'com.firebase:firebase-client-android:2.5.2+'
     compile 'com.android.support:recyclerview-v7:24.0.0-alpha1'
+    compile 'com.android.support:support-v4:23.2.1'
+    compile 'com.google.android.gms:play-services-appindexing:8.4.0'
 }
 
 apply plugin: 'com.google.gms.google-services'
+
+
 
 

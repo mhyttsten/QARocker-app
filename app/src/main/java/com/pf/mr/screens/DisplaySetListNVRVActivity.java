@@ -1,26 +1,20 @@
-package com.pf.mr.activities;
+package com.pf.mr.screens;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
-import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.GravityCompat;
-import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,8 +25,14 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.pf.mr.R;
-import com.pf.mr.activities.settings.SettingsActivity;
+import com.pf.mr.screens.settings.SettingsActivity;
 import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.utils.Constants;
 
@@ -40,10 +40,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class DisplaySetListNVRVActivity extends AppCompatActivity {
+public class DisplaySetListNVRVActivity extends AppCompatActivity
+        implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     private static final String TAG = DisplaySetListNVRVActivity.class.getSimpleName();
 
+    private GoogleApiClient mGoogleApiClient;
+
     private DrawerLayout mDrawerLayout;
+
+    private String mDBName;
 
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
@@ -56,7 +61,7 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.i(TAG, "DisplaySetListNVRVActivity.onCreate");
+        Log.e(TAG, "DisplaySetListNVRVActivity.onCreate");
 
         setContentView(R.layout.activity_display_set_list_nvrv);
         Firebase.setAndroidContext(this);
@@ -78,12 +83,21 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity {
         setupRecyclerView();
     }
 
+    @Override
+    protected void onResume() {
+        Log.i(TAG, "onResume");
+        super.onResume();
+
+        setupRecyclerView();
+    }
+
     private void setupDrawerContent(NavigationView navigationView) {
         Log.e(TAG, "setupDrawerContent");
         navigationView.setNavigationItemSelectedListener(
                 new NavigationView.OnNavigationItemSelectedListener() {
                     @Override
                     public boolean onNavigationItemSelected(MenuItem menuItem) {
+                        menuItem.setChecked(false);
                         // menuItem.setChecked(true);
                         mDrawerLayout.closeDrawers();
                         switch (menuItem.getItemId()) {
@@ -93,6 +107,18 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity {
                                 startActivity(i);
                                 return true;
                             case R.id.nv_logout:
+                                Log.i(TAG, "R.id.nv_logout entered");
+                                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                                        .requestEmail()
+                                        .build();
+                                mGoogleApiClient = new GoogleApiClient.Builder(
+                                        DisplaySetListNVRVActivity.this,
+                                        DisplaySetListNVRVActivity.this,
+                                        DisplaySetListNVRVActivity.this)
+                                        .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                                        .build();
+                                mGoogleApiClient.connect();
+                                Log.i(TAG, "R.id.nv_logout exit");
                                 return true;
 
                         }
@@ -113,12 +139,39 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
+        boolean didDBNameChange = false;
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        String dbName = sp.getString(getString(R.string.pref_key_database), null);
+        String dbOld = mDBName;
+        String dbNew = dbName;
+        if (mDBName == null) {
+            didDBNameChange = true;
+            mDBName = dbName;
+        } else if (dbName != null && dbName.trim().length() > 0 && !dbName.equals(mDBName)) {
+            didDBNameChange = true;
+            mDBName = dbName;
+        }
+
+        if (!didDBNameChange) {
+            Log.i(TAG, "No name change, no need to recreate recyclerview");
+            return;
+        }
+
+        Log.i(TAG, "DB name has changed, old: " + dbOld + ", new: " + dbNew);
+        Constants.set_FPATH_BASE(mDBName);
+        Log.i(TAG, "Settings reporting database: " + mDBName);
+        Log.i(TAG, "Using database: " + Constants.FPATH_BASE);
+
+
         mRecyclerView = (RecyclerView)findViewById(R.id.my_recycler_view);
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mUserEmail = getIntent().getStringExtra(Constants.USER_EMAIL);
+        mQuizList.clear();
 
-        Firebase ref = new Firebase(Constants.FPATH_SETS);
+        Log.i(TAG, "FPathBase is: " + Constants.FPATH_BASE);
+        Log.i(TAG, "Will now retrieve sets from URL: " + Constants.FPATH_SETS());
+        Firebase ref = new Firebase(Constants.FPATH_SETS());
         Query qref = ref.orderByKey();
         qref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -126,13 +179,16 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity {
                 // Data is ordered by increasing height, so we want the first entry
                 Log.e(TAG, "Result count: " + qs.getChildrenCount());
                 Iterator<DataSnapshot> iter = qs.getChildren().iterator();
+                if (mQuizList.contains("All")) {
+                    mQuizList.remove("All");
+                }
                 while (iter.hasNext()) {
                     QLSet s = (QLSet) iter.next().getValue(QLSet.class);
                     if (!mQuizList.contains(s.title)) {
                         mQuizList.add(s.title);
                     }
                 }
-                mQuizList.add(0, "All");
+                mQuizList.add(0, Constants.SETNAME_ALL);
                 String[] sa = mQuizList.toArray(new String[mQuizList.size()]);
                 mAdapter = new MyAdapter(DisplaySetListNVRVActivity.this, mUserEmail, sa);
                 Log.i(TAG, "Adapter now ready to set: " + sa.length);
@@ -211,5 +267,30 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity {
         public int getItemCount() {
             return mDataset.length;
         }
+    }
+
+    @Override
+    public void onConnected(Bundle r) {
+        Log.e(TAG, "onConnected");
+        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
+                new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(Status status) {
+                        Intent i = new Intent(DisplaySetListNVRVActivity.this, SignInActivity.class);
+                        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivity(i);
+                        finish();
+                    }
+                });
+    }
+
+    @Override
+    public void onConnectionSuspended(int r) {
+        Log.e(TAG, "ERROR, onConnectionSuspended");
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.e(TAG, "ERROR, onConnectionFailed");
     }
 }

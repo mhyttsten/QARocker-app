@@ -11,7 +11,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".activities.SignInActivity"
+            android:name=".screens.SignInActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -20,28 +20,34 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.CardFlipActivity"
+            android:name=".screens.CardFlipActivity"
             android:label="@string/title_card_flip"
-            android:parentActivityName=".activities.DisplaySetListNVRVActivity"
+            android:parentActivityName=".screens.DisplaySetListNVRVActivity"
             android:theme="@style/DarkTheme" />
             <!--<meta-data-->
                 <!--android:name="android.support.PARENT_ACTIVITY"-->
                 <!--android:value=".activities.DisplaySetListNVRVActivity" />-->
         <!--</activity>-->
         <activity
-            android:name=".activities.display_set_stats.RehearsalFinishedActivity"
+            android:name=".screens.display_set_stats.RehearsalFinishedActivity"
             android:label="@string/title_activity_rehearsal_finished"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppThemeDark.NoActionBar" />
+        <!--android:theme="@style/AppTheme.NoActionBar" />-->
         <activity
-            android:name=".activities.DisplaySetListNVRVActivity"
+            android:name=".screens.DisplaySetListNVRVActivity"
             android:label="@string/title_activity_display_set_list_nvrv"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
-            android:name=".activities.settings.SettingsActivity"
+            android:name=".screens.settings.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".activities.DisplaySetListNVRVActivity" />
-            <!--<meta-data-->
+            android:parentActivityName=".screens.DisplaySetListNVRVActivity" />
+        <!-- ATTENTION: This was auto-generated to add Google Play services to your project for
+             App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information. -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+        <!--<meta-data-->
                 <!--android:name="android.support.PARENT_ACTIVITY"-->
                 <!--android:value=".activities.DisplaySetListNVRVActivity" />-->
         <!--</activity>-->
