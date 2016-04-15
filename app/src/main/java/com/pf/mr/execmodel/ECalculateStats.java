@@ -1,11 +1,14 @@
 package com.pf.mr.execmodel;
 
+import android.util.Log;
+
 import com.pf.mr.datamodel.StatTermForUser;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ECalculateStats {
+    private static final String TAG = ECalculateStats.class.getSimpleName();
 
     private List<StatTermForUser> mStats = new ArrayList<>();
 
@@ -15,13 +18,22 @@ public class ECalculateStats {
     public int mCL4;
     public int mCL5;
     public int mCTotal;
-    public int mPercent;
+    public int mPercentFinished;
 
     public void addAll(List<StatTermForUser> l) {
+        Log.i(TAG, "Adding a total of: " + l.size() + " stats");
         mStats.addAll(l);
+        mCL1 = 0;
+        mCL2 = 0;
+        mCL3 = 0;
+        mCL4 = 0;
+        mCL5 = 0;
+        mCTotal = 0;
+        mPercentFinished = 0;
+        calculate();
     }
 
-    public String calculate() {
+    private String calculate() {
         mCTotal = mStats.size();
         int pScore = 0;
 
@@ -48,14 +60,14 @@ public class ECalculateStats {
                     pScore += 8;
                     break;
                 default:
-                    return "Unexpected Leitner box: " + t.leitnerBox;
+                    Log.e(TAG, "Unexpected Leitner box: " + t.leitnerBox);
             }
         }
 
         int maxScore = mCTotal * 8;
         double d = ((double)pScore) / ((double)maxScore);
         d *= 100;
-        mPercent = (int)d;
+        mPercentFinished = (int)d;
         return null;
     }
 

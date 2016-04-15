@@ -9,12 +9,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * Created by magnushyttsten on 3/25/16.
- */
 public class ESet {
 
-    public QLSet mQ;
+    public QLSet mSet;
+    public List<StatTermForUser> mStatsAll = new ArrayList<>();
 
     private List<ETerm> mETermsDue = new ArrayList<>();
     private List<ETerm> mETermsNew = new ArrayList<>();
@@ -22,10 +20,11 @@ public class ESet {
     private List<ETerm> mETermsCRound = new ArrayList<>();
     private List<ETerm> mETermsCRound_PushedBack = new ArrayList<>();
 
-    public ESet(QLSet q, String email, List<StatTermForUser> statTerms) {
-        mQ = q;
+    public ESet(QLSet set, String email, List<StatTermForUser> statTerms) {
+        mSet = set;
+        mStatsAll.addAll(statTerms);
 
-        List<ETerm> al = ETerm.getQAs(q.id, email, mQ.terms, statTerms);
+        List<ETerm> al = ETerm.getQAs(mSet.id, email, mSet.terms, statTerms);
         Collections.sort(al, new Comparator<ETerm>() {
             @Override
             public int compare(ETerm lhs, ETerm rhs) {
@@ -124,7 +123,7 @@ public class ESet {
 
     public void reportAnswer(ETerm eterm) {
         long timeNow = System.currentTimeMillis();
-        if (eterm.getStat().nextRehearsalTime < timeNow) {
+        if (!eterm.isDoneForToday()) {
             mETermsCRound_PushedBack.add(eterm);
         }
     }

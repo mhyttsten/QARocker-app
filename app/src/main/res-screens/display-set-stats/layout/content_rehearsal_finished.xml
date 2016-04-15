@@ -6,8 +6,17 @@
     android:orientation="vertical"
     tools:context=".legacy.MainActivity">
 
-    <fragment android:name="com.pf.mr.screens.five_vertical_bars.FiveVerticalBarsFragment"
-        android:id="@+id/fvb_fragment"
+    <!--<fragment android:name="com.pf.mr.screens.five_vertical_bars.FiveVerticalBarsFragment"-->
+        <!--android:id="@+id/fvb_fragment"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="0dp"-->
+        <!--android:layout_weight="1"-->
+        <!--android:paddingBottom="32dp"-->
+        <!--android:paddingTop="16dp"-->
+        <!--/>-->
+
+    <FrameLayout
+        android:id="@+id/fvb_fragment_layout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"

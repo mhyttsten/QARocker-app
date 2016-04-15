@@ -2,6 +2,7 @@ package com.pf.mr.screens.display_set_stats;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -16,59 +17,50 @@ import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.pf.mr.R;
+import com.pf.mr.execmodel.ECalculateStats;
+import com.pf.mr.execmodel.ESet;
 import com.pf.mr.screens.five_vertical_bars.FiveVerticalBarsFragment;
 import com.pf.mr.utils.Constants;
+import com.pf.mr.utils.Misc;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RehearsalFinishedActivity extends AppCompatActivity {
     private static final String TAG = RehearsalFinishedActivity.class.getSimpleName();
 
-    private FiveVerticalBarsFragment fvbFragment;
     private String mUserEmail;
-    private String mSetId;
+    private String mSetName;
 
-    private View mMainView;
-    private View mFragmentView;
     private FiveVerticalBarsFragment mFVMFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.i(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rehearsal_finished);
 
         mUserEmail = getIntent().getStringExtra(Constants.USER_EMAIL);
-        mSetId = getIntent().getStringExtra(Intent.EXTRA_TITLE);
-        mFVMFragment = (FiveVerticalBarsFragment)getSupportFragmentManager().findFragmentById(R.id.fvb_fragment);
+        mSetName = getIntent().getStringExtra(Constants.SETNAME);
+        Log.i(TAG, "...email:   " + mUserEmail);
+        Log.i(TAG, "...setName: " + mSetName);
 
-        Log.i(TAG, "onCreate");
-
-
-
-
-
-        mFragmentView = (View)findViewById(R.id.fvb_fragment);
-        Log.i(TAG, "Fragment view class: " + mFragmentView.getClass().getName());
-        ViewTreeObserver vtObserver2 = mFragmentView.getViewTreeObserver();
-        vtObserver2.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                mFVMFragment.adjustBarHeights(mFragmentView);
-                Log.i(TAG, "onGlobalLayout.fragmentView, width: " + mFragmentView.getWidth() + ", height: " + mFragmentView.getHeight());
-            }
-        });
-
-
-
+        mFVMFragment = new FiveVerticalBarsFragment();
+        mFVMFragment.setData(mUserEmail, mSetName);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fvb_fragment_layout, mFVMFragment)
+                .commit();
     }
 
     public void clickToMain(View v) {
         CheckBox cb = (CheckBox) findViewById(R.id.checkBox);
-
         if (cb.isChecked()) {
             String setId = getIntent().getStringExtra(Constants.SETID);
             String userEmail = getIntent().getStringExtra(Constants.USER_EMAIL);
             Firebase forUser = new Firebase(Constants.FPATH_STATFORUSER())
-                    .child(setId)
-                    .child(Constants.EMAIL_TO_FIREBASEPATH(userEmail));
+                    .child(String.valueOf(mFVMFragment.mESet.mSet.id))
+                    .child(Constants.EMAIL_TO_FIREBASEPATH(mUserEmail));
             forUser.setValue(null);
         }
         finish();

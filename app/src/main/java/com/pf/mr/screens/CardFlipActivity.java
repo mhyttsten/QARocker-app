@@ -104,9 +104,7 @@ public class CardFlipActivity extends Activity
     private boolean mShowingBack = false;
 
     private String mUserEmail;
-
     private String mSetName;
-    private QLSet mQLSet;
     private ESet mESet;
     private ETerm mCurrentETerm;
     private GestureDetectorCompat mDetector;
@@ -126,11 +124,34 @@ public class CardFlipActivity extends Activity
         Log.i(TAG, "User email: " + mUserEmail);
         mSetName = getIntent().getStringExtra(Constants.SETNAME);
 
-        getTermData();
+        getESetAndStartCircus();
     }
 
 
-    public void getTermData() {
+    public void getESetAndStartCircus() {
+
+        final List<ESet> esets = new ArrayList<>();
+        Misc.getESets(mUserEmail, mSetName, esets, new Runnable() {
+            @Override
+            public void run() {
+                if (esets.size() == 0) {
+                    Log.e(TAG, "*** Could not find a set named: " + mSetName);
+                } else if (esets.size() > 1) {
+                    Log.e(TAG, "*** Found multiple results from name: " + mSetName);
+                } else {
+                    ESet eset = esets.get(0);
+                    if (!eset.mSet.title.equals(mSetName)) {
+                        Log.e(TAG, "*** Retrieved set: " + eset.mSet.title
+                                + ", expected: " + mSetName);
+                    } else {
+                        mESet = eset;
+                        startNextRound();
+                    }
+                }
+            }
+        });
+
+/*
         Firebase ref = new Firebase(Constants.FPATH_SETS());
         Query qref = ref.orderByKey();
         qref.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -173,13 +194,13 @@ public class CardFlipActivity extends Activity
                     terms.add(stfu);
                 }
                 mESet = new ESet(mQLSet, mUserEmail, terms);
-                startNextRound();
             }
 
             @Override
             public void onCancelled(FirebaseError firebaseError) {
             }
         });
+        */
     }
 
 
@@ -193,7 +214,7 @@ public class CardFlipActivity extends Activity
         boolean hasNext = mESet.hasNext();
         if (!hasNext) {
             Intent i = Misc.getIntentWithUserId(this, RehearsalFinishedActivity.class, mUserEmail);
-            i.putExtra(Constants.SETID, String.valueOf(mQLSet.id));
+            i.putExtra(Constants.SETNAME, String.valueOf(mESet.mSet.title));
             startActivity(i);
             finish();
             return;

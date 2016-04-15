@@ -27,9 +27,8 @@ public class ETerm {
 
     private QLTerm mQA;
     private StatTermForUser mStat;
-    private int mLastAnswer;
-
-    private boolean hasLeitnerBeenAdjusted = false;
+    private boolean mIsDoneForToday;
+    private boolean mHasLeitnerBeenAdjusted;
 
     private long mStartTimer;
 
@@ -62,16 +61,13 @@ public class ETerm {
     }
 
     public StatTermForUser getStat() { return mStat; }
-
-    public void setQuestionDisplayedTimer() {
-        mStartTimer = System.currentTimeMillis();
-    }
+    public boolean isDoneForToday() { return mIsDoneForToday; }
+    public void setQuestionDisplayedTimer() { mStartTimer = System.currentTimeMillis(); }
 
     public void setAnswerGiven(int answer) {
         long endTimer = System.currentTimeMillis();
         long duration = endTimer - mStartTimer;
 
-        mLastAnswer = answer;
         int leitnerBoxBefore = mStat.leitnerBox;
         int leitnerBoxAfter = leitnerBoxBefore;
 
@@ -79,9 +75,9 @@ public class ETerm {
 
         // Calculate new average time
         long newTotalTime = mStat.answerTimeTotal + duration;
-        long newAverageTime =
-                newTotalTime /
-                ((mStat.acountNoClue + mStat.acountKnewIt + mStat.acountNailedIt) + 1);
+        long totalQs = mStat.acountNoClue + mStat.acountKnewIt + mStat.acountNailedIt + 1;
+        long newAverageTime = newTotalTime / totalQs;
+        Log.i(TAG, "totalTime: " + newTotalTime + ", averageTime: " + newAverageTime + ", qs: " + totalQs);
 
         long newNoClueCount = mStat.acountNoClue;
         long newKnewItCount = mStat.acountKnewIt;
@@ -90,22 +86,29 @@ public class ETerm {
         switch (answer) {
             case AS_NO_CLUE:
                 newNoClueCount++;
-                if (!hasLeitnerBeenAdjusted) {
+                if (!mHasLeitnerBeenAdjusted) {
                     if (leitnerBoxBefore > StatTermForUser.LB_1) {
                         leitnerBoxAfter--;
                     } else if (leitnerBoxBefore == StatTermForUser.LB_0) {
                         leitnerBoxAfter++;
                     }
+                    mHasLeitnerBeenAdjusted = true;
                 }
+                // If we answered wrong, we rehearse as quickly as possible regardless of box
                 newNextRehearsalTime = -1;
                 break;
             case AS_KNEW_IT:
-                if (!hasLeitnerBeenAdjusted) {
-                    if (leitnerBoxBefore == StatTermForUser.LB_0) {
-                        leitnerBoxAfter = StatTermForUser.LB_2;
+                newKnewItCount++;
+                mIsDoneForToday = true;
+                if (!mHasLeitnerBeenAdjusted) {
+                    if (leitnerBoxBefore == StatTermForUser.LB_0
+                            || leitnerBoxAfter == StatTermForUser.LB_1) {
+                        leitnerBoxAfter = StatTermForUser.LB_3;
                     } else {
                         leitnerBoxAfter++;
                     }
+                    newNextRehearsalTime = getNewRehearsalTime(leitnerBoxAfter);
+                    mHasLeitnerBeenAdjusted = true;
                 } else {
                     // No matter how bad it's been going, a KNEW_IT always brings us to L2
                     if (leitnerBoxAfter == StatTermForUser.LB_0
@@ -113,25 +116,30 @@ public class ETerm {
                         leitnerBoxAfter = StatTermForUser.LB_2;
                     }
                 }
-                newKnewItCount++;
-                newNextRehearsalTime = getNewRehearsalTime(leitnerBoxAfter);
                 break;
             case AS_NAILED_IT:
-                if (!hasLeitnerBeenAdjusted) {
-                    if (leitnerBoxBefore == StatTermForUser.LB_0) {
+                newNailedItCount++;
+                mIsDoneForToday = true;
+                if (!mHasLeitnerBeenAdjusted) {
+                    if (leitnerBoxBefore == StatTermForUser.LB_0
+                            || leitnerBoxBefore == StatTermForUser.LB_1) {
                         leitnerBoxAfter = StatTermForUser.LB_4;
                     } else {
-                        leitnerBoxAfter++;
+                        if (leitnerBoxBefore < StatTermForUser.LB_5) {
+                            leitnerBoxAfter++;
+                        }
                     }
+                    mHasLeitnerBeenAdjusted = true;
+                    newNextRehearsalTime = getNewRehearsalTime(leitnerBoxAfter);
+                } else {
+                    // Nailed it after an error, push to L2
+                    newNextRehearsalTime = getNewRehearsalTime(StatTermForUser.LB_2);
                 }
-                newNailedItCount++;
-                newNextRehearsalTime = getNewRehearsalTime(leitnerBoxAfter);
                 break;
             default:
                 Log.e(TAG, "Unexpected answer type: " + answer);
                 break;
         }
-        hasLeitnerBeenAdjusted = true;
 
         mStat.updateData(
                 leitnerBoxAfter,
@@ -160,7 +168,6 @@ public class ETerm {
     }
 
     private static long getNewRehearsalTime(long leitnerBox) {
-
         if (leitnerBox == StatTermForUser.LB_1) {
             return Constants.NEXT_REHEARSAL_TIME_LB1();
         }
