@@ -59,10 +59,6 @@ public class FiveVerticalBarsFragment extends Fragment {
         Misc.getESets(mRFA.mUserEmail, mRFA.mSetName, esets, new Runnable() {
             @Override
             public void run() {
-                if (esets.size() != 1) {
-                    Log.e(TAG, "*** Error, expected 1 result from getting sets");
-                    return;
-                }
                 mESets = esets;
                 Log.i(TAG, "Firebase data received");
                 mHasData = true;

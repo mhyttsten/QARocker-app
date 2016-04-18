@@ -19,6 +19,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.firebase.client.DataSnapshot;
@@ -36,6 +37,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.pf.mr.R;
 import com.pf.mr.execmodel.ESet;
+import com.pf.mr.screens.display_set_stats.RehearsalFinishedActivity;
 import com.pf.mr.screens.settings.SettingsActivity;
 import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.utils.Constants;
@@ -194,18 +196,6 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
         });
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-    }
-
-
     public static class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         private Activity mParent;
         private String mEmail;
@@ -216,11 +206,19 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
         // you provide access to all the views for a data item in a view holder
         public static class ViewHolder extends RecyclerView.ViewHolder {
             // each data item is just a string in this case
+            public View mView;
             public TextView mTextView;
+            public Button mButton;
 
-            public ViewHolder(TextView v) {
+            public ViewHolder(View v, TextView tv, Button b) {
                 super(v);
-                mTextView = v;
+                mView = v;
+                mTextView = tv;
+                mButton = b;
+            }
+
+            public void setText(String t) {
+                mTextView.setText(t);
             }
         }
 
@@ -238,13 +236,15 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
             View v = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.rv_viewitem, parent, false);
             // set the view's size, margins, paddings and layout parameters
-            TextView tv = (TextView) v.findViewById(R.id.rv_viewitem_text);
+            View lv = v.findViewById(R.id.rv_viewitem);
+            final TextView tv = (TextView)lv.findViewById(R.id.rv_viewitem_tv);
             tv.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    TextView tw = (TextView) v;
-                    String name = tw.getText().toString();
-                    Log.i(TAG, "I was clicked, with text: " + name);
+                    // TextView tv = (TextView) v.findViewById(R.id.rv_viewitem_tv);
+                    TextView mtv = (TextView)v;
+                    String name = mtv.getText().toString();
+                    Log.i(TAG, "TextView, I was clicked, with text: " + name);
 
                     // Launch the sample, associated with this list position.
                     Intent i = new Intent(mParent, CardFlipActivity.class);
@@ -253,7 +253,23 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
                     mParent.startActivity(i);
                 }
             });
-            ViewHolder vh = new ViewHolder(tv);
+            Button btn = (Button)lv.findViewById(R.id.rv_viewitem_btn);
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String name = tv.getText().toString();
+                    Log.i(TAG, "Button, I was clicked, with text: " + name);
+
+                    // Launch the sample, associated with this list position.
+                    Intent i = new Intent(mParent, RehearsalFinishedActivity.class);
+                    i.putExtra(Constants.SETNAME, name);
+                    i.putExtra(Constants.USER_EMAIL, mEmail);
+                    mParent.startActivity(i);
+                }
+            });
+
+
+            ViewHolder vh = new ViewHolder(lv, tv, btn);
             return vh;
         }
 

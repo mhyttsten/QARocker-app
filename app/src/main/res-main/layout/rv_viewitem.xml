@@ -1,44 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--android:background="@android:color/black"-->
 
-<TextView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/rv_viewitem_text"
-    android:background="@drawable/set_pressed"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp"
-    android:gravity="center_vertical"
-    android:textStyle="bold"
-    android:textAppearance="?android:textAppearanceLarge"
-    android:paddingLeft="32dp"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content" />
-
-<!--<LinearLayout-->
+<!--<TextView-->
     <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
+    <!--android:id="@+id/rv_viewitem_text"-->
+    <!--android:background="@drawable/set_pressed"-->
     <!--android:paddingTop="8dp"-->
     <!--android:paddingBottom="8dp"-->
-    <!--android:orientation="horizontal"-->
     <!--android:gravity="center_vertical"-->
+    <!--android:textStyle="bold"-->
+    <!--android:textAppearance="?android:textAppearanceLarge"-->
     <!--android:paddingLeft="32dp"-->
     <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content" >-->
+    <!--android:layout_height="wrap_content" />-->
 
-    <!--<TextView-->
-        <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
-        <!--android:id="@+id/rv_viewitem_text2"-->
-        <!--android:background="@drawable/set_pressed"-->
-        <!--android:textStyle="bold"-->
-        <!--android:textAppearance="?android:textAppearanceLarge"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content" />-->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rv_viewitem"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingLeft="32dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
 
-    <!--<TextView-->
-        <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
-        <!--android:textStyle="bold"-->
-        <!--android:textAppearance="?android:textAppearanceLarge"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:text="Hello"/>-->
+    <TextView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/rv_viewitem_tv"
+        android:background="@drawable/set_pressed"
+        android:layout_gravity="center_vertical"
+        android:textStyle="bold"
+        android:textAppearance="?android:textAppearanceLarge"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content" />
 
-<!--</LinearLayout>-->
+    <Button
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/rv_viewitem_btn"
+        android:textStyle="bold"
+        android:layout_gravity="right"
+        android:textAppearance="?android:textAppearanceButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stats"/>
+
+</LinearLayout>
