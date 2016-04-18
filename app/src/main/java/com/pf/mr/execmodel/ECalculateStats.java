@@ -12,17 +12,21 @@ public class ECalculateStats {
 
     private List<StatTermForUser> mStats = new ArrayList<>();
 
+    public int mCL0;
     public int mCL1;
     public int mCL2;
     public int mCL3;
     public int mCL4;
     public int mCL5;
     public int mCTotal;
+    public int mDue;
     public int mPercentFinished;
 
     public void addAll(List<StatTermForUser> l) {
         Log.i(TAG, "Adding a total of: " + l.size() + " stats");
         mStats.addAll(l);
+        mDue = 0;
+        mCL0 = 0;
         mCL1 = 0;
         mCL2 = 0;
         mCL3 = 0;
@@ -34,11 +38,21 @@ public class ECalculateStats {
     }
 
     private String calculate() {
+        long timeNow = System.currentTimeMillis();
+
         mCTotal = mStats.size();
         int pScore = 0;
 
         for (StatTermForUser t: mStats) {
+            if (timeNow > t.nextRehearsalTime) {
+                mDue++;
+            }
+
             switch (t.leitnerBox) {
+                case StatTermForUser.LB_0:
+                    mCL0++;
+                    pScore += 0;
+                    break;
                 case StatTermForUser.LB_1:
                     mCL1++;
                     pScore += 0;
@@ -69,11 +83,5 @@ public class ECalculateStats {
         d *= 100;
         mPercentFinished = (int)d;
         return null;
-    }
-
-    public int getPixels(int availPixels, int count) {
-        double d =  ((double)count) / ((double)mCTotal);
-        double rd = ((double)availPixels) * d;
-        return (int)rd;
     }
 }

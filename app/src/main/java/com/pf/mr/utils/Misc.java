@@ -96,9 +96,11 @@ public class Misc {
                 Iterator<DataSnapshot> iter = qs.getChildren().iterator();
                 while (iter.hasNext()) {
                     QLSet s = (QLSet) iter.next().getValue(QLSet.class);
+                    Log.i(TAG, "Fetched set: " + s.title + " from Firebase");
                     if (setName == null
-                            || setName.toLowerCase().equals(Constants.SETNAME_ALL)
+                            || setName.toLowerCase().equals(Constants.SETNAME_ALL.toLowerCase())
                             || setName.equals(s.title)) {
+                        Log.i(TAG, "...adding it to result list");
                         qlSets.add(s);
                     }
                 }
@@ -116,9 +118,9 @@ public class Misc {
     }
 
     private void getESetsIter(final String email,
-                                    final List<QLSet> work,
-                                    final List<ESet> result,
-                                    final Runnable resultNotifier) {
+                              final List<QLSet> work,
+                              final List<ESet> result,
+                              final Runnable resultNotifier) {
         final QLSet qlset = work.remove(0);
 
         Firebase ref = new Firebase(Constants.FPATH_STATFORUSER())

@@ -26,21 +26,24 @@ public class ETerm {
     public static final int AS_NAILED_IT = 3;
 
     private QLTerm mQA;
+    private String mSetTitle;
     private StatTermForUser mStat;
     private boolean mIsDoneForToday;
     private boolean mHasLeitnerBeenAdjusted;
 
     private long mStartTimer;
 
-    public ETerm(QLTerm qa, StatTermForUser stat) {
+    public ETerm(String setTitle, QLTerm qa, StatTermForUser stat) {
         mQA = qa;
         mStat = stat;
+        mSetTitle = setTitle;
     }
 
     public String getQ() { return mQA.term; }
     public String getA() { return mQA.definition; }
 
     public static List<ETerm> getQAs(long pSetId,
+                                     String pSetTitle,
                                      String pEmail,
                                      List<QLTerm> eQAs,
                                      List<StatTermForUser> stats) {
@@ -55,7 +58,7 @@ public class ETerm {
                     }
                 }
             }
-            al.add(new ETerm(eQA, stat));
+            al.add(new ETerm(pSetTitle, eQA, stat));
         }
         return al;
     }
@@ -90,12 +93,12 @@ public class ETerm {
                     if (leitnerBoxBefore > StatTermForUser.LB_1) {
                         leitnerBoxAfter--;
                     } else if (leitnerBoxBefore == StatTermForUser.LB_0) {
-                        leitnerBoxAfter++;
+                        leitnerBoxAfter = StatTermForUser.LB_1;
                     }
                     mHasLeitnerBeenAdjusted = true;
                 }
                 // If we answered wrong, we rehearse as quickly as possible regardless of box
-                newNextRehearsalTime = -1;
+                newNextRehearsalTime = Constants.NEXT_REHEARSAL_TIME_LB1();
                 break;
             case AS_KNEW_IT:
                 newKnewItCount++;
@@ -103,18 +106,12 @@ public class ETerm {
                 if (!mHasLeitnerBeenAdjusted) {
                     if (leitnerBoxBefore == StatTermForUser.LB_0
                             || leitnerBoxAfter == StatTermForUser.LB_1) {
-                        leitnerBoxAfter = StatTermForUser.LB_3;
+                        leitnerBoxAfter = StatTermForUser.LB_2;
                     } else {
                         leitnerBoxAfter++;
                     }
                     newNextRehearsalTime = getNewRehearsalTime(leitnerBoxAfter);
                     mHasLeitnerBeenAdjusted = true;
-                } else {
-                    // No matter how bad it's been going, a KNEW_IT always brings us to L2
-                    if (leitnerBoxAfter == StatTermForUser.LB_0
-                            || leitnerBoxAfter == StatTermForUser.LB_1) {
-                        leitnerBoxAfter = StatTermForUser.LB_2;
-                    }
                 }
                 break;
             case AS_NAILED_IT:

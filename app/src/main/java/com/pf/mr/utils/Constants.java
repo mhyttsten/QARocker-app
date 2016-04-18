@@ -39,15 +39,19 @@ public class Constants {
 
     // Rehearsal parameters
     public static final int TERMS_PER_ROUND = 5;
-    public static final long REHEARSAL_TIME_LB2 =   1L * 12L * 3600L * 1000L;
-    public static final long REHEARSAL_TIME_LB3 =   7L * 24L * 3600L * 1000L;
-    public static final long REHEARSAL_TIME_LB4 =  28L * 24L * 3600L * 1000L;
-    public static final long REHEARSAL_TIME_LB5 = 365L * 24L * 3600L * 1000L;
-    public static final long NEXT_REHEARSAL_TIME_LB1() { return -1; }
+    public static final long REHEARSAL_TIME_LB1 =  600L * 1000L;
+    public static final long REHEARSAL_TIME_LB2 =  1200L * 1000L;
+    public static final long REHEARSAL_TIME_LB3 =  1800L * 1000L;
+    public static final long REHEARSAL_TIME_LB4 =  2400L * 1000L;
+    public static final long REHEARSAL_TIME_LB5 =  3000L * 1000L;
+//    public static final long REHEARSAL_TIME_LB1 =   1L * 12L * 3600L * 1000L;
+//    public static final long REHEARSAL_TIME_LB2 =   3L * 24L * 3600L * 1000L;
+//    public static final long REHEARSAL_TIME_LB3 =   7L * 24L * 3600L * 1000L;
+//    public static final long REHEARSAL_TIME_LB4 =  28L * 24L * 3600L * 1000L;
+//    public static final long REHEARSAL_TIME_LB5 = 365L * 24L * 3600L * 1000L;
+    public static final long NEXT_REHEARSAL_TIME_LB1() { return System.currentTimeMillis() + REHEARSAL_TIME_LB1; };
     public static final long NEXT_REHEARSAL_TIME_LB2() { return System.currentTimeMillis() + REHEARSAL_TIME_LB2; };
     public static final long NEXT_REHEARSAL_TIME_LB3() { return System.currentTimeMillis() + REHEARSAL_TIME_LB3; };
     public static final long NEXT_REHEARSAL_TIME_LB4() { return System.currentTimeMillis() + REHEARSAL_TIME_LB4; };
     public static final long NEXT_REHEARSAL_TIME_LB5() { return System.currentTimeMillis() + REHEARSAL_TIME_LB5; };
-
-
 }

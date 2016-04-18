@@ -54,14 +54,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * Demonstrates a "card-flip" animation using custom fragment transactions ({@link
- * android.app.FragmentTransaction#setCustomAnimations(int, int)}).
- *
- * <p>This sample shows an "info" action bar button that shows the back of a "card", rotating the
- * front of the card out and the back of the card in. The reverse animation is played when the user
- * presses the system Back button or the "photo" action bar button.</p>
- */
 public class CardFlipActivity extends Activity
         implements FragmentManager.OnBackStackChangedListener,
         GestureDetector.OnDoubleTapListener,
@@ -105,6 +97,7 @@ public class CardFlipActivity extends Activity
 
     private String mUserEmail;
     private String mSetName;
+
     private ESet mESet;
     private ETerm mCurrentETerm;
     private GestureDetectorCompat mDetector;
@@ -131,76 +124,22 @@ public class CardFlipActivity extends Activity
     public void getESetAndStartCircus() {
 
         final List<ESet> esets = new ArrayList<>();
+        Log.e(TAG, "Now starting circus with set: " + mSetName);
         Misc.getESets(mUserEmail, mSetName, esets, new Runnable() {
             @Override
             public void run() {
                 if (esets.size() == 0) {
                     Log.e(TAG, "*** Could not find a set named: " + mSetName);
-                } else if (esets.size() > 1) {
-                    Log.e(TAG, "*** Found multiple results from name: " + mSetName);
                 } else {
-                    ESet eset = esets.get(0);
-                    if (!eset.mSet.title.equals(mSetName)) {
-                        Log.e(TAG, "*** Retrieved set: " + eset.mSet.title
-                                + ", expected: " + mSetName);
+                    if (esets.size() == 1) {
+                        mESet = esets.get(0);
                     } else {
-                        mESet = eset;
-                        startNextRound();
+                        mESet = new ESet(esets);
                     }
+                    startNextRound();
                 }
             }
         });
-
-/*
-        Firebase ref = new Firebase(Constants.FPATH_SETS());
-        Query qref = ref.orderByKey();
-        qref.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot qs) {
-                // Data is ordered by increasing height, so we want the first entry
-                Log.e(TAG, "Result count: " + qs.getChildrenCount());
-                Iterator<DataSnapshot> iter = qs.getChildren().iterator();
-                while (iter.hasNext()) {
-                    QLSet s = (QLSet) iter.next().getValue(QLSet.class);
-                    if (s.title.equals(mSetName)) {
-                        mQLSet = s;
-                    }
-                }
-                getTermStats();
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-            }
-        });
-    }
-
-    public void getTermStats() {
-        Firebase ref = new Firebase(Constants.FPATH_STATFORUSER())
-                .child(String.valueOf(mQLSet.id))
-                .child(Constants.EMAIL_TO_FIREBASEPATH(mUserEmail));
-        Query qref = ref.orderByKey();
-        qref.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot qs) {
-                List<StatTermForUser> terms = null;
-                // Data is ordered by increasing height, so we want the first entry
-                Iterator<DataSnapshot> iter = qs.getChildren().iterator();
-                while (iter.hasNext()) {
-                    StatTermForUser stfu = iter.next().getValue(StatTermForUser.class);
-                    if (terms == null) {
-                        terms = new ArrayList<StatTermForUser>();
-                    }
-                    terms.add(stfu);
-                }
-                mESet = new ESet(mQLSet, mUserEmail, terms);
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-            }
-        });
-        */
     }
 
 
@@ -214,7 +153,7 @@ public class CardFlipActivity extends Activity
         boolean hasNext = mESet.hasNext();
         if (!hasNext) {
             Intent i = Misc.getIntentWithUserId(this, RehearsalFinishedActivity.class, mUserEmail);
-            i.putExtra(Constants.SETNAME, String.valueOf(mESet.mSet.title));
+            i.putExtra(Constants.SETNAME, String.valueOf(mESet.getSetTitle()));
             startActivity(i);
             finish();
             return;

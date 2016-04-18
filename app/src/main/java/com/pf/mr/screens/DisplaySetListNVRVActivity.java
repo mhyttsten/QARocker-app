@@ -184,7 +184,7 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
                 mQuizList.clear();
                 mQuizList.add(Constants.SETNAME_ALL);
                 for (ESet e: esets) {
-                    mQuizList.add(e.mSet.title);
+                    mQuizList.add(e.getSetTitle());
                 }
                 String[] sa = mQuizList.toArray(new String[mQuizList.size()]);
                 mAdapter = new MyAdapter(DisplaySetListNVRVActivity.this, mUserEmail, sa);
@@ -192,35 +192,6 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
                 mRecyclerView.setAdapter(mAdapter);
             }
         });
-
-//        Firebase ref = new Firebase(Constants.FPATH_SETS());
-//        Query qref = ref.orderByKey();
-//        qref.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot qs) {
-//                // Data is ordered by increasing height, so we want the first entry
-//                Log.e(TAG, "Result count: " + qs.getChildrenCount());
-//                Iterator<DataSnapshot> iter = qs.getChildren().iterator();
-//                if (mQuizList.contains("All")) {
-//                    mQuizList.remove("All");
-//                }
-//                while (iter.hasNext()) {
-//                    QLSet s = (QLSet) iter.next().getValue(QLSet.class);
-//                    if (!mQuizList.contains(s.title)) {
-//                        mQuizList.add(s.title);
-//                    }
-//                }
-//                mQuizList.add(0, Constants.SETNAME_ALL);
-//                String[] sa = mQuizList.toArray(new String[mQuizList.size()]);
-//                mAdapter = new MyAdapter(DisplaySetListNVRVActivity.this, mUserEmail, sa);
-//                Log.i(TAG, "Adapter now ready to set: " + sa.length);
-//                mRecyclerView.setAdapter(mAdapter);
-//            }
-//
-//            @Override
-//            public void onCancelled(FirebaseError firebaseError) {
-//            }
-//        });
     }
 
     @Override
@@ -276,12 +247,10 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
                     Log.i(TAG, "I was clicked, with text: " + name);
 
                     // Launch the sample, associated with this list position.
-                    if (!name.equals("All")) {
-                        Intent i = new Intent(mParent, CardFlipActivity.class);
-                        i.putExtra(Constants.SETNAME, name);
-                        i.putExtra(Constants.USER_EMAIL, mEmail);
-                        mParent.startActivity(i);
-                    }
+                    Intent i = new Intent(mParent, CardFlipActivity.class);
+                    i.putExtra(Constants.SETNAME, name);
+                    i.putExtra(Constants.USER_EMAIL, mEmail);
+                    mParent.startActivity(i);
                 }
             });
             ViewHolder vh = new ViewHolder(tv);

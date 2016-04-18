@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.CheckBox;
+import android.widget.TextView;
 
 import com.firebase.client.Firebase;
 import com.google.android.gms.appindexing.Action;
@@ -29,8 +30,8 @@ import java.util.List;
 public class RehearsalFinishedActivity extends AppCompatActivity {
     private static final String TAG = RehearsalFinishedActivity.class.getSimpleName();
 
-    private String mUserEmail;
-    private String mSetName;
+    public String mUserEmail;
+    public String mSetName;
 
     private FiveVerticalBarsFragment mFVMFragment;
 
@@ -46,7 +47,7 @@ public class RehearsalFinishedActivity extends AppCompatActivity {
         Log.i(TAG, "...setName: " + mSetName);
 
         mFVMFragment = new FiveVerticalBarsFragment();
-        mFVMFragment.setData(mUserEmail, mSetName);
+        mFVMFragment.setParentActivity(this);
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fvb_fragment_layout, mFVMFragment)
@@ -56,14 +57,28 @@ public class RehearsalFinishedActivity extends AppCompatActivity {
     public void clickToMain(View v) {
         CheckBox cb = (CheckBox) findViewById(R.id.checkBox);
         if (cb.isChecked()) {
-            String setId = getIntent().getStringExtra(Constants.SETID);
-            String userEmail = getIntent().getStringExtra(Constants.USER_EMAIL);
-            Firebase forUser = new Firebase(Constants.FPATH_STATFORUSER())
-                    .child(String.valueOf(mFVMFragment.mESet.mSet.id))
-                    .child(Constants.EMAIL_TO_FIREBASEPATH(mUserEmail));
-            forUser.setValue(null);
+            for (ESet s: mFVMFragment.mESets) {
+                Firebase forUser = new Firebase(Constants.FPATH_STATFORUSER())
+                        .child(String.valueOf(s.getSetId()))
+                        .child(Constants.EMAIL_TO_FIREBASEPATH(mUserEmail));
+                forUser.setValue(null);
+            }
         }
         finish();
+    }
+
+    public void updateUI(ECalculateStats ecs) {
+        TextView tv1 = (TextView)findViewById(R.id.stats_completion);
+        tv1.setText(String.valueOf(ecs.mPercentFinished) + "%");
+
+        TextView tv2 = (TextView)findViewById(R.id.stats_due);
+        tv2.setText(String.valueOf(ecs.mDue));
+
+        TextView tv3 = (TextView)findViewById(R.id.stats_new);
+        tv3.setText(String.valueOf(ecs.mCL0));
+
+        TextView tv4 = (TextView)findViewById(R.id.stats_total);
+        tv4.setText(String.valueOf(ecs.mCTotal));
     }
 
 }

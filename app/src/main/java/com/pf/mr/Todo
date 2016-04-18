@@ -1,11 +1,13 @@
 // Quizlet.com: gutesting / planetm00nshot
 
-// TODO: [P1] Add rest of TextView stats
 // TODO: [P1] Enable statistics from main screen (text + button)
-// TODO: [P1] Add All
 // TODO: [P1] Add "Good Job" after each cycle
+// TODO: [P1] Add Stats toolbar on CardFlip to show how well you're doing
+
 
 // --------------
+
+// TODO: [P1] Change main window title
 
 // TODO: Setname "All" should be from resources file
 // TODO: Move all hardcoded things to strings.xml

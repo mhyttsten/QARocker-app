@@ -1,18 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--android:background="@android:color/black"-->
 
-<!--<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"-->
-    <!--android:orientation="vertical"-->
-    <!--android:paddingTop="16dp">-->
-
-    <!--<View-->
-        <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="2dp"-->
-        <!--android:background="@android:color/darker_gray"/>-->
-
 <TextView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/rv_viewitem_text"
@@ -26,5 +14,31 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content" />
 
-<!--</LinearLayout>-->
+<!--<LinearLayout-->
+    <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
+    <!--android:paddingTop="8dp"-->
+    <!--android:paddingBottom="8dp"-->
+    <!--android:orientation="horizontal"-->
+    <!--android:gravity="center_vertical"-->
+    <!--android:paddingLeft="32dp"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content" >-->
 
+    <!--<TextView-->
+        <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
+        <!--android:id="@+id/rv_viewitem_text2"-->
+        <!--android:background="@drawable/set_pressed"-->
+        <!--android:textStyle="bold"-->
+        <!--android:textAppearance="?android:textAppearanceLarge"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content" />-->
+
+    <!--<TextView-->
+        <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
+        <!--android:textStyle="bold"-->
+        <!--android:textAppearance="?android:textAppearanceLarge"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="Hello"/>-->
+
+<!--</LinearLayout>-->
