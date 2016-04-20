@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.view.GestureDetectorCompat;
@@ -41,6 +42,9 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.pf.mr.screens.display_set_stats.RehearsalFinishedActivity;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.utils.Constants;
@@ -55,35 +59,8 @@ import java.util.Iterator;
 import java.util.List;
 
 public class CardFlipActivity extends Activity
-        implements FragmentManager.OnBackStackChangedListener,
-        GestureDetector.OnDoubleTapListener,
-        GestureDetector.OnGestureListener {
-    public static final String TAG = CardFlipActivity.class.getSimpleName();
-
-    public boolean onDown(MotionEvent me) { return true; }
-    public boolean onFling(MotionEvent me1, MotionEvent me2, float vx, float vy) { return false; }
-    public void onLongPress(MotionEvent me) { }
-    public boolean onScroll(MotionEvent me1, MotionEvent me2, float dx, float dy) { return false; }
-    public void onShowPress(MotionEvent me) { }
-    public boolean onSingleTapUp(MotionEvent me) {
-        Log.i(TAG, "onSingleTapUp");
-        Toast.makeText(this, "onSingleTapUp", Toast.LENGTH_SHORT).show();
-        return true;
-    }
-
-    public boolean onTouchEvent(MotionEvent me) {
-        mDetector.onTouchEvent(me);
-        Log.i(TAG, "HERE");
-        return super.onTouchEvent(me);
-    }
-
-    public boolean onDoubleTap(MotionEvent me) { return false; }
-    public boolean onDoubleTapEvent(MotionEvent me) { return false; }
-    public boolean onSingleTapConfirmed(MotionEvent me) {
-        Log.i(TAG, "onSingleTapConfirmed");
-        Toast.makeText(this, "onSingleTapConfirmed", Toast.LENGTH_SHORT).show();
-        return false;
-    }
+        implements FragmentManager.OnBackStackChangedListener {
+    private static final String TAG = CardFlipActivity.class.getSimpleName();
 
     /**
      * A handler object, used for deferring UI operations.
@@ -102,6 +79,17 @@ public class CardFlipActivity extends Activity
     private ETerm mCurrentETerm;
     private GestureDetectorCompat mDetector;
 
+    private TextView mTitle;
+    private TextView mStats;
+
+    private int mDoneCount;
+    private int mTodoCount;
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -110,14 +98,18 @@ public class CardFlipActivity extends Activity
         Firebase.setAndroidContext(this);
 
         Log.i(TAG, "Now setting GestureDetector");
-        mDetector = new GestureDetectorCompat(this, this);
-        mDetector.setOnDoubleTapListener(this);
+
+        mTitle = (TextView)findViewById(R.id.test_title_id);
+        mStats = (TextView)findViewById(R.id.test_data_id);
 
         mUserEmail = getIntent().getStringExtra(Constants.USER_EMAIL);
         Log.i(TAG, "User email: " + mUserEmail);
         mSetName = getIntent().getStringExtra(Constants.SETNAME);
 
         getESetAndStartCircus();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
 
@@ -134,8 +126,9 @@ public class CardFlipActivity extends Activity
                     if (esets.size() == 1) {
                         mESet = esets.get(0);
                     } else {
-                        mESet = new ESet(esets);
+                        mESet = new ESet(Constants.SETNAME_ALL, esets);
                     }
+                    mTodoCount = mESet.getTodoCount();
                     startNextRound();
                 }
             }
@@ -159,6 +152,9 @@ public class CardFlipActivity extends Activity
             return;
         }
         mCurrentETerm = mESet.next();
+        mTitle.setText(mCurrentETerm.mSetTitle);
+        mStats.setText("[" + mDoneCount + " / " + mTodoCount  + "]");
+
         CardFrontFragment cardFront = new CardFrontFragment();
         mCurrentETerm.setQuestionDisplayedTimer();
         cardFront.setQ(mCurrentETerm.getQ());
@@ -228,24 +224,24 @@ public class CardFlipActivity extends Activity
         getFragmentManager()
                 .beginTransaction()
 
-                // Replace the default fragment animations with animator resources representing
-                // rotations when switching to the back of the card, as well as animator
-                // resources representing rotations when flipping back to the front (e.g. when
-                // the system Back button is pressed).
+                        // Replace the default fragment animations with animator resources representing
+                        // rotations when switching to the back of the card, as well as animator
+                        // resources representing rotations when flipping back to the front (e.g. when
+                        // the system Back button is pressed).
                 .setCustomAnimations(
                         R.animator.card_flip_right_in, R.animator.card_flip_right_out,
                         R.animator.card_flip_left_in, R.animator.card_flip_left_out)
 
-                // Replace any fragments currently in the container view with a fragment
-                // representing the next page (indicated by the just-incremented currentPage
-                // variable).
+                        // Replace any fragments currently in the container view with a fragment
+                        // representing the next page (indicated by the just-incremented currentPage
+                        // variable).
                 .replace(R.id.container, cardBack)
 
-                // Add this transaction to the back stack, allowing users to press Back
-                // to get to the front of the card.
+                        // Add this transaction to the back stack, allowing users to press Back
+                        // to get to the front of the card.
                 .addToBackStack(null)
 
-                // Commit the transaction.
+                        // Commit the transaction.
                 .commit();
 
         // Defer an invalidation of the options menu (on modern devices, the action bar). This
@@ -278,6 +274,8 @@ public class CardFlipActivity extends Activity
         Log.i(TAG, "clickKnewIt");
         mCurrentETerm.setAnswerGiven(ETerm.AS_KNEW_IT);
         mESet.reportAnswer(mCurrentETerm);
+        mDoneCount++;
+        mTodoCount--;
         startNextRound();
     }
 
@@ -285,7 +283,19 @@ public class CardFlipActivity extends Activity
         Log.i(TAG, "clickNailedIt");
         mCurrentETerm.setAnswerGiven(ETerm.AS_NAILED_IT);
         mESet.reportAnswer(mCurrentETerm);
+        mDoneCount++;
+        mTodoCount--;
         startNextRound();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
     }
 
     /**
@@ -294,15 +304,18 @@ public class CardFlipActivity extends Activity
     public static class CardFrontFragment extends Fragment {
         private String mQ;
 
-        public CardFrontFragment() {}
+        public CardFrontFragment() {
+        }
 
-        public void setQ(String q) { mQ = q; }
+        public void setQ(String q) {
+            mQ = q;
+        }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
+                                 Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.fragment_card_front, container, false);
-            TextView tw = (TextView)v.findViewById(android.R.id.text1);
+            TextView tw = (TextView) v.findViewById(android.R.id.text1);
             tw.setText(mQ);
 
             v.setOnClickListener(new View.OnClickListener() {
@@ -321,16 +334,19 @@ public class CardFlipActivity extends Activity
     public static class CardBackFragment extends Fragment {
         private String mA;
 
-        public CardBackFragment() { }
+        public CardBackFragment() {
+        }
 
-        public void setA(String a) { mA = a; }
+        public void setA(String a) {
+            mA = a;
+        }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
+                                 Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.fragment_card_back, container, false);
 
-            TextView tw = (TextView)v.findViewById(android.R.id.text1);
+            TextView tw = (TextView) v.findViewById(android.R.id.text1);
             tw.setScroller(new Scroller(getActivity()));
             //tw.setMaxLines(1);
             tw.setVerticalScrollBarEnabled(true);

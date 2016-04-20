@@ -37,6 +37,9 @@ public class Constants {
         return emod;
     }
 
+    public static final int COLOR_RED = 0xCC0000;
+    public static final int COLOR_GREEN = 0x00CC00;
+
     // Rehearsal parameters
     public static final int TERMS_PER_ROUND = 5;
     public static final long REHEARSAL_TIME_LB1 =  600L * 1000L;

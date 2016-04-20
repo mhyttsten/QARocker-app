@@ -3,6 +3,7 @@ package com.pf.mr.execmodel;
 import android.util.Log;
 
 import com.pf.mr.datamodel.StatTermForUser;
+import com.pf.mr.utils.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +11,41 @@ import java.util.List;
 public class ECalculateStats {
     private static final String TAG = ECalculateStats.class.getSimpleName();
 
-    private List<StatTermForUser> mStats = new ArrayList<>();
+    private String mSetName;
+
+//    public ECalculateStats(String setName) {
+//        mSetname = setName;
+//    }
+
+    public ECalculateStats(List<ESet> sets) {
+        if (sets != null || sets.size() > 0) {
+            if (sets.size() == 1) {
+                mSetName = sets.get(0).getSetTitle();
+            } else {
+                mSetName = Constants.SETNAME_ALL;
+            }
+        }
+        for (ESet set: sets) {
+            mTerms.addAll(set.mETermsAll);
+        }
+    }
+
+    public ECalculateStats(ESet set) {
+        mSetName = set.getSetTitle();
+        mTerms.addAll(set.mETermsAll);
+    }
+
+    public static String getSetName(List<ESet> sets) {
+        if (sets == null || sets.size() == 0) {
+            return null;
+        }
+        if (sets.size() == 1) {
+            return sets.get(0).getSetTitle();
+        }
+        return Constants.SETNAME_ALL;
+    }
+
+    private List<ETerm> mTerms = new ArrayList<>();
 
     public int mCL0;
     public int mCL1;
@@ -22,33 +57,20 @@ public class ECalculateStats {
     public int mDue;
     public int mPercentFinished;
 
-    public void addAll(List<StatTermForUser> l) {
-        Log.i(TAG, "Adding a total of: " + l.size() + " stats");
-        mStats.addAll(l);
-        mDue = 0;
-        mCL0 = 0;
-        mCL1 = 0;
-        mCL2 = 0;
-        mCL3 = 0;
-        mCL4 = 0;
-        mCL5 = 0;
-        mCTotal = 0;
-        mPercentFinished = 0;
-        calculate();
-    }
-
-    private String calculate() {
+    public void calculate() {
         long timeNow = System.currentTimeMillis();
 
-        mCTotal = mStats.size();
+        mCTotal = mTerms.size();
         int pScore = 0;
 
-        for (StatTermForUser t: mStats) {
-            if (timeNow > t.nextRehearsalTime) {
+        for (ETerm t: mTerms) {
+            if (timeNow > t.getStat().nextRehearsalTime) {
+                mDue++;
+            } else if (t.getStat().leitnerBox == StatTermForUser.LB_0) {
                 mDue++;
             }
 
-            switch (t.leitnerBox) {
+            switch (t.getStat().leitnerBox) {
                 case StatTermForUser.LB_0:
                     mCL0++;
                     pScore += 0;
@@ -74,7 +96,7 @@ public class ECalculateStats {
                     pScore += 8;
                     break;
                 default:
-                    Log.e(TAG, "Unexpected Leitner box: " + t.leitnerBox);
+                    Log.e(TAG, "Unexpected Leitner box: " + t.getStat().leitnerBox);
             }
         }
 
@@ -82,6 +104,17 @@ public class ECalculateStats {
         double d = ((double)pScore) / ((double)maxScore);
         d *= 100;
         mPercentFinished = (int)d;
-        return null;
+
+        Log.i(TAG, "Calculated all for set: " + mSetName
+                + "\n...mStats.size: " + mTerms.size()
+                + "\n...mPercentFinished: " + mPercentFinished
+                + "\n...mTotal: " + mCTotal
+                + "\n...mDue: " + mDue
+                + "\n...mCL0: " + mCL0
+                + "\n...mCL1: " + mCL1
+                + "\n...mCL2: " + mCL2
+                + "\n...mCL3: " + mCL3
+                + "\n...mCL4: " + mCL4
+                + "\n...mCL5: " + mCL5);
     }
 }

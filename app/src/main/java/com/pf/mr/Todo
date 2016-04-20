@@ -1,10 +1,10 @@
 // Quizlet.com: gutesting / planetm00nshot
 
-// TODO: [P1] Print statistics on main screen (%completed, #todo)
-// TODO: [P1] Add Stats toolbar on CardFlip: Stats today & Tutorial
+
 
 // --------------
 
+// TODO: Memory Leaks - you need to deregister everything (Firebase listeners, etc) in onPause
 // TODO: [P1] Change main window title
 
 // TODO: Setname "All" should be from resources file

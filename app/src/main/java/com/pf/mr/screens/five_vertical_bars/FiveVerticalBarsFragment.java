@@ -56,11 +56,21 @@ public class FiveVerticalBarsFragment extends Fragment {
         });
 
         final List<ESet> esets = new ArrayList<>();
+        if (mRFA == null) {
+            Log.e(TAG, "mRFA is null");
+        } else {
+            if (mRFA.mUserEmail == null) {
+                Log.e(TAG, "mRFA.mUserEmail is null");
+            }
+            if (mRFA.mSetName == null) {
+                Log.e(TAG, "mRFA.mSetName is null");
+            }
+        }
         Misc.getESets(mRFA.mUserEmail, mRFA.mSetName, esets, new Runnable() {
             @Override
             public void run() {
                 mESets = esets;
-                Log.i(TAG, "Firebase data received");
+                Log.i(TAG, "Firebase data received, number of sets: " + esets.size());
                 mHasData = true;
                 adjustBarHeights(mESets);
             }
@@ -78,15 +88,13 @@ public class FiveVerticalBarsFragment extends Fragment {
     }
 
     public void adjustBarHeightsImpl(List<ESet> sets) {
-        Log.i(TAG, "setBarHeight");
+        Log.i(TAG, "setBarHeight, sets.size: " + sets.size());
 
-        mECS = new ECalculateStats();
-        for (ESet set: sets) {
-            mECS.addAll(set.mStatsAll);
-        }
+        mECS = new ECalculateStats(sets);
+        mECS.calculate();
 
         float totalF = mECS.mCTotal;
-        float c1ratio = (float)mECS.mCL1 / totalF;
+        float c1ratio = (float)(mECS.mCL1 + mECS.mCL0) / totalF;
         float c2ratio = (float)mECS.mCL2 / totalF;
         float c3ratio = (float)mECS.mCL3 / totalF;
         float c4ratio = (float)mECS.mCL4 / totalF;
@@ -104,7 +112,7 @@ public class FiveVerticalBarsFragment extends Fragment {
         final TextView v4 = (TextView)mView.findViewById(R.id.fvb_col4);
         final TextView v5 = (TextView) mView.findViewById(R.id.fvb_col5);
 
-        v1.setText(String.valueOf(mECS.mCL1));
+        v1.setText(String.valueOf(mECS.mCL1 + mECS.mCL0));
         v2.setText(String.valueOf(mECS.mCL2));
         v3.setText(String.valueOf(mECS.mCL3));
         v4.setText(String.valueOf(mECS.mCL4));

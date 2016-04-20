@@ -36,6 +36,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.pf.mr.R;
+import com.pf.mr.execmodel.ECalculateStats;
 import com.pf.mr.execmodel.ESet;
 import com.pf.mr.screens.display_set_stats.RehearsalFinishedActivity;
 import com.pf.mr.screens.settings.SettingsActivity;
@@ -61,7 +62,7 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
-    private List<String> mQuizList = new ArrayList<>();
+    private List<ESet> mQuizList = new ArrayList<>();
     private String mUserEmail;
 
     @Override
@@ -184,11 +185,13 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
             @Override
             public void run() {
                 mQuizList.clear();
-                mQuizList.add(Constants.SETNAME_ALL);
+//                ESet esetAll = new ESet(Constants.SETNAME_ALL, esets);
+//                mQuizList.add(esetAll);
                 for (ESet e: esets) {
-                    mQuizList.add(e.getSetTitle());
+                    Log.i(TAG, "Now adding: " + e.getSetTitle() + " with stats.size: " + e.mETermsAll.size());
+                    mQuizList.add(e);
                 }
-                String[] sa = mQuizList.toArray(new String[mQuizList.size()]);
+                ESet[] sa = mQuizList.toArray(new ESet[mQuizList.size()]);
                 mAdapter = new MyAdapter(DisplaySetListNVRVActivity.this, mUserEmail, sa);
                 Log.i(TAG, "Adapter now ready to set: " + sa.length);
                 mRecyclerView.setAdapter(mAdapter);
@@ -199,7 +202,7 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
     public static class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         private Activity mParent;
         private String mEmail;
-        private String[] mDataset;
+        private ESet[] mDataset;
 
         // Provide a reference to the views for each data item
         // Complex data items may need more than one view per item, and
@@ -223,7 +226,7 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
         }
 
         // Provide a suitable constructor (depends on the kind of dataset)
-        public MyAdapter(Activity parent, String email, String[] myDataset) {
+        public MyAdapter(Activity parent, String email, ESet[] myDataset) {
             mParent = parent;
             mEmail = email;
             mDataset = myDataset;
@@ -278,7 +281,18 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
         public void onBindViewHolder(ViewHolder holder, int position) {
             // - get element from your dataset at this position
             // - replace the contents of the view with that element
-            holder.mTextView.setText(mDataset[position]);
+            ESet eset = mDataset[position];
+            holder.mTextView.setText(eset.getSetTitle());
+
+            ECalculateStats ecs = new ECalculateStats(eset);
+            Log.i(TAG, "For " + eset.getSetTitle() + ", creating ECS with stats size: " + eset.mETermsAll.size());
+            ecs.calculate();
+//            if (ecs.mDue > 0) {
+//                holder.mButton.setTextColor(Constants.COLOR_RED);
+//            } else {
+//                holder.mButton.setTextColor(Constants.COLOR_GREEN);
+//            }
+            holder.mButton.setText(String.valueOf(ecs.mDue) + " DUE / @" + String.valueOf(ecs.mPercentFinished)+"%");
         }
 
         // Return the size of your dataset (invoked by the layout manager)

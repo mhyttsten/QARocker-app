@@ -17,11 +17,11 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/rv_viewitem"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp"
+    android:paddingTop="2dp"
+    android:paddingBottom="2dp"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingLeft="32dp"
+    android:paddingLeft="16dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content" >
 

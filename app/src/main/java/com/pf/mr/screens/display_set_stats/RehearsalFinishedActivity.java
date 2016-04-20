@@ -34,6 +34,7 @@ public class RehearsalFinishedActivity extends AppCompatActivity {
     public String mSetName;
 
     private FiveVerticalBarsFragment mFVMFragment;
+    private static String FVM_FRAGMENT_TAG = "FVMFragment";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,11 +47,15 @@ public class RehearsalFinishedActivity extends AppCompatActivity {
         Log.i(TAG, "...email:   " + mUserEmail);
         Log.i(TAG, "...setName: " + mSetName);
 
-        mFVMFragment = new FiveVerticalBarsFragment();
+        mFVMFragment = (FiveVerticalBarsFragment)getSupportFragmentManager().findFragmentByTag(FVM_FRAGMENT_TAG);
+        if (mFVMFragment == null) {
+            mFVMFragment = new FiveVerticalBarsFragment();
+        }
+
         mFVMFragment.setParentActivity(this);
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.fvb_fragment_layout, mFVMFragment)
+                .replace(R.id.fvb_fragment_layout, mFVMFragment, FVM_FRAGMENT_TAG)
                 .commit();
     }
 

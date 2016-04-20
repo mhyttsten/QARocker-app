@@ -12,46 +12,61 @@ import java.util.Comparator;
 import java.util.List;
 
 public class ESet {
+    private static final String TAG = ESet.class.getSimpleName();
 
     private QLSet mSet;
+    private String mSetTitle;
 
-    public List<StatTermForUser> mStatsAll = new ArrayList<>();
-
+    public List<ETerm> mETermsAll = new ArrayList<>();
     private List<ETerm> mETermsDue = new ArrayList<>();
+    private List<ETerm> mETermsNotDue = new ArrayList<>();
     private List<ETerm> mETermsNew = new ArrayList<>();
 
     private List<ETerm> mETermsCRound = new ArrayList<>();
     private List<ETerm> mETermsCRound_PushedBack = new ArrayList<>();
 
-    private static final String TAG = ESet.class.getSimpleName();
+    public int getTodoCount() {
+        return mETermsDue.size()
+                + mETermsNew.size() + mETermsCRound.size() + mETermsCRound_PushedBack.size();
+    }
 
-    public ESet(List<ESet> esets) {
+    public ESet(String title, List<ESet> esets) {
+        mSetTitle = title;
         // This method will be destructive to esets elements
 
         // Get all due and sort in next rehearsal time order
         for (ESet set: esets) {
             mETermsDue.addAll(set.mETermsDue);
+            mETermsNotDue.addAll(set.mETermsNotDue);
         }
         sortETermList(mETermsDue);
 
         // Get all new, 1 from each set
+        List<List<ETerm>> esetsNew = new ArrayList<>();
+        for (ESet set: esets) {
+            List<ETerm> nterm = new ArrayList<ETerm>();
+            nterm.addAll(set.mETermsNew);
+            esetsNew.add(nterm);
+        }
         boolean found = true;
         while (found) {
             found = false;
-            for (ESet set: esets) {
-                if (set.mETermsNew.size() > 0) {
-                    mETermsNew.add(set.mETermsNew.remove(0));
+            for (List<ETerm> terms: esetsNew) {
+                if (terms.size() > 0) {
+                    mETermsNew.add(terms.remove(0));
                     found = true;
                 }
             }
         }
+        populateAll();
     }
 
     public ESet(QLSet set, String email, List<StatTermForUser> statTerms) {
+        Log.i(TAG, "Creating primitive set: " + set.title + ", stats.size: " + statTerms.size());
         mSet = set;
-        mStatsAll.addAll(statTerms);
 
         List<ETerm> qAs = ETerm.getQAs(set.id, set.title, email, set.terms, statTerms);
+        Log.i(TAG, "...all stats.size: " + qAs.size());
         sortETermList(qAs);
 
         List<ETerm> lb0 = new ArrayList<>();
@@ -71,14 +86,27 @@ public class ESet {
 
         // Remove any entries that are not due
         long timeNow = System.currentTimeMillis();
-        while (mETermsDue.size() > 0) {
-            ETerm eterm = mETermsDue.get(0);
+        int index = 0;
+        while (index < mETermsDue.size()) {
+            ETerm eterm = mETermsDue.get(index);
             if (eterm.getStat().nextRehearsalTime > timeNow) {
-                mETermsDue.remove(0);
+                mETermsNotDue.add(mETermsDue.remove(index));
             } else {
-                break;
+                index++;
             }
         }
+        for (ETerm eterm: mETermsDue) {
+        }
+        populateAll();
+
+        Log.i(TAG, "...mETermsNew.size: " + mETermsNew.size());
+        Log.i(TAG, "...mETermsDue.size: " + mETermsDue.size());
+        Log.i(TAG, "...mETermsNotDue.size: " + mETermsNotDue.size());
+    }
+    private void populateAll() {
+        mETermsAll.addAll(mETermsNew);
+        mETermsAll.addAll(mETermsDue);
+        mETermsAll.addAll(mETermsNotDue);
     }
 
     /**
@@ -173,11 +201,12 @@ public class ESet {
     /**
      */
     public String getSetTitle() {
-        if (mSet == null) {
+        if (mSet == null && mSetTitle == null) {
             Log.wtf(TAG, "Calling getSetTitle on a composite ESet",
                     new Exception("Calling getSetTitle on a composite ESet"));
         }
-        return mSet.title;
+
+        return mSet != null ? mSet.title : mSetTitle;
     }
 
 

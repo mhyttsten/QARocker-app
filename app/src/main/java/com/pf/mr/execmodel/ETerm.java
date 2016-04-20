@@ -26,7 +26,7 @@ public class ETerm {
     public static final int AS_NAILED_IT = 3;
 
     private QLTerm mQA;
-    private String mSetTitle;
+    public String mSetTitle;
     private StatTermForUser mStat;
     private boolean mIsDoneForToday;
     private boolean mHasLeitnerBeenAdjusted;
