@@ -4,11 +4,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.firebase.client.DataSnapshot;
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.Query;
-import com.firebase.client.ValueEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Logger;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.execmodel.ESet;
@@ -23,10 +25,9 @@ public class Misc {
 
     public static Intent getIntentWithUserId(Context context, Class c, String userId) {
         Intent i = new Intent(context, c);
-        i.putExtra(Constants.USER_EMAIL, userId);
+        i.putExtra(Constants.USER_TOKEN, userId);
         return i;
     }
-
 
     public static String toString(Object o) throws Exception {
         IndentWriter iw = new IndentWriter();
@@ -70,33 +71,62 @@ public class Misc {
         iw.println("}");
     }
 
+    static boolean hasSetLogLevel = false;
+    public static DatabaseReference getDatabaseReference(String url) {
+        FirebaseDatabase fd = FirebaseDatabase.getInstance();
+        if (!hasSetLogLevel) {
+//            fd.setLogLevel(Logger.Level.DEBUG);
+            hasSetLogLevel = true;
+        }
+        DatabaseReference dr = fd.getReferenceFromUrl(url);
+        return dr;
+    }
+
     /**
      *
      */
-    public static void getESets(final String email,
+    public static void getESets(final String userToken,
                              final String setName,
                              final List<ESet> eSetsResult,
                              final Runnable resultNotifier) {
-        new Misc().getESetsImpl(email, setName, eSetsResult, resultNotifier);
+        new Misc().getESetsImpl(userToken, setName, eSetsResult, resultNotifier);
     }
 
-    public void getESetsImpl(final String email,
+
+    private static List<String> sets = new ArrayList<>();
+    public void getESetsImpl(final String userToken,
                                final String setName,
                                final List<ESet> eSetsResult,
                                final Runnable resultNotifier) {
-        Firebase ref = new Firebase(Constants.FPATH_SETS());
+        DatabaseReference ref = Misc.getDatabaseReference(Constants.FPATH_SETS());
         Query qref = ref.orderByKey();
 
         final List<QLSet> qlSets = new ArrayList<>();
-
         qref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot qs) {
                 Log.i(TAG, "Result count: " + qs.getChildrenCount());
                 Iterator<DataSnapshot> iter = qs.getChildren().iterator();
                 while (iter.hasNext()) {
-                    QLSet s = (QLSet) iter.next().getValue(QLSet.class);
-                    Log.i(TAG, "Fetched set: " + s.title + " from Firebase");
+                    DataSnapshot dsh = iter.next();
+                    Object o = dsh.getValue();
+                    QLSet s = null;
+                    try {
+                        s = (QLSet) dsh.getValue(QLSet.class);
+                    } catch(Exception exc) {
+                        System.out.println("Error");
+                        exc.printStackTrace();
+                        throw exc;
+                    }
+                    if (s != null) {
+                        sets.add(s.title);
+                        Log.i(TAG, "Fetched set: " + s.title + " from Firebase");
+                    } else {
+                        Log.i(TAG, "Fetched NULL QLSet, previous");
+                        for (String setStr: sets) {
+                            Log.i(TAG, setStr);
+                        }
+                    }
                     if (setName == null
                             || setName.toLowerCase().equals(Constants.SETNAME_ALL.toLowerCase())
                             || setName.equals(s.title)) {
@@ -109,23 +139,23 @@ public class Misc {
                     return;
                 }
 
-                getESetsIter(email, qlSets, eSetsResult, resultNotifier);
+                getESetsIter(userToken, qlSets, eSetsResult, resultNotifier);
             }
             @Override
-            public void onCancelled(FirebaseError firebaseError) {
+            public void onCancelled(DatabaseError firebaseError) {
             }
         });
     }
 
-    private void getESetsIter(final String email,
+    private void getESetsIter(final String userToken,
                               final List<QLSet> work,
                               final List<ESet> result,
                               final Runnable resultNotifier) {
         final QLSet qlset = work.remove(0);
 
-        Firebase ref = new Firebase(Constants.FPATH_STATFORUSER())
+        DatabaseReference ref = getDatabaseReference(Constants.FPATH_STATFORUSER())
                 .child(String.valueOf(qlset.id))
-                .child(Constants.EMAIL_TO_FIREBASEPATH(email));
+                .child(userToken);
         Query qref = ref.orderByKey();
         qref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -136,17 +166,17 @@ public class Misc {
                     StatTermForUser stfu = iter.next().getValue(StatTermForUser.class);
                     terms.add(stfu);
                 }
-                ESet eset = new ESet(qlset, email, terms);
+                ESet eset = new ESet(qlset, userToken, terms);
                 result.add(eset);
                 if (work.size() == 0) {
                     resultNotifier.run();
                     return;
                 }
-                getESetsIter(email, work, result, resultNotifier);
+                getESetsIter(userToken, work, result, resultNotifier);
             }
 
             @Override
-            public void onCancelled(FirebaseError firebaseError) {
+            public void onCancelled(DatabaseError firebaseError) {
             }
         });
     }

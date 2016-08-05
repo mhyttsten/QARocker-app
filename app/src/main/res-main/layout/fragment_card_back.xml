@@ -61,15 +61,6 @@
             android:layout_height="2dp"
             android:background="@android:color/darker_gray"/>
 
-        <TextView style="?android:textAppearanceLarge"
-            android:gravity="center"
-            android:textStyle="bold"
-            android:textColor="#fff"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Did you know this?"
-            android:layout_gravity="top" />
-
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

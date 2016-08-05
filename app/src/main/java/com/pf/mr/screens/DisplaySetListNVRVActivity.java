@@ -22,19 +22,13 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.firebase.client.DataSnapshot;
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.Query;
-import com.firebase.client.ValueEventListener;
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.firebase.crash.FirebaseCrash;
 import com.pf.mr.R;
 import com.pf.mr.execmodel.ECalculateStats;
 import com.pf.mr.execmodel.ESet;
@@ -63,16 +57,15 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
     private RecyclerView.LayoutManager mLayoutManager;
 
     private List<ESet> mQuizList = new ArrayList<>();
-    private String mUserEmail;
+    private String mUserToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        FirebaseCrash.log(this.getClass().getSimpleName() + ".onCreate");
         Log.e(TAG, "DisplaySetListNVRVActivity.onCreate");
 
         setContentView(R.layout.activity_display_set_list_nvrv);
-        Firebase.setAndroidContext(this);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -175,24 +168,24 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
         mRecyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
-        mUserEmail = getIntent().getStringExtra(Constants.USER_EMAIL);
+        mUserToken = getIntent().getStringExtra(Constants.USER_TOKEN);
         mQuizList.clear();
 
         Log.i(TAG, "FPathBase is: " + Constants.FPATH_BASE);
         Log.i(TAG, "Will now retrieve sets from URL: " + Constants.FPATH_SETS());
         final List<ESet> esets = new ArrayList<>();
-        Misc.getESets(mUserEmail, null, esets, new Runnable() {
+        Misc.getESets(mUserToken, null, esets, new Runnable() {
             @Override
             public void run() {
                 mQuizList.clear();
-//                ESet esetAll = new ESet(Constants.SETNAME_ALL, esets);
-//                mQuizList.add(esetAll);
+                ESet esetAll = new ESet(Constants.SETNAME_ALL, esets);
+                mQuizList.add(esetAll);
                 for (ESet e: esets) {
                     Log.i(TAG, "Now adding: " + e.getSetTitle() + " with stats.size: " + e.mETermsAll.size());
                     mQuizList.add(e);
                 }
                 ESet[] sa = mQuizList.toArray(new ESet[mQuizList.size()]);
-                mAdapter = new MyAdapter(DisplaySetListNVRVActivity.this, mUserEmail, sa);
+                mAdapter = new MyAdapter(DisplaySetListNVRVActivity.this, mUserToken, sa);
                 Log.i(TAG, "Adapter now ready to set: " + sa.length);
                 mRecyclerView.setAdapter(mAdapter);
             }
@@ -201,7 +194,7 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
 
     public static class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         private Activity mParent;
-        private String mEmail;
+        private String mUserToken;
         private ESet[] mDataset;
 
         // Provide a reference to the views for each data item
@@ -226,9 +219,9 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
         }
 
         // Provide a suitable constructor (depends on the kind of dataset)
-        public MyAdapter(Activity parent, String email, ESet[] myDataset) {
+        public MyAdapter(Activity parent, String userToken, ESet[] myDataset) {
             mParent = parent;
-            mEmail = email;
+            mUserToken = userToken;
             mDataset = myDataset;
         }
 
@@ -252,7 +245,7 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
                     // Launch the sample, associated with this list position.
                     Intent i = new Intent(mParent, CardFlipActivity.class);
                     i.putExtra(Constants.SETNAME, name);
-                    i.putExtra(Constants.USER_EMAIL, mEmail);
+                    i.putExtra(Constants.USER_TOKEN, mUserToken);
                     mParent.startActivity(i);
                 }
             });
@@ -266,7 +259,7 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
                     // Launch the sample, associated with this list position.
                     Intent i = new Intent(mParent, RehearsalFinishedActivity.class);
                     i.putExtra(Constants.SETNAME, name);
-                    i.putExtra(Constants.USER_EMAIL, mEmail);
+                    i.putExtra(Constants.USER_TOKEN, mUserToken);
                     mParent.startActivity(i);
                 }
             });

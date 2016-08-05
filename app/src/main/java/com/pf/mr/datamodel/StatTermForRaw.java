@@ -6,7 +6,7 @@ package com.pf.mr.datamodel;
 public class StatTermForRaw {
     public long setId;
     public long termId;
-    public String email;
+    public String userToken;
 
     public long leitnerBoxBefore;
     public long leitnerBoxAfter;
@@ -18,14 +18,14 @@ public class StatTermForRaw {
     public StatTermForRaw(
             long pSetId,
             long pTermId,
-            String pEmail,
+            String pUserToken,
             long pLeitnerBoxBefore,
             long pLeitnerBoxAfter,
             long pASCorrectCode,
             long pAnswerDuration) {
         setId = pSetId;
         termId = pTermId;
-        email = pEmail;
+        userToken = pUserToken;
         leitnerBoxBefore = pLeitnerBoxBefore;
         leitnerBoxAfter = pLeitnerBoxAfter;
         asCorrectCode = pASCorrectCode;

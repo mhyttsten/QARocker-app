@@ -19,4 +19,7 @@
     <color name="green">#00CC00</color>
     <color name="blue">#0000FF</color>
 
+    <color name="grey_100">#F5F5F5</color>
+    <color name="grey_300">#E0E0E0</color>
+
 </resources>

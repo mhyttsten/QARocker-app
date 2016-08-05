@@ -29,15 +29,16 @@
         android:gravity="center"
         android:textStyle="bold"
         android:text="Title"/>
-
+    <!--
     <TextView
         android:id="@+id/test_data_id"
         android:textAppearance="?android:textAppearanceMedium"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layoutjjj_height="wrap_content"
         android:gravity="center"
         android:textStyle="bold"
         android:text="Data"/>
+        -->
 
     <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/container"

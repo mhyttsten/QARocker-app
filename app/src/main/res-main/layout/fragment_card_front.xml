@@ -37,7 +37,7 @@
         android:textStyle="bold"
         android:textColor="#fff"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:text="@string/card_front_title" />
 
 </LinearLayout>

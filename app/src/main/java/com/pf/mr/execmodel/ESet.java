@@ -30,6 +30,9 @@ public class ESet {
                 + mETermsNew.size() + mETermsCRound.size() + mETermsCRound_PushedBack.size();
     }
 
+    /**
+     * Called when creating a set that contains sets (e.g. "All")
+     */
     public ESet(String title, List<ESet> esets) {
         mSetTitle = title;
         // This method will be destructive to esets elements
@@ -61,6 +64,9 @@ public class ESet {
         populateAll();
     }
 
+    /**
+     * Called to instantiate an actual set with terms
+     */
     public ESet(QLSet set, String email, List<StatTermForUser> statTerms) {
         Log.i(TAG, "Creating primitive set: " + set.title + ", stats.size: " + statTerms.size());
         mSet = set;
@@ -71,32 +77,32 @@ public class ESet {
 
         List<ETerm> lb0 = new ArrayList<>();
         List<ETerm> lb1 = new ArrayList<>();
+        long timeNow = System.currentTimeMillis();
+        boolean first = true;
         for(ETerm e: qAs) {
+            boolean isDue = timeNow > e.getStat().nextRehearsalTime;
             if (e.getStat().leitnerBox == StatTermForUser.LB_0) {
                 lb0.add(e);
-            } else if (e.getStat().leitnerBox == StatTermForUser.LB_1) {
-                lb1.add(e);
+                if (first) {
+                    first = false;
+                    // System.out.println("###-10 Q: " + e.getQ());
+                }
             } else {
-                mETermsDue.add(e);
+                if (isDue) {
+                    if (e.getStat().leitnerBox == StatTermForUser.LB_1) {
+                        mETermsNew.add(e);
+                    } else {
+                        mETermsDue.add(e);
+                    }
+                } else {
+                    mETermsNotDue.add(e);
+                }
             }
         }
+
         // Box 1 should come before 0
-        mETermsNew.addAll(lb1);
         mETermsNew.addAll(lb0);
 
-        // Remove any entries that are not due
-        long timeNow = System.currentTimeMillis();
-        int index = 0;
-        while (index < mETermsDue.size()) {
-            ETerm eterm = mETermsDue.get(index);
-            if (eterm.getStat().nextRehearsalTime > timeNow) {
-                mETermsNotDue.add(mETermsDue.remove(index));
-            } else {
-                index++;
-            }
-        }
-        for (ETerm eterm: mETermsDue) {
-        }
         populateAll();
 
         Log.i(TAG, "...mETermsNew.size: " + mETermsNew.size());
@@ -104,14 +110,19 @@ public class ESet {
         Log.i(TAG, "...mETermsNotDue.size: " + mETermsNotDue.size());
     }
     private void populateAll() {
+//        ETerm.printSome("NEW", mETermsNew);
+//        ETerm.printSome("DUE", mETermsDue);
         mETermsAll.addAll(mETermsNew);
         mETermsAll.addAll(mETermsDue);
         mETermsAll.addAll(mETermsNotDue);
     }
 
-    /**
-     *
-     */
+    public void rescaleImages() {
+        for( ETerm e: mETermsAll) {
+            e.rescaleImages();
+        }
+    }
+
     private void refillCurrentRound() {
         assert(mETermsCRound.size() == 0);
 
@@ -186,13 +197,17 @@ public class ESet {
         Collections.sort(eterms, new Comparator<ETerm>() {
             @Override
             public int compare(ETerm lhs, ETerm rhs) {
-                if (lhs.getStat() == null) {
-                    return -1;
+                if (lhs.getStat() == null || rhs.getStat() == null) {
+                    throw new AssertionError("Unexpected: Neither LHS/RHS stat object should be null");
                 }
-                if (rhs.getStat() == null) {
+                int result = (int) (lhs.getStat().nextRehearsalTime - rhs.getStat().nextRehearsalTime);
+                if (result < 0) {
                     return -1;
+                } else if (result > 0) {
+                    return 1;
+                } else {
+                    return 0;
                 }
-                return (int) (lhs.getStat().nextRehearsalTime - rhs.getStat().nextRehearsalTime);
             }
         });
     }

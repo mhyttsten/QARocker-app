@@ -59,14 +59,14 @@ public class FiveVerticalBarsFragment extends Fragment {
         if (mRFA == null) {
             Log.e(TAG, "mRFA is null");
         } else {
-            if (mRFA.mUserEmail == null) {
-                Log.e(TAG, "mRFA.mUserEmail is null");
+            if (mRFA.mUserToken == null) {
+                Log.e(TAG, "mRFA.mUserToken is null");
             }
             if (mRFA.mSetName == null) {
                 Log.e(TAG, "mRFA.mSetName is null");
             }
         }
-        Misc.getESets(mRFA.mUserEmail, mRFA.mSetName, esets, new Runnable() {
+        Misc.getESets(mRFA.mUserToken, mRFA.mSetName, esets, new Runnable() {
             @Override
             public void run() {
                 mESets = esets;

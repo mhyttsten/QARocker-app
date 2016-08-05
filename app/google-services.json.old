@@ -1,0 +1,64 @@
+{
+  "project_info": {
+    "project_id": "memory-rocker",
+    "project_number": "1056859767842",
+    "name": "Memory Rocker"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1056859767842:android:4e710558b13bed96",
+        "client_id": "android:com.pf.mr",
+        "client_type": 1,
+        "android_client_info": {
+          "package_name": "com.pf.mr",
+          "certificate_hash": []
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1056859767842-5bu65udon2r0opqtuqgiviht1nlun2kq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pf.mr",
+            "certificate_hash": "8EF9DF9DE22B2FDEA7F2A8FD131B39B8A321F285"
+          }
+        },
+        {
+          "client_id": "1056859767842-9c5sml9mpfses7i3u9pembn1rkrahp56.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pf.mr",
+            "certificate_hash": "F99A5A4F2CB38885829C1D8E0F49870182F2840B"
+          }
+        },
+        {
+          "client_id": "1056859767842-vlghk07r1flv1gkt9ijghms656kr14q0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "cloud_messaging_service": {
+          "status": 2,
+          "apns_config": []
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "google_signin_service": {
+          "status": 2
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "client_info": [],
+  "ARTIFACT_VERSION": "1"
+}

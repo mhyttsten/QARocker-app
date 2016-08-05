@@ -8,25 +8,25 @@ import java.util.List;
 public class QLSet {
 
     public long access_type;
-    public String can_edit;
-    public String created_by;
-    public String created_date;
+    public boolean can_edit;
+    public String created_by; //x
+    public long created_date;
 
-    public QLCreator creator;
+    public QLCreator creator; //x
 
     public long creator_id;
     public String description;
-    public String display_timestamp;
+    public Object display_timestamp;
     public String editable;
-    public String has_access;
-    public String has_images;
+    public boolean has_access;
+    public boolean has_images;
     public long id;
     public String lang_definitions;
     public String lang_terms;
-    public String modified_date;
+    public long modified_date; //x
     public long password_edit;
     public long password_use;
-    public String published_date;
+    public long published_date; // was String
     public long term_count;
 
     public List<QLTerm> terms;

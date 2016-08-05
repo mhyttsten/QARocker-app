@@ -18,7 +18,7 @@ public class StatTermForUser {
 
     public long setId;
     public long termId;
-    public String email;
+    public String userToken;
 
     public int leitnerBox;
     public long nextRehearsalTime;
@@ -53,7 +53,7 @@ public class StatTermForUser {
     public StatTermForUser(
             long pSetId,
             long pTermId,
-            String pEmail,
+            String pUserToken,
             int pLeitnerBox,
             long pNextRehearsalTime,
             long pNoClueCount,
@@ -63,7 +63,7 @@ public class StatTermForUser {
             long pAnswerTimeAverage) {
         setId = pSetId;
         termId = pTermId;
-        email = pEmail;
+        userToken = pUserToken;
         leitnerBox = pLeitnerBox;
         nextRehearsalTime = pNextRehearsalTime;
         acountNoClue = pNoClueCount;

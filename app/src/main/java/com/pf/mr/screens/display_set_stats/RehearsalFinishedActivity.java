@@ -13,10 +13,7 @@ import android.view.ViewTreeObserver;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
-import com.firebase.client.Firebase;
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.firebase.database.DatabaseReference;
 import com.pf.mr.R;
 import com.pf.mr.execmodel.ECalculateStats;
 import com.pf.mr.execmodel.ESet;
@@ -24,13 +21,10 @@ import com.pf.mr.screens.five_vertical_bars.FiveVerticalBarsFragment;
 import com.pf.mr.utils.Constants;
 import com.pf.mr.utils.Misc;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class RehearsalFinishedActivity extends AppCompatActivity {
     private static final String TAG = RehearsalFinishedActivity.class.getSimpleName();
 
-    public String mUserEmail;
+    public String mUserToken;
     public String mSetName;
 
     private FiveVerticalBarsFragment mFVMFragment;
@@ -42,9 +36,9 @@ public class RehearsalFinishedActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rehearsal_finished);
 
-        mUserEmail = getIntent().getStringExtra(Constants.USER_EMAIL);
+        mUserToken = getIntent().getStringExtra(Constants.USER_TOKEN);
         mSetName = getIntent().getStringExtra(Constants.SETNAME);
-        Log.i(TAG, "...email:   " + mUserEmail);
+        Log.i(TAG, "...token:   " + mUserToken);
         Log.i(TAG, "...setName: " + mSetName);
 
         mFVMFragment = (FiveVerticalBarsFragment)getSupportFragmentManager().findFragmentByTag(FVM_FRAGMENT_TAG);
@@ -63,9 +57,9 @@ public class RehearsalFinishedActivity extends AppCompatActivity {
         CheckBox cb = (CheckBox) findViewById(R.id.checkBox);
         if (cb.isChecked()) {
             for (ESet s: mFVMFragment.mESets) {
-                Firebase forUser = new Firebase(Constants.FPATH_STATFORUSER())
+                DatabaseReference forUser = Misc.getDatabaseReference(Constants.FPATH_STATFORUSER())
                         .child(String.valueOf(s.getSetId()))
-                        .child(Constants.EMAIL_TO_FIREBASEPATH(mUserEmail));
+                        .child(mUserToken);
                 forUser.setValue(null);
             }
         }
