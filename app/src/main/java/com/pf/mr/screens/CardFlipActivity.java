@@ -1,14 +1,15 @@
 package com.pf.mr.screens;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.PersistableBundle;
-import android.support.v4.view.GestureDetectorCompat;
+//import android.support.v4.app.Fragment;
+//import android.support.v7.app.AppCompatActivity;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,6 +20,7 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.Scroller;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.pf.mr.screens.display_set_stats.RehearsalFinishedActivity;
@@ -48,8 +50,6 @@ public class CardFlipActivity extends Activity {
     private TextView mTitle;
     private TextView mStats;
 
-    /**
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -173,10 +173,23 @@ public class CardFlipActivity extends Activity {
                 .commit();
     }
 
+    private void showDialog(String s) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setMessage(s)
+                .setTitle("Stats History")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) { }
+                });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
     public void clickNoClue(View v) {
         Log.i(TAG, "clickNoClue");
         mData.mCurrentETerm.setAnswerGiven(ETerm.AS_NO_CLUE);
         mData.mESet.reportAnswer(mData.mCurrentETerm);
+        String str = "Come on... memorize it!";
+        Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
         getFragmentManager().popBackStack();
         startNextRound(true);
     }
@@ -184,9 +197,11 @@ public class CardFlipActivity extends Activity {
     public void clickKnewIt(View v) {
         Log.i(TAG, "clickKnewIt");
         mData.mCurrentETerm.setAnswerGiven(ETerm.AS_KNEW_IT);
+        showDialog(mData.mCurrentETerm.mstr.toString());
         mData.mESet.reportAnswer(mData.mCurrentETerm);
         mData.mDoneCount++;
         mData.mTodoCount--;
+        Toast.makeText(this, mData.mCurrentETerm.mRehearsalNextString, Toast.LENGTH_SHORT).show();
         getFragmentManager().popBackStack();
         startNextRound(true);
     }
@@ -194,9 +209,11 @@ public class CardFlipActivity extends Activity {
     public void clickNailedIt(View v) {
         Log.i(TAG, "clickNailedIt");
         mData.mCurrentETerm.setAnswerGiven(ETerm.AS_NAILED_IT);
+        showDialog(mData.mCurrentETerm.mstr.toString());
         mData.mESet.reportAnswer(mData.mCurrentETerm);
         mData.mDoneCount++;
         mData.mTodoCount--;
+        Toast.makeText(this, mData.mCurrentETerm.mRehearsalNextString, Toast.LENGTH_SHORT).show();
         getFragmentManager().popBackStack();
         startNextRound(true);
     }

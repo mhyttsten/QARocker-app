@@ -17,6 +17,8 @@ import com.pf.mr.execmodel.ESet;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 
@@ -179,6 +181,24 @@ public class Misc {
             public void onCancelled(DatabaseError firebaseError) {
             }
         });
+    }
+
+    public static String getNowAs_YYMMDD_HHMMSS(long time) {
+        return getAs_YYMMDD_HHMMSS(new java.util.Date().getTime());
+    }
+
+    public static String getAs_YYMMDD_HHMMSS(long time) {
+        Calendar c = new GregorianCalendar();
+        c.setTime(new java.util.Date(time));
+        int yy = c.get(Calendar.YEAR) % 100;
+        int mm = c.get(Calendar.MONTH);
+        int dd = c.get(Calendar.DAY_OF_MONTH);
+        int hh = c.get(Calendar.HOUR_OF_DAY);
+        int mi = c.get(Calendar.MINUTE);
+        int ss = c.get(Calendar.SECOND);
+        System.out.println("yy:" + yy  + ", mm:" + mm + ", dd:" + dd + ", hh:" + hh + ", mi: " + mi + ", ss: " + ss);
+        String s = String.format("%02d%02d%d %02d%02d%02d", yy, mm, dd, hh, mm, ss);
+        return s;
     }
 
 }

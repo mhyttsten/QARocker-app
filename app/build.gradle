@@ -34,8 +34,8 @@ android {
         applicationId "com.pf.mr"
         minSdkVersion 15
         targetSdkVersion 23
-        versionCode 17
-        versionName "17"
+        versionCode 23
+        versionName "23"
     }
     buildTypes {
         release {

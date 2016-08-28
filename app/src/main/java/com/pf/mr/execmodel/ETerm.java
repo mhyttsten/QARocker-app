@@ -42,13 +42,17 @@ public class ETerm {
     public static final int AS_KNEW_IT = 2;
     public static final int AS_NAILED_IT = 3;
 
-    private QLTerm mQA;
+    public QLTerm mQA;
     private List<QAElem> mQElems;
     private List<QAElem> mAElems;
     public String mSetTitle;
     public long mRank;
     private StatTermForUser mStat;
+
+    public StringBuffer mstr = new StringBuffer();
+
     private boolean mIsDoneForToday;
+    public String mRehearsalNextString;
     private boolean mHasLeitnerBeenAdjusted;
 
     private long mStartTimer;
@@ -331,113 +335,106 @@ public class ETerm {
         long endTimer = System.currentTimeMillis();
         long duration = endTimer - mStartTimer;
 
-        int leitnerBoxBefore = mStat.leitnerBox;
-        int leitnerBoxAfter = leitnerBoxBefore;
-
-        long newNextRehearsalTime = mStat.nextRehearsalTime;
-
         // Calculate new average time
-        long newTotalTime = mStat.answerTimeTotal + duration;
+        mStat.answerTimeTotal += duration;
         long totalQs = mStat.acountNoClue + mStat.acountKnewIt + mStat.acountNailedIt + 1;
-        long newAverageTime = newTotalTime / totalQs;
-        Log.i(TAG, "totalTime: " + newTotalTime + ", averageTime: " + newAverageTime + ", qs: " + totalQs);
+        mStat.answerTimeAverage = mStat.answerTimeTotal / totalQs;
+        Log.i(TAG, "totalTime: " + mStat.answerTimeTotal + ", averageTime: " + mStat.answerTimeAverage + ", qs: " + totalQs);
 
-        long newNoClueCount = mStat.acountNoClue;
-        long newKnewItCount = mStat.acountKnewIt;
-        long newNailedItCount = mStat.acountNailedIt;
-
+        String lba = String.valueOf(mHasLeitnerBeenAdjusted);
         switch (answer) {
             case AS_NO_CLUE:
-                newNoClueCount++;
+                mStat.acountNoClue++;
                 if (!mHasLeitnerBeenAdjusted) {
-                    if (leitnerBoxBefore > StatTermForUser.LB_1) {
-                        leitnerBoxAfter--;
-                    } else if (leitnerBoxBefore == StatTermForUser.LB_0) {
-                        leitnerBoxAfter = StatTermForUser.LB_1;
+                    if (mStat.leitnerBox > StatTermForUser.LB_1) {
+                        mStat.leitnerBox--;
+                    } else if (mStat.leitnerBox == StatTermForUser.LB_0) {
+                        mStat.leitnerBox = StatTermForUser.LB_1;
                     }
                     mHasLeitnerBeenAdjusted = true;
                 }
                 // If we answered wrong, we rehearse as quickly as possible regardless of box
-                newNextRehearsalTime = Constants.NEXT_REHEARSAL_TIME_LB1();
+                mStat.nextRehearsalTime = getNewRehearsalTime(StatTermForUser.LB_1);
+                mstr.append("NC, set: " + lba + ", lb: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime)
+                        + "\n...[" + mRehearsalNextString + "]\n");
                 break;
             case AS_KNEW_IT:
-                newKnewItCount++;
+                mStat.acountKnewIt++;
                 mIsDoneForToday = true;
                 if (!mHasLeitnerBeenAdjusted) {
-                    if (leitnerBoxBefore == StatTermForUser.LB_0
-                            || leitnerBoxAfter == StatTermForUser.LB_1) {
-                        leitnerBoxAfter = StatTermForUser.LB_2;
+                    if (mStat.leitnerBox == StatTermForUser.LB_0
+                            || mStat.leitnerBox == StatTermForUser.LB_1) {
+                        mStat.leitnerBox = StatTermForUser.LB_2;
                     } else {
-                        leitnerBoxAfter++;
+                        mStat.leitnerBox++;
                     }
-                    newNextRehearsalTime = getNewRehearsalTime(leitnerBoxAfter);
+                    mStat.nextRehearsalTime = getNewRehearsalTime(mStat.leitnerBox);
                     mHasLeitnerBeenAdjusted = true;
                 }
+                mstr.append("KI, set: " + lba + ", lb: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime)
+                        + "\n...[" + mRehearsalNextString + "]\n");
                 break;
             case AS_NAILED_IT:
-                newNailedItCount++;
+                mStat.acountNailedIt++;
                 mIsDoneForToday = true;
                 if (!mHasLeitnerBeenAdjusted) {
-                    if (leitnerBoxBefore == StatTermForUser.LB_0
-                            || leitnerBoxBefore == StatTermForUser.LB_1) {
-                        leitnerBoxAfter = StatTermForUser.LB_4;
+                    if (mStat.leitnerBox == StatTermForUser.LB_0
+                            || mStat.leitnerBox == StatTermForUser.LB_1) {
+                        mStat.leitnerBox = StatTermForUser.LB_3;
                     } else {
-                        if (leitnerBoxBefore < StatTermForUser.LB_5) {
-                            leitnerBoxAfter++;
+                        if (mStat.leitnerBox < StatTermForUser.LB_5) {
+                            mStat.leitnerBox++;
                         }
                     }
                     mHasLeitnerBeenAdjusted = true;
-                    newNextRehearsalTime = getNewRehearsalTime(leitnerBoxAfter);
+                    mStat.nextRehearsalTime = getNewRehearsalTime(mStat.leitnerBox);
                 } else {
                     // Nailed it after an error, push to L2
-                    newNextRehearsalTime = getNewRehearsalTime(StatTermForUser.LB_2);
+                    mStat.nextRehearsalTime = getNewRehearsalTime(StatTermForUser.LB_2);
                 }
+                mstr.append("NI, set: " + lba + ", lb: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime)
+                        + "\n...[" + mRehearsalNextString + "]\n");
                 break;
             default:
-                Log.e(TAG, "Unexpected answer type: " + answer);
-                break;
+                throw new AssertionError("Unexpected answer type: " + answer);
         }
 
-        mStat.updateData(
-                leitnerBoxAfter,
-                newNextRehearsalTime,
-                newNoClueCount, newKnewItCount, newNailedItCount,
-                newTotalTime, newAverageTime);
+        if (mIsDoneForToday) {
+            mstr.append("D, lB: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime) + "\n");
+            mStat.updateData(
+                    mStat.leitnerBox,
+                    mStat.nextRehearsalTime,
+                    mStat.acountNoClue, mStat.acountKnewIt, mStat.acountNailedIt,
+                    mStat.answerTimeTotal, mStat.answerTimeAverage);
 
-        // Store in StatForUser table
-        DatabaseReference forUser = Misc.getDatabaseReference(Constants.FPATH_STATFORUSER())
-                .child(String.valueOf(mStat.setId))
-                .child(mStat.userToken)
-                .child(String.valueOf(mStat.termId));
-        forUser.setValue(mStat);
-
-        // Store in StatForRaw table
-        StatTermForRaw statRaw = new StatTermForRaw(
-                mStat.setId, mStat.termId, mStat.userToken,
-                leitnerBoxBefore, leitnerBoxAfter,
-                answer, duration);
-        DatabaseReference forRaw = Misc.getDatabaseReference(Constants.FPATH_STATFORRAW())
-                .child(String.valueOf(mStat.setId))
-                .child(String.valueOf(mStat.termId))
-                .child(String.valueOf(mStat.userToken)
-                        + "_" + String.valueOf(System.currentTimeMillis()));
-        forRaw.setValue(statRaw);
+            // Store in StatForUser table
+            DatabaseReference forUser = Misc.getDatabaseReference(Constants.FPATH_STATFORUSER())
+                    .child(String.valueOf(mStat.setId))
+                    .child(mStat.userToken)
+                    .child(String.valueOf(mStat.termId));
+            forUser.setValue(mStat);
+        }
     }
 
-    private static long getNewRehearsalTime(long leitnerBox) {
+    private long getNewRehearsalTime(long leitnerBox) {
         if (leitnerBox == StatTermForUser.LB_1) {
+            mRehearsalNextString = Constants.REHEARSAL_TIME_LB1_STR;
             return Constants.NEXT_REHEARSAL_TIME_LB1();
         }
         if (leitnerBox == StatTermForUser.LB_2) {
+            mRehearsalNextString = Constants.REHEARSAL_TIME_LB2_STR;
             return Constants.NEXT_REHEARSAL_TIME_LB2();
         }
         if (leitnerBox == StatTermForUser.LB_3) {
+            mRehearsalNextString = Constants.REHEARSAL_TIME_LB3_STR;
             return Constants.NEXT_REHEARSAL_TIME_LB3();
         }
         if (leitnerBox == StatTermForUser.LB_4) {
+            mRehearsalNextString = Constants.REHEARSAL_TIME_LB4_STR;
             return Constants.NEXT_REHEARSAL_TIME_LB4();
         }
         if (leitnerBox == StatTermForUser.LB_5) {
+            mRehearsalNextString = Constants.REHEARSAL_TIME_LB5_STR;
             return Constants.NEXT_REHEARSAL_TIME_LB5();
         }
         return -1;

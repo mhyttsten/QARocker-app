@@ -2,9 +2,11 @@ package com.pf.mr.execmodel;
 
 import android.util.Log;
 
+import com.google.firebase.crash.FirebaseCrash;
 import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.utils.Constants;
+import com.pf.mr.utils.IndentWriter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -193,25 +195,63 @@ public class ESet {
 
     /**
      */
-    public static void sortETermList(List<ETerm> eterms) {
+    public static void sortETermList(final List<ETerm> eterms) {
+        long timeNow = System.currentTimeMillis();
+        int countNeverTested = 0;
+        for (ETerm e: eterms) {
+            if (e.getStat().nextRehearsalTime == -1) {
+                countNeverTested++;
+            }
+        }
+        countNeverTested = (countNeverTested * 10) + 5000; // 10ms spacing, with 5s margin to now
+        long timeStart = timeNow - countNeverTested;
+        for (ETerm e: eterms) {
+            if (e.getStat().nextRehearsalTime == -1) {
+                e.getStat().nextRehearsalTime = timeStart;
+                timeStart += 10; // just add 10ms
+            }
+        }
+
         Collections.sort(eterms, new Comparator<ETerm>() {
             @Override
             public int compare(ETerm lhs, ETerm rhs) {
+                int r = -1;
+                try {
+                    compareImpl(lhs, rhs);
+                } catch (IllegalArgumentException exc) {
+                    IndentWriter iw = new IndentWriter();
+                    iw.setFlowChar('.');
+                    iw.println("IllegalArgument exception when sorting terms");
+                    iw.push();
+                    printETerm(iw, "LHS: " , lhs);
+                    printETerm(iw, "RHS: " , rhs);
+                    iw.println();
+                    for (int i=0; i < eterms.size(); i++) {
+                        ETerm et = eterms.get(i);
+                        printETerm(iw, "ETerm_" + String.valueOf(i), et);
+                    }
+                    iw.pop();
+                    iw.println("Done");
+                    FirebaseCrash.log(iw.getString());
+                    throw exc;
+                }
+                return r;
+            }
+            private int compareImpl(ETerm lhs, ETerm rhs) {
                 if (lhs.getStat() == null || rhs.getStat() == null) {
                     throw new AssertionError("Unexpected: Neither LHS/RHS stat object should be null");
                 }
-                int result = (int) (lhs.getStat().nextRehearsalTime - rhs.getStat().nextRehearsalTime);
-                if (result < 0) {
-                    return -1;
-                } else if (result > 0) {
-                    return 1;
-                } else {
-                    return 0;
-                }
+                long lhsTime = lhs.getStat().nextRehearsalTime;
+                long rhsTime = rhs.getStat().nextRehearsalTime;
+                long result =  lhsTime - rhsTime;
+                return (int)result;
             }
         });
     }
 
+    private static void printETerm(IndentWriter iw, String header, ETerm et ){
+        iw.println(et.getStat().nextRehearsalTime + ", q: " + et.mQA.term);
+    }
 
     /**
      */

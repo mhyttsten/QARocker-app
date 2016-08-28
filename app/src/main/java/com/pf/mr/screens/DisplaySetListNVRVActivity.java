@@ -1,6 +1,5 @@
 package com.pf.mr.screens;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -193,7 +192,8 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
     }
 
     public static class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
-        private Activity mParent;
+        // private Activity mParent;
+        private AppCompatActivity mParent;
         private String mUserToken;
         private ESet[] mDataset;
 
@@ -219,7 +219,7 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
         }
 
         // Provide a suitable constructor (depends on the kind of dataset)
-        public MyAdapter(Activity parent, String userToken, ESet[] myDataset) {
+        public MyAdapter(AppCompatActivity parent, String userToken, ESet[] myDataset) {
             mParent = parent;
             mUserToken = userToken;
             mDataset = myDataset;
