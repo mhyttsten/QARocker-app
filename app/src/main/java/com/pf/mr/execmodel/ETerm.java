@@ -49,7 +49,7 @@ public class ETerm {
     public long mRank;
     private StatTermForUser mStat;
 
-    public StringBuffer mstr = new StringBuffer();
+    public StringBuffer mstr;
 
     private boolean mIsDoneForToday;
     public String mRehearsalNextString;
@@ -332,6 +332,11 @@ public class ETerm {
     public boolean isDoneForToday() { return mIsDoneForToday; }
 
     public void setAnswerGiven(int answer) {
+        if (mstr == null) {
+            mstr = new StringBuffer();
+            mstr.append("Before. lb: " + mStat.leitnerBox + "\n");
+        }
+
         long endTimer = System.currentTimeMillis();
         long duration = endTimer - mStartTimer;
 
@@ -355,7 +360,7 @@ public class ETerm {
                 }
                 // If we answered wrong, we rehearse as quickly as possible regardless of box
                 mStat.nextRehearsalTime = getNewRehearsalTime(StatTermForUser.LB_1);
-                mstr.append("NC, set: " + lba + ", lb: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime)
+                mstr.append("After. NC, box_adjusted: " + lba + ", lb: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime)
                         + "\n...[" + mRehearsalNextString + "]\n");
                 break;
             case AS_KNEW_IT:
@@ -371,7 +376,7 @@ public class ETerm {
                     mStat.nextRehearsalTime = getNewRehearsalTime(mStat.leitnerBox);
                     mHasLeitnerBeenAdjusted = true;
                 }
-                mstr.append("KI, set: " + lba + ", lb: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime)
+                mstr.append("After. KI, set: " + lba + ", lb: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime)
                         + "\n...[" + mRehearsalNextString + "]\n");
                 break;
             case AS_NAILED_IT:
@@ -392,7 +397,7 @@ public class ETerm {
                     // Nailed it after an error, push to L2
                     mStat.nextRehearsalTime = getNewRehearsalTime(StatTermForUser.LB_2);
                 }
-                mstr.append("NI, set: " + lba + ", lb: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime)
+                mstr.append("After. NI, set: " + lba + ", lb: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime)
                         + "\n...[" + mRehearsalNextString + "]\n");
                 break;
             default:
@@ -400,7 +405,7 @@ public class ETerm {
         }
 
         if (mIsDoneForToday) {
-            mstr.append("D, lB: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime) + "\n");
+            mstr.append("Done, lB: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime) + "\n");
             mStat.updateData(
                     mStat.leitnerBox,
                     mStat.nextRehearsalTime,
