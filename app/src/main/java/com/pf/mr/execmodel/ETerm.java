@@ -34,6 +34,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
 
+import static com.pf.mr.utils.Constants.REHEARSAL_TIME_LB1;
+
 public class ETerm {
     public static final String TAG = ETerm.class.getSimpleName();
 
@@ -48,6 +50,7 @@ public class ETerm {
     public String mSetTitle;
     public long mRank;
     private StatTermForUser mStat;
+    private boolean mIsFirstAnswer = true;
 
     public StringBuffer mstr;
 
@@ -347,21 +350,21 @@ public class ETerm {
         Log.i(TAG, "totalTime: " + mStat.answerTimeTotal + ", averageTime: " + mStat.answerTimeAverage + ", qs: " + totalQs);
 
         String lba = String.valueOf(mHasLeitnerBeenAdjusted);
+
+        if (mIsFirstAnswer) {
+            mIsFirstAnswer = false;
+
+            if (mStat.lastFailedTime > 0
+                    && ((endTimer - mStat.lastFailedTime) < Constants.REHEARSAL_TIME_LB1)) {
+                answerNoClue(lba, true);
+            } else {
+                mStat.lastFailedTime = -1;
+            }
+        }
+
         switch (answer) {
             case AS_NO_CLUE:
-                mStat.acountNoClue++;
-                if (!mHasLeitnerBeenAdjusted) {
-                    if (mStat.leitnerBox > StatTermForUser.LB_1) {
-                        mStat.leitnerBox--;
-                    } else if (mStat.leitnerBox == StatTermForUser.LB_0) {
-                        mStat.leitnerBox = StatTermForUser.LB_1;
-                    }
-                    mHasLeitnerBeenAdjusted = true;
-                }
-                // If we answered wrong, we rehearse as quickly as possible regardless of box
-                mStat.nextRehearsalTime = getNewRehearsalTime(StatTermForUser.LB_1);
-                mstr.append("After. NC, box_adjusted: " + lba + ", lb: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime)
-                        + "\n...[" + mRehearsalNextString + "]\n");
+                answerNoClue(lba, false);
                 break;
             case AS_KNEW_IT:
                 mStat.acountKnewIt++;
@@ -374,6 +377,7 @@ public class ETerm {
                         mStat.leitnerBox++;
                     }
                     mStat.nextRehearsalTime = getNewRehearsalTime(mStat.leitnerBox);
+                    mStat.lastFailedTime = System.currentTimeMillis();
                     mHasLeitnerBeenAdjusted = true;
                 }
                 mstr.append("After. KI, set: " + lba + ", lb: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime)
@@ -406,19 +410,40 @@ public class ETerm {
 
         if (mIsDoneForToday) {
             mstr.append("Done, lB: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime) + "\n");
-            mStat.updateData(
-                    mStat.leitnerBox,
-                    mStat.nextRehearsalTime,
-                    mStat.acountNoClue, mStat.acountKnewIt, mStat.acountNailedIt,
-                    mStat.answerTimeTotal, mStat.answerTimeAverage);
-
-            // Store in StatForUser table
-            DatabaseReference forUser = Misc.getDatabaseReference(Constants.FPATH_STATFORUSER())
-                    .child(String.valueOf(mStat.setId))
-                    .child(mStat.userToken)
-                    .child(String.valueOf(mStat.termId));
-            forUser.setValue(mStat);
+            mStat.lastFailedTime = -1; // We've actually came to a conclusive KNEW / NAILED
+            saveStatForUser();
         }
+    }
+
+    private void answerNoClue(String lba, boolean previousFailure) {
+        mStat.acountNoClue++;
+        if (!mHasLeitnerBeenAdjusted) {
+            if (mStat.leitnerBox > StatTermForUser.LB_1) {
+                mStat.leitnerBox--;
+            } else if (mStat.leitnerBox == StatTermForUser.LB_0) {
+                mStat.leitnerBox = StatTermForUser.LB_1;
+            }
+            mHasLeitnerBeenAdjusted = true;
+
+            // If we answered wrong, we rehearse as quickly as possible regardless of box
+            mStat.nextRehearsalTime = getNewRehearsalTime(StatTermForUser.LB_1);
+            if (previousFailure) {
+                mstr.append("* Remembered previous failure");
+            }
+            mstr.append("After. NC, box_adjusted: " + lba + ", lb: " + mStat.leitnerBox + ", nrh: " + Misc.getAs_YYMMDD_HHMMSS(mStat.nextRehearsalTime)
+                    + "\n...[" + mRehearsalNextString + "]\n");
+            mStat.lastFailedTime = System.currentTimeMillis();
+            saveStatForUser();
+        }
+    }
+
+    private void saveStatForUser() {
+        // Store in StatForUser table
+        DatabaseReference forUser = Misc.getDatabaseReference(Constants.FPATH_STATFORUSER())
+                .child(String.valueOf(mStat.setId))
+                .child(mStat.userToken)
+                .child(String.valueOf(mStat.termId));
+        forUser.setValue(mStat);
     }
 
     private long getNewRehearsalTime(long leitnerBox) {

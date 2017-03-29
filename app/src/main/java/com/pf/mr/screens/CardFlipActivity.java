@@ -23,6 +23,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.crash.FirebaseCrash;
 import com.pf.mr.screens.display_set_stats.RehearsalFinishedActivity;
 import com.pf.mr.utils.Constants;
 import com.pf.mr.R;
@@ -33,8 +35,11 @@ import com.pf.mr.utils.Misc;
 import java.util.ArrayList;
 import java.util.List;
 
+import static android.R.attr.name;
+
 public class CardFlipActivity extends Activity {
     private static final String TAG = CardFlipActivity.class.getSimpleName();
+    private FirebaseAnalytics mFirebaseAnalytics;
 
     private static class Data {
         boolean mShowingBack;
@@ -54,11 +59,14 @@ public class CardFlipActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_card_flip);
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        FirebaseCrash.log("CardFlipActivity.onResume: Entered");
 
         mTitle = (TextView)findViewById(R.id.test_title_id);
         String userToken = getIntent().getStringExtra(Constants.USER_TOKEN);
@@ -68,16 +76,19 @@ public class CardFlipActivity extends Activity {
         if (mData == null
                 || !mData.mSetName.equals(setName)
                 || !mData.mUserToken.equals(userToken)) {
+            FirebaseCrash.log("CardFlipActivity.onResume: Reloading data");
             Log.i(TAG, "No previous data found, or setName/userToken mismatch, initializing");
             mData = new Data();
             mData.mUserToken = userToken;
             mData.mSetName = setName;
             getESetAndStartCircus();
         } else {
+            FirebaseCrash.log("CardFlipActivity.onResume: Previous data found");
             Log.i(TAG, "Previous data found, let's continue that session");
             mData.mESet.rescaleImages();
             startNextRound(false);
         }
+        FirebaseCrash.log("CardFlipActivity.onResume: Exit");
     }
 
     /**
@@ -184,11 +195,28 @@ public class CardFlipActivity extends Activity {
         dialog.show();
     }
 
+
+    private static final String E_NO_CLUE = "answer_noclue";
+    private static final String E_KNEW_IT = "answer_knewit";
+    private static final String E_NAILED_IT = "answer_nailedit";
+
+    private static final String E1_ANSWER = "answer";
+    private static final String EP1_NO_CLUE = "no_clue";
+    private static final String EP1_KNEW_IT = "knew_it";
+    private static final String EP1_NAILED_IT = "nailed_it";
+
     public void clickNoClue(View v) {
         Log.i(TAG, "clickNoClue");
         mData.mCurrentETerm.setAnswerGiven(ETerm.AS_NO_CLUE);
         mData.mESet.reportAnswer(mData.mCurrentETerm);
         String str = "Come on... memorize it!";
+
+        Bundle p = null;
+        p = new Bundle();
+        p.putInt(FirebaseAnalytics.Param.VALUE, 1);
+        mFirebaseAnalytics.logEvent(E1_ANSWER, p);
+        mFirebaseAnalytics.logEvent(E_NO_CLUE, null);
+
         Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
         getFragmentManager().popBackStack();
         startNextRound(true);
@@ -201,6 +229,13 @@ public class CardFlipActivity extends Activity {
         mData.mESet.reportAnswer(mData.mCurrentETerm);
         mData.mDoneCount++;
         mData.mTodoCount--;
+
+        Bundle p = null;
+        p = new Bundle();
+        p.putInt(FirebaseAnalytics.Param.VALUE, 1);
+        mFirebaseAnalytics.logEvent(E1_ANSWER, p);
+        mFirebaseAnalytics.logEvent(E_KNEW_IT, null);
+
         Toast.makeText(this, mData.mCurrentETerm.mRehearsalNextString, Toast.LENGTH_SHORT).show();
         getFragmentManager().popBackStack();
         startNextRound(true);
@@ -213,6 +248,13 @@ public class CardFlipActivity extends Activity {
         mData.mESet.reportAnswer(mData.mCurrentETerm);
         mData.mDoneCount++;
         mData.mTodoCount--;
+
+        Bundle p = null;
+        p = new Bundle();
+        p.putInt(FirebaseAnalytics.Param.VALUE, 1);
+        mFirebaseAnalytics.logEvent(E1_ANSWER, p);
+        mFirebaseAnalytics.logEvent(E_NAILED_IT, null);
+
         Toast.makeText(this, mData.mCurrentETerm.mRehearsalNextString, Toast.LENGTH_SHORT).show();
         getFragmentManager().popBackStack();
         startNextRound(true);
@@ -241,7 +283,8 @@ public class CardFlipActivity extends Activity {
                     new ViewTreeObserver.OnGlobalLayoutListener() {
                         @Override
                         public void onGlobalLayout() {
-                            if (getActivity() != null) {
+                            if (getActivity() != null
+                                    && CardFlipActivity.mData.mCurrentETerm != null) {
                                 CardFlipActivity.mData.mCurrentETerm.renderQ(getActivity(), tv);
                             }
                         }
@@ -274,7 +317,9 @@ public class CardFlipActivity extends Activity {
                     new ViewTreeObserver.OnGlobalLayoutListener() {
                         @Override
                         public void onGlobalLayout() {
-                            if (getActivity() != null) {
+                            if (getActivity() != null
+                                    && CardFlipActivity.mData.mCurrentETerm != null) {
+                                FirebaseCrash.log("CardBackFragment.onResume: About to do mData.mCurrentETerm.rednerA");
                                 CardFlipActivity.mData.mCurrentETerm.renderA(getActivity(), tv);
                             }
                         }

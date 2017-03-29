@@ -25,6 +25,15 @@ import java.util.List;
 public class Misc {
     public static final String TAG = Misc.class.getSimpleName();
 
+    public static String getPartStr(String s) {
+        s = s.replace('\n', ' ');
+        int l = 10;
+        if (s.length() < 10) {
+            l = s.length();
+        }
+        return s.substring(0, l);
+    }
+
     public static Intent getIntentWithUserId(Context context, Class c, String userId) {
         Intent i = new Intent(context, c);
         i.putExtra(Constants.USER_TOKEN, userId);

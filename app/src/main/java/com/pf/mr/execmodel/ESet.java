@@ -7,6 +7,8 @@ import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.utils.Constants;
 import com.pf.mr.utils.IndentWriter;
+import com.pf.mr.utils.MPair;
+import com.pf.mr.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,7 +46,7 @@ public class ESet {
             mETermsDue.addAll(set.mETermsDue);
             mETermsNotDue.addAll(set.mETermsNotDue);
         }
-        sortETermList(mETermsDue);
+        // sortETermList(title, mETermsDue);
 
         // Get all new, 1 from each set
         List<List<ETerm>> esetsNew = new ArrayList<>();
@@ -75,7 +77,7 @@ public class ESet {
 
         List<ETerm> qAs = ETerm.getQAs(set.id, set.title, email, set.terms, statTerms);
         Log.i(TAG, "...all stats.size: " + qAs.size());
-        sortETermList(qAs);
+        sortETermList(set.title, qAs);
 
         List<ETerm> lb0 = new ArrayList<>();
         List<ETerm> lb1 = new ArrayList<>();
@@ -110,7 +112,11 @@ public class ESet {
         Log.i(TAG, "...mETermsNew.size: " + mETermsNew.size());
         Log.i(TAG, "...mETermsDue.size: " + mETermsDue.size());
         Log.i(TAG, "...mETermsNotDue.size: " + mETermsNotDue.size());
+
+        // String s1 = printList("*** New list", mETermsNew);
+        // String s2 = printList("*** Due list", mETermsDue);
     }
+
     private void populateAll() {
 //        ETerm.printSome("NEW", mETermsNew);
 //        ETerm.printSome("DUE", mETermsDue);
@@ -130,7 +136,7 @@ public class ESet {
 
         // Add all spilling over from old round
         mETermsCRound.addAll(mETermsCRound_PushedBack);
-        mETermsCRound_PushedBack = new ArrayList<ETerm>();
+        mETermsCRound_PushedBack.clear();
         if (mETermsCRound.size() >= Constants.TERMS_PER_ROUND) { return; }
 
         // Make sure to include at least a new one...
@@ -195,7 +201,8 @@ public class ESet {
 
     /**
      */
-    public static void sortETermList(final List<ETerm> eterms) {
+    private static List<MPair<ETerm, ETerm>> mHistory = new ArrayList<>();
+    public static void sortETermList(final String setName, final List<ETerm> eterms) {
         long timeNow = System.currentTimeMillis();
         int countNeverTested = 0;
         for (ETerm e: eterms) {
@@ -203,54 +210,75 @@ public class ESet {
                 countNeverTested++;
             }
         }
-        countNeverTested = (countNeverTested * 10) + 5000; // 10ms spacing, with 5s margin to now
+        countNeverTested = (countNeverTested * 1000) + 5000; // 100ms spacing, with 5s margin to now
         long timeStart = timeNow - countNeverTested;
         for (ETerm e: eterms) {
             if (e.getStat().nextRehearsalTime == -1) {
                 e.getStat().nextRehearsalTime = timeStart;
-                timeStart += 10; // just add 10ms
+                timeStart += 1000; // just add 10ms
             }
         }
 
-        Collections.sort(eterms, new Comparator<ETerm>() {
-            @Override
-            public int compare(ETerm lhs, ETerm rhs) {
-                int r = -1;
-                try {
-                    compareImpl(lhs, rhs);
-                } catch (IllegalArgumentException exc) {
-                    IndentWriter iw = new IndentWriter();
-                    iw.setFlowChar('.');
-                    iw.println("IllegalArgument exception when sorting terms");
-                    iw.push();
-                    printETerm(iw, "LHS: " , lhs);
-                    printETerm(iw, "RHS: " , rhs);
-                    iw.println();
-                    for (int i=0; i < eterms.size(); i++) {
-                        ETerm et = eterms.get(i);
-                        printETerm(iw, "ETerm_" + String.valueOf(i), et);
+        final IndentWriter iwError = new IndentWriter();
+        iwError.setIndentChar('.');
+        iwError.println("*** Sorting set: " + setName);
+        iwError.push();
+        try {
+            mHistory = new ArrayList<>();
+            Collections.sort(eterms, new Comparator<ETerm>() {
+                @Override
+                public int compare(ETerm lhs, ETerm rhs) {
+                    int r = -1;
+                    mHistory.add(new MPair<>(lhs, rhs));
+                    r = compareImpl(lhs, rhs);
+                    iwError.println(
+                            "r: " + r + ". "
+                            + String.format("%,d", lhs.getStat().nextRehearsalTime)
+                            + " (" + new java.util.Date(lhs.getStat().nextRehearsalTime).toString() + ")"
+                            + ", \"" + Misc.getPartStr(lhs.mQA.term)+ "\", "
+                            + String.format("%,d", rhs.getStat().nextRehearsalTime)
+                            + " (" + new java.util.Date(rhs.getStat().nextRehearsalTime).toString() + ")"
+                            + ", \"" + Misc.getPartStr(rhs.mQA.term) + "\"");
+                    return r;
+                }
+                private int compareImpl(ETerm lhs, ETerm rhs) {
+                    if (lhs.getStat() == null || rhs.getStat() == null) {
+                        throw new AssertionError("Unexpected: Neither LHS/RHS stat object should be null");
                     }
-                    iw.pop();
-                    iw.println("Done");
-                    FirebaseCrash.log(iw.getString());
-                    throw exc;
+                    long lhsTime = lhs.getStat().nextRehearsalTime;
+                    long rhsTime = rhs.getStat().nextRehearsalTime;
+                    long result =  lhsTime-rhsTime;
+                    return (int)(result/1000);
                 }
-                return r;
+            });
+        } catch (IllegalArgumentException exc) {
+            IndentWriter iw = new IndentWriter();
+            iw.setFlowChar('.');
+            iw.println("IllegalArgument exception when sorting terms");
+            iw.push();
+            int start = 0;
+            int end = mHistory.size();
+            if (end - start > 10) {
+                start = end - 10;
             }
-            private int compareImpl(ETerm lhs, ETerm rhs) {
-                if (lhs.getStat() == null || rhs.getStat() == null) {
-                    throw new AssertionError("Unexpected: Neither LHS/RHS stat object should be null");
-                }
-                long lhsTime = lhs.getStat().nextRehearsalTime;
-                long rhsTime = rhs.getStat().nextRehearsalTime;
-                long result =  lhsTime - rhsTime;
-                return (int)result;
+            for (int i=start; i < end; i++) {
+                MPair<ETerm, ETerm> p = mHistory.get(i);
+                iw.println(p.mO1.getStat().nextRehearsalTime + ", " + Misc.getPartStr(p.mO1.mQA.term) +
+                        ", " + p.mO2.getStat().nextRehearsalTime + ", " + Misc.getPartStr(p.mO2.mQA.term));
             }
-        });
-    }
-
-    private static void printETerm(IndentWriter iw, String header, ETerm et ){
-        iw.println(et.getStat().nextRehearsalTime + ", q: " + et.mQA.term);
+            MPair<ETerm, ETerm> p = mHistory.get(mHistory.size()-1);
+            iw.println("Last two\n"
+                    + p.mO1.getStat().nextRehearsalTime + ", " + Misc.getPartStr(p.mO1.mQA.term) +
+                    ", " + p.mO2.getStat().nextRehearsalTime + ", " + Misc.getPartStr(p.mO2.mQA.term));
+            iw.println();
+            iw.pop();
+            iw.println("Done");
+            FirebaseCrash.log(iw.getString());
+            Log.e(TAG, iw.getString());
+            Log.e(TAG, iwError.getString());
+            Log.e(TAG, "That was the end of everything");
+            throw exc;
+        }
     }
 
     /**
@@ -260,7 +288,6 @@ public class ESet {
             Log.wtf(TAG, "Calling getSetTitle on a composite ESet",
                     new Exception("Calling getSetTitle on a composite ESet"));
         }
-
         return mSet != null ? mSet.title : mSetTitle;
     }
 

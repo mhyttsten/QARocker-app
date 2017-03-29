@@ -22,6 +22,7 @@ public class StatTermForUser {
 
     public int leitnerBox;
     public long nextRehearsalTime;
+    public long lastFailedTime = -1;
     public String getNextRehearsalTimeReadable() { return new java.util.Date(nextRehearsalTime).toString(); }
     public void setNextRehearsalTimeReadable(String s) { }
 
@@ -32,30 +33,15 @@ public class StatTermForUser {
     public long answerTimeTotal;
     public long answerTimeAverage;
 
-    public void updateData(int pLeitnerBox,
-                           long pNextRehearsalTime,
-                           long pNoClueCount,
-                           long pKnewItCount,
-                           long pNailedItCount,
-                           long pAnswerTimeTotal,
-                           long pAnswerTimeAverage) {
-        leitnerBox = pLeitnerBox;
-        nextRehearsalTime = pNextRehearsalTime;
-        acountNoClue = pNoClueCount;
-        acountKnewIt = pKnewItCount;
-        acountNailedIt = pNailedItCount;
-        answerTimeTotal = pAnswerTimeTotal;
-        answerTimeAverage = pAnswerTimeAverage;
-    }
-
     public StatTermForUser() { }
 
-    public StatTermForUser(
+    private StatTermForUser(
             long pSetId,
             long pTermId,
             String pUserToken,
             int pLeitnerBox,
             long pNextRehearsalTime,
+            long pLastFailedTime,
             long pNoClueCount,
             long pKnewItCount,
             long pNailedItCount,
@@ -66,6 +52,7 @@ public class StatTermForUser {
         userToken = pUserToken;
         leitnerBox = pLeitnerBox;
         nextRehearsalTime = pNextRehearsalTime;
+        lastFailedTime = pLastFailedTime;
         acountNoClue = pNoClueCount;
         acountKnewIt = pKnewItCount;
         acountNailedIt = pNailedItCount;
@@ -78,6 +65,7 @@ public class StatTermForUser {
                 pSetId, pTermId, pEmail,
                 LB_0,
                 -1,       // Next time is now
+                -1,       // Last failed time has not happened
                 0, 0, 0,  // No clue, knew it, nailed it
                 0, 0);    // Answer times are all 0
     }
