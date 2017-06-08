@@ -7,8 +7,10 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/app" />
+            <option value="/Volumes/Personal_Bulk/Personal/Code/AndroidStudioProjects/QARocker-app" />
+            <option value="/Volumes/Personal_Bulk/Personal/Code/AndroidStudioProjects/QARocker-app/app" />
+            <option value="/Volumes/Personal_Bulk/Personal/Code/AndroidStudioProjects/QARocker-app/backend" />
+            <option value="/Volumes/Personal_Bulk/Personal/Code/AndroidStudioProjects/QARocker-app/shared" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

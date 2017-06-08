@@ -64,7 +64,6 @@
     <string name="title_activity_display_set_list_nvrv">DisplaySetListNVRVActivity</string>
     <string name="title_activity_settings">SettingsActivity</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

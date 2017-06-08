@@ -11,12 +11,18 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <!--<activity-->
+        <!--android:name="com.pf.fl.screens.MainActivity"-->
+        <!--android:label="FundLifterActivity"-->
+        <!--android:theme="@style/AppTheme.NoActionBar">-->
         <activity
             android:name=".screens.SignInActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -26,25 +32,47 @@
             android:label="@string/title_card_flip"
             android:parentActivityName=".screens.DisplaySetListNVRVActivity"
             android:theme="@style/DarkTheme" />
-
         <activity
             android:name=".screens.display_set_stats.RehearsalFinishedActivity"
             android:label="@string/title_activity_rehearsal_finished"
             android:theme="@style/AppThemeDark.NoActionBar" />
-
         <activity
             android:name=".screens.DisplaySetListNVRVActivity"
             android:label="@string/title_activity_display_set_list_nvrv"
             android:theme="@style/AppTheme.NoActionBar" />
-
         <activity
             android:name=".screens.settings.SettingsActivity"
             android:label="@string/title_activity_settings"
             android:parentActivityName=".screens.DisplaySetListNVRVActivity" />
+
+        <activity
+            android:name="com.pf.fl.screens.MainActivity"
+            android:label="FundLifterActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name="com.pf.fl.screens.PortfolioActivity"
+            android:label="PortfolioActivity"
+            android:parentActivityName="com.pf.fl.screens.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name="com.pf.fl.screens.PortfolioViewerActivity"
+            android:label="PortfolioViewerActivity"
+            android:parentActivityName="com.pf.fl.screens.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name="com.pf.fl.screens.ViewExtractResultActivity"
+            android:label=""
+            android:parentActivityName="com.pf.fl.screens.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name="com.pf.fl.screens.ListActivity"
+            android:label=""
+            android:parentActivityName="com.pf.fl.screens.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
-
     </application>
 
 </manifest>

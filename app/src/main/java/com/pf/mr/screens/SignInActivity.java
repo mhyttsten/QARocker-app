@@ -19,6 +19,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.firebase.auth.FirebaseAuth;
 import com.pf.mr.R;
+import com.pf.mr.SingletonMR;
 import com.pf.mr.utils.Constants;
 
 
@@ -47,9 +48,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
-/**
- * Demonstrate Firebase Authentication using a Google ID Token.
- */
 public class SignInActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener {
@@ -226,8 +224,9 @@ public class SignInActivity extends AppCompatActivity implements
             findViewById(R.id.sign_in_button).setVisibility(View.GONE);
             System.out.println("*** User email: " + user.getEmail());
             System.out.println("*** User UID:   " + user.getUid());
+            SingletonMR.mFirebaseUser = user;
+            SingletonMR.mUserToken = user.getUid();
             Intent i =  new Intent(this, DisplaySetListNVRVActivity.class);
-            i.putExtra(Constants.USER_TOKEN, user.getUid());
             startActivity(i);
         } else {
             // User signed out

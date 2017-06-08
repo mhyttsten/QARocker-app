@@ -2,6 +2,7 @@ package com.pf.mr.execmodel;
 
 import android.util.Log;
 
+import com.pf.mr.SingletonMR;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.utils.Constants;
 
@@ -11,38 +12,11 @@ import java.util.List;
 public class ECalculateStats {
     private static final String TAG = ECalculateStats.class.getSimpleName();
 
-    private String mSetName;
+    private ESet mESet;
 
-//    public ECalculateStats(String setName) {
-//        mSetname = setName;
-//    }
-
-    public ECalculateStats(List<ESet> sets) {
-        if (sets != null || sets.size() > 0) {
-            if (sets.size() == 1) {
-                mSetName = sets.get(0).getSetTitle();
-            } else {
-                mSetName = Constants.SETNAME_ALL;
-            }
-        }
-        for (ESet set: sets) {
-            mTerms.addAll(set.mETermsAll);
-        }
-    }
-
-    public ECalculateStats(ESet set) {
-        mSetName = set.getSetTitle();
-        mTerms.addAll(set.mETermsAll);
-    }
-
-    public static String getSetName(List<ESet> sets) {
-        if (sets == null || sets.size() == 0) {
-            return null;
-        }
-        if (sets.size() == 1) {
-            return sets.get(0).getSetTitle();
-        }
-        return Constants.SETNAME_ALL;
+    public ECalculateStats(ESet eset) {
+        mESet = eset;
+        mTerms.addAll(mESet.mETermsAll);
     }
 
     private List<ETerm> mTerms = new ArrayList<>();
@@ -63,7 +37,7 @@ public class ECalculateStats {
         mCTotal = mTerms.size();
         int pScore = 0;
 
-        for (ETerm t: mTerms) {
+        for (ETerm t : mTerms) {
             if (timeNow > t.getStat().nextRehearsalTime) {
                 mDue++;
             } else if (t.getStat().leitnerBox == StatTermForUser.LB_0) {
@@ -101,11 +75,13 @@ public class ECalculateStats {
         }
 
         int maxScore = mCTotal * 8;
-        double d = ((double)pScore) / ((double)maxScore);
+        double d = ((double) pScore) / ((double) maxScore);
         d *= 100;
-        mPercentFinished = (int)d;
+        mPercentFinished = (int) d;
+    }
 
-        Log.i(TAG, "Calculated all for set: " + mSetName
+    public String toString() {
+        return "Calculated all for set: " + mESet.getSetTitle()
                 + "\n...mStats.size: " + mTerms.size()
                 + "\n...mPercentFinished: " + mPercentFinished
                 + "\n...mTotal: " + mCTotal
@@ -115,6 +91,6 @@ public class ECalculateStats {
                 + "\n...mCL2: " + mCL2
                 + "\n...mCL3: " + mCL3
                 + "\n...mCL4: " + mCL4
-                + "\n...mCL5: " + mCL5);
+                + "\n...mCL5: " + mCL5;
     }
 }

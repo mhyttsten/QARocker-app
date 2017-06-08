@@ -387,8 +387,9 @@ public class ETerm {
                 mStat.acountNailedIt++;
                 mIsDoneForToday = true;
                 if (!mHasLeitnerBeenAdjusted) {
-                    if (mStat.leitnerBox == StatTermForUser.LB_0
-                            || mStat.leitnerBox == StatTermForUser.LB_1) {
+                    if (mStat.leitnerBox == StatTermForUser.LB_0) {
+                        mStat.leitnerBox = StatTermForUser.LB_3;
+                    } else if (mStat.leitnerBox == StatTermForUser.LB_1) {
                         mStat.leitnerBox = StatTermForUser.LB_3;
                     } else {
                         if (mStat.leitnerBox < StatTermForUser.LB_5) {

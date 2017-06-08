@@ -25,6 +25,7 @@ import android.widget.Toast;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.crash.FirebaseCrash;
+import com.pf.mr.SingletonMR;
 import com.pf.mr.screens.display_set_stats.RehearsalFinishedActivity;
 import com.pf.mr.utils.Constants;
 import com.pf.mr.R;
@@ -43,98 +44,70 @@ public class CardFlipActivity extends Activity {
 
     private static class Data {
         boolean mShowingBack;
-        String mUserToken;
-        String mSetName;
-        ESet mESet;
         ETerm mCurrentETerm;
         int mDoneCount;
         int mTodoCount;
-    };
+    }
 
-    public static Data mData;
+    private static Data mData;
     private TextView mTitle;
     private TextView mStats;
+
+    public static void reset() {
+        mData = null;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.i(TAG, "onCreate Entered");
+
         setContentView(R.layout.activity_card_flip);
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        if (mData == null) {
+            mData = new Data();
+            mData.mTodoCount = SingletonMR.mCurrentESet.getTodoCount();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        Log.i(TAG, "onResume Entered");
 
         FirebaseCrash.log("CardFlipActivity.onResume: Entered");
-
         mTitle = (TextView)findViewById(R.id.test_title_id);
-        String userToken = getIntent().getStringExtra(Constants.USER_TOKEN);
-        String setName = getIntent().getStringExtra(Constants.SETNAME);
-        Log.i(TAG, "Incoming userToken: " + userToken + ", setName: " + setName);
-
-        if (mData == null
-                || !mData.mSetName.equals(setName)
-                || !mData.mUserToken.equals(userToken)) {
-            FirebaseCrash.log("CardFlipActivity.onResume: Reloading data");
-            Log.i(TAG, "No previous data found, or setName/userToken mismatch, initializing");
-            mData = new Data();
-            mData.mUserToken = userToken;
-            mData.mSetName = setName;
-            getESetAndStartCircus();
-        } else {
-            FirebaseCrash.log("CardFlipActivity.onResume: Previous data found");
-            Log.i(TAG, "Previous data found, let's continue that session");
-            mData.mESet.rescaleImages();
-            startNextRound(false);
-        }
+        SingletonMR.mCurrentESet.rescaleImages();
+        startNextRound(); // newCard);
         FirebaseCrash.log("CardFlipActivity.onResume: Exit");
     }
 
     /**
      */
-    private void getESetAndStartCircus() {
-        final List<ESet> esets = new ArrayList<>();
-        Log.e(TAG, "Retrieving data for set: " + mData.mSetName);
-        Misc.getESets(mData.mUserToken, mData.mSetName, esets, new Runnable() {
-            @Override
-            public void run() {
-                if (esets.size() == 0) {
-                    Log.e(TAG, "Could not find a set named: " + mData.mSetName);
-                } else {
-                    if (esets.size() == 1) {
-                        mData.mESet = esets.get(0);
-                    } else {
-                        mData.mESet = new ESet(Constants.SETNAME_ALL, esets);
-                    }
-                }
-                mData.mTodoCount = mData.mESet.getTodoCount();
-                startNextRound(true);
-            }
-        });
-    }
-
-    /**
-     */
-    public void startNextRound(boolean newCard) {
-        if (newCard) {
-            boolean hasNext = mData.mESet.hasNext();
+    public void startNextRound() {
+        Log.i(TAG, "startNextRound");
+        if (mData.mCurrentETerm == null) {
+            boolean hasNext = SingletonMR.mCurrentESet.hasNext();
             if (!hasNext) {
-                Intent i = Misc.getIntentWithUserId(this,
-                        RehearsalFinishedActivity.class,
-                        mData.mUserToken);
-                i.putExtra(Constants.SETNAME, String.valueOf(mData.mESet.getSetTitle()));
+                Intent i = new Intent(this, RehearsalFinishedActivity.class);
                 mData = null;
                 startActivity(i);
                 finish();
                 return;
             }
-            mData.mCurrentETerm = mData.mESet.next();
+            ESet eset = SingletonMR.mCurrentESet;
+            mData.mCurrentETerm = SingletonMR.mCurrentESet.next();
             mData.mShowingBack = false;
         }
         mTitle.setText(mData.mCurrentETerm.mSetTitle +
                 " [" + mData.mDoneCount + " / " + mData.mTodoCount  + "]");
         showCard();
+
+        if (mData.mCurrentETerm == null) {
+            Log.i(TAG, "...at exit, mCurrentETerm == null");
+        } else {
+            Log.i(TAG, "...at exit, mCurrentETerm != null");
+        }
     }
 
     /**
@@ -155,6 +128,7 @@ public class CardFlipActivity extends Activity {
         switch (item.getItemId()) {
             case android.R.id.home:
                 mData = null;
+                SingletonMR.mCurrentESet.reset();
                 finish();
                 return true;
 
@@ -195,7 +169,6 @@ public class CardFlipActivity extends Activity {
         dialog.show();
     }
 
-
     private static final String E_NO_CLUE = "answer_noclue";
     private static final String E_KNEW_IT = "answer_knewit";
     private static final String E_NAILED_IT = "answer_nailedit";
@@ -208,7 +181,7 @@ public class CardFlipActivity extends Activity {
     public void clickNoClue(View v) {
         Log.i(TAG, "clickNoClue");
         mData.mCurrentETerm.setAnswerGiven(ETerm.AS_NO_CLUE);
-        mData.mESet.reportAnswer(mData.mCurrentETerm);
+        SingletonMR.mCurrentESet.reportAnswer(mData.mCurrentETerm);
         String str = "Come on... memorize it!";
 
         Bundle p = null;
@@ -219,14 +192,15 @@ public class CardFlipActivity extends Activity {
 
         Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
         getFragmentManager().popBackStack();
-        startNextRound(true);
+        mData.mCurrentETerm = null;
+        startNextRound(); //true);
     }
 
     public void clickKnewIt(View v) {
         Log.i(TAG, "clickKnewIt");
         mData.mCurrentETerm.setAnswerGiven(ETerm.AS_KNEW_IT);
         showDialog(mData.mCurrentETerm.mstr.toString());
-        mData.mESet.reportAnswer(mData.mCurrentETerm);
+        SingletonMR.mCurrentESet.reportAnswer(mData.mCurrentETerm);
         mData.mDoneCount++;
         mData.mTodoCount--;
 
@@ -238,14 +212,15 @@ public class CardFlipActivity extends Activity {
 
         Toast.makeText(this, mData.mCurrentETerm.mRehearsalNextString, Toast.LENGTH_SHORT).show();
         getFragmentManager().popBackStack();
-        startNextRound(true);
+        mData.mCurrentETerm = null;
+        startNextRound(); // true);
     }
 
     public void clickNailedIt(View v) {
         Log.i(TAG, "clickNailedIt");
         mData.mCurrentETerm.setAnswerGiven(ETerm.AS_NAILED_IT);
         showDialog(mData.mCurrentETerm.mstr.toString());
-        mData.mESet.reportAnswer(mData.mCurrentETerm);
+        SingletonMR.mCurrentESet.reportAnswer(mData.mCurrentETerm);
         mData.mDoneCount++;
         mData.mTodoCount--;
 
@@ -257,7 +232,8 @@ public class CardFlipActivity extends Activity {
 
         Toast.makeText(this, mData.mCurrentETerm.mRehearsalNextString, Toast.LENGTH_SHORT).show();
         getFragmentManager().popBackStack();
-        startNextRound(true);
+        mData.mCurrentETerm = null;
+        startNextRound(); //true);
     }
 
     /**

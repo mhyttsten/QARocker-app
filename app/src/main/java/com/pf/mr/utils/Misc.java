@@ -34,12 +34,6 @@ public class Misc {
         return s.substring(0, l);
     }
 
-    public static Intent getIntentWithUserId(Context context, Class c, String userId) {
-        Intent i = new Intent(context, c);
-        i.putExtra(Constants.USER_TOKEN, userId);
-        return i;
-    }
-
     public static String toString(Object o) throws Exception {
         IndentWriter iw = new IndentWriter();
         toStringObject(iw, o);

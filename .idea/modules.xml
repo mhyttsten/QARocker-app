@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/QARocker-app.iml" filepath="$PROJECT_DIR$/QARocker-app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file:///Volumes/Personal_Bulk/Personal/Code/AndroidStudioProjects/QARocker-app/QARocker-app.iml" filepath="/Volumes/Personal_Bulk/Personal/Code/AndroidStudioProjects/QARocker-app/QARocker-app.iml" />
+      <module fileurl="file:///Volumes/Personal_Bulk/Personal/Code/AndroidStudioProjects/QARocker-app/app/app.iml" filepath="/Volumes/Personal_Bulk/Personal/Code/AndroidStudioProjects/QARocker-app/app/app.iml" />
+      <module fileurl="file:///Volumes/Personal_Bulk/Personal/Code/AndroidStudioProjects/QARocker-app/backend/backend.iml" filepath="/Volumes/Personal_Bulk/Personal/Code/AndroidStudioProjects/QARocker-app/backend/backend.iml" />
+      <module fileurl="file:///Volumes/Personal_Bulk/Personal/Code/AndroidStudioProjects/QARocker-app/shared/shared.iml" filepath="/Volumes/Personal_Bulk/Personal/Code/AndroidStudioProjects/QARocker-app/shared/shared.iml" />
     </modules>
   </component>
 </project>

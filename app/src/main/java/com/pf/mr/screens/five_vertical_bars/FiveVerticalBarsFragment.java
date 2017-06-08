@@ -1,6 +1,5 @@
 package com.pf.mr.screens.five_vertical_bars;
 
-
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,6 +12,7 @@ import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
 import com.pf.mr.R;
+import com.pf.mr.SingletonMR;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.execmodel.ECalculateStats;
 import com.pf.mr.execmodel.ESet;
@@ -22,13 +22,8 @@ import com.pf.mr.utils.Misc;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A simple {@link Fragment} subclass.
- */
 public class FiveVerticalBarsFragment extends Fragment {
     public static final String TAG = FiveVerticalBarsFragment.class.getSimpleName();
-
-    public List<ESet> mESets = new ArrayList<>();
 
     private View mView;
     private boolean mHasData;
@@ -51,47 +46,30 @@ public class FiveVerticalBarsFragment extends Fragment {
             public void onGlobalLayout() {
                 Log.i(TAG, "***** onGlobalLayout.fragmentView, width: " + mView.getWidth() + ", height: " + mView.getHeight());
                 mHeight = mView.getHeight();
-                adjustBarHeights(mESets);
-            }
-        });
-
-        final List<ESet> esets = new ArrayList<>();
-        if (mRFA == null) {
-            Log.e(TAG, "mRFA is null");
-        } else {
-            if (mRFA.mUserToken == null) {
-                Log.e(TAG, "mRFA.mUserToken is null");
-            }
-            if (mRFA.mSetName == null) {
-                Log.e(TAG, "mRFA.mSetName is null");
-            }
-        }
-        Misc.getESets(mRFA.mUserToken, mRFA.mSetName, esets, new Runnable() {
-            @Override
-            public void run() {
-                mESets = esets;
-                Log.i(TAG, "Firebase data received, number of sets: " + esets.size());
                 mHasData = true;
-                adjustBarHeights(mESets);
+                adjustBarHeights();
             }
         });
 
         return mView;
     }
 
-    public void adjustBarHeights(List<ESet> sets) {
+    public void adjustBarHeights() {
+        Log.i(TAG, "adjustBarHeights, mHasData: " + mHasData + ", height: " + mHeight + ", mVHU: " + mViewHeightUpdated);
         if (mHasData && mHeight > 0 && !mViewHeightUpdated) {
             mViewHeightUpdated = true;
-            adjustBarHeightsImpl(sets);
+            adjustBarHeightsImpl();
             mRFA.updateUI(mECS);
         }
     }
 
-    public void adjustBarHeightsImpl(List<ESet> sets) {
-        Log.i(TAG, "setBarHeight, sets.size: " + sets.size());
+    public void adjustBarHeightsImpl() {
+        Log.i(TAG, "setBarHeight, sets.size: " + SingletonMR.mQuizList.length);
 
-        mECS = new ECalculateStats(sets);
+        mECS = new ECalculateStats(SingletonMR.mCurrentESet);
         mECS.calculate();
+
+        Log.i(TAG, "ECS\n" + mECS.toString());
 
         float totalF = mECS.mCTotal;
         float c1ratio = (float)(mECS.mCL1 + mECS.mCL0) / totalF;

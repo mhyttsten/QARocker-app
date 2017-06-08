@@ -10,7 +10,8 @@ android {
                     // Then you create
                     'src/main/res-screens/settings',
                     'src/main/res-screens/display-set-stats',
-                    'src/main/res-screens/five-vertical-bars'
+                    'src/main/res-screens/five-vertical-bars',
+                    'src/main/res-screens/fundlifter'
             ]
         }
     }
@@ -28,14 +29,14 @@ android {
     }
 
     compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    buildToolsVersion '25.0.0'
 
     defaultConfig {
         applicationId "com.pf.mr"
         minSdkVersion 15
         targetSdkVersion 23
-        versionCode 32
-        versionName "32"
+        versionCode 35
+        versionName "35"
     }
     buildTypes {
         release {
@@ -61,6 +62,9 @@ dependencies {
     compile 'com.google.android.gms:play-services-auth:9.2.1'
     compile 'com.google.firebase:firebase-crash:9.2.1'
     compile 'com.google.firebase:firebase-storage:9.2.1'
+
+    compile 'com.android.support.constraint:constraint-layout:1.0.0-beta4'
+
 }
 
 apply plugin: 'com.google.gms.google-services'

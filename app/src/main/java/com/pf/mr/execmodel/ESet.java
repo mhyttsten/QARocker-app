@@ -46,7 +46,6 @@ public class ESet {
             mETermsDue.addAll(set.mETermsDue);
             mETermsNotDue.addAll(set.mETermsNotDue);
         }
-        // sortETermList(title, mETermsDue);
 
         // Get all new, 1 from each set
         List<List<ETerm>> esetsNew = new ArrayList<>();
@@ -72,11 +71,11 @@ public class ESet {
      * Called to instantiate an actual set with terms
      */
     public ESet(QLSet set, String email, List<StatTermForUser> statTerms) {
-        Log.i(TAG, "Creating primitive set: " + set.title + ", stats.size: " + statTerms.size());
+//        Log.i(TAG, "Creating primitive set: " + set.title + ", stats.size: " + statTerms.size());
         mSet = set;
 
         List<ETerm> qAs = ETerm.getQAs(set.id, set.title, email, set.terms, statTerms);
-        Log.i(TAG, "...all stats.size: " + qAs.size());
+//        Log.i(TAG, "...all stats.size: " + qAs.size());
         sortETermList(set.title, qAs);
 
         List<ETerm> lb0 = new ArrayList<>();
@@ -109,9 +108,9 @@ public class ESet {
 
         populateAll();
 
-        Log.i(TAG, "...mETermsNew.size: " + mETermsNew.size());
-        Log.i(TAG, "...mETermsDue.size: " + mETermsDue.size());
-        Log.i(TAG, "...mETermsNotDue.size: " + mETermsNotDue.size());
+//        Log.i(TAG, "...mETermsNew.size: " + mETermsNew.size());
+//        Log.i(TAG, "...mETermsDue.size: " + mETermsDue.size());
+//        Log.i(TAG, "...mETermsNotDue.size: " + mETermsNotDue.size());
 
         // String s1 = printList("*** New list", mETermsNew);
         // String s2 = printList("*** Due list", mETermsDue);
@@ -185,9 +184,10 @@ public class ESet {
 
     /**
      */
+    private ETerm mCurrentETerm;
     public ETerm next() {
-        return mETermsCRound.remove(0);
-
+        mCurrentETerm = mETermsCRound.remove(0);
+        return mCurrentETerm;
     }
 
     /**
@@ -197,6 +197,16 @@ public class ESet {
         if (!eterm.isDoneForToday()) {
             mETermsCRound_PushedBack.add(eterm);
         }
+    }
+
+    public void reset() {
+        Log.i(TAG, "*** Doing Reset");
+        if (mCurrentETerm != null) {
+            mETermsCRound_PushedBack.add(mCurrentETerm);
+        }
+        mETermsCRound_PushedBack.addAll(mETermsCRound);
+        mETermsCRound.clear();
+        mCurrentETerm = null;
     }
 
     /**
@@ -290,7 +300,6 @@ public class ESet {
         }
         return mSet != null ? mSet.title : mSetTitle;
     }
-
 
     /**
      */

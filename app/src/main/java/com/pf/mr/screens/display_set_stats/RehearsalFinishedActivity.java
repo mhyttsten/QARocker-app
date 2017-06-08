@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import com.google.firebase.database.DatabaseReference;
 import com.pf.mr.R;
+import com.pf.mr.SingletonMR;
 import com.pf.mr.execmodel.ECalculateStats;
 import com.pf.mr.execmodel.ESet;
 import com.pf.mr.screens.five_vertical_bars.FiveVerticalBarsFragment;
@@ -24,9 +25,6 @@ import com.pf.mr.utils.Misc;
 public class RehearsalFinishedActivity extends AppCompatActivity {
     private static final String TAG = RehearsalFinishedActivity.class.getSimpleName();
 
-    public String mUserToken;
-    public String mSetName;
-
     private FiveVerticalBarsFragment mFVMFragment;
     private static String FVM_FRAGMENT_TAG = "FVMFragment";
 
@@ -35,11 +33,6 @@ public class RehearsalFinishedActivity extends AppCompatActivity {
         Log.i(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rehearsal_finished);
-
-        mUserToken = getIntent().getStringExtra(Constants.USER_TOKEN);
-        mSetName = getIntent().getStringExtra(Constants.SETNAME);
-        Log.i(TAG, "...token:   " + mUserToken);
-        Log.i(TAG, "...setName: " + mSetName);
 
         mFVMFragment = (FiveVerticalBarsFragment)getSupportFragmentManager().findFragmentByTag(FVM_FRAGMENT_TAG);
         if (mFVMFragment == null) {
@@ -56,12 +49,11 @@ public class RehearsalFinishedActivity extends AppCompatActivity {
     public void clickToMain(View v) {
         CheckBox cb = (CheckBox) findViewById(R.id.checkBox);
         if (cb.isChecked()) {
-            for (ESet s: mFVMFragment.mESets) {
-                DatabaseReference forUser = Misc.getDatabaseReference(Constants.FPATH_STATFORUSER())
-                        .child(String.valueOf(s.getSetId()))
-                        .child(mUserToken);
-                forUser.setValue(null);
-            }
+            DatabaseReference forUser = Misc.getDatabaseReference(Constants.FPATH_STATFORUSER())
+                    .child(String.valueOf(SingletonMR.mCurrentESet.getSetId()))
+                    .child(SingletonMR.mUserToken);
+            forUser.setValue(null);
+            SingletonMR.reset();
         }
         finish();
     }
