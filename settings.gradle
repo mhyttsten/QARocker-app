@@ -1,1 +1,1 @@
-include ':app', ':backend', ':shared'
+include ':app', ':backend', ':shared', ':JavaCode', ':photomanager'
