@@ -11,6 +11,7 @@ import com.pf.fl.be.datastore.DS;
 import com.pf.fl.be.util.EE;
 import com.pf.shared.IndentWriter;
 import com.pf.shared.MM;
+import com.google.cloud.datastore.*;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -295,11 +296,14 @@ public class FLA_Cache {
                     .type(FLA_FundInfo.class)
                     .offset(foundCount)
                     .limit(50);
-            QueryResultIterator<FLA_FundInfo> qri = query.iterator();
-            while (qri.hasNext()) {
+//            QueryResultIterator<FLA_FundInfo> qri = query.iterator();
+//            List<FLA_FundInfo> qri = query.iterator();
+            List<FLA_FundInfo> qri = query.list();
+            for (FLA_FundInfo fi: qri) {
+//            while (qri.hasNext()) {
                 foundCount++;
                 count++;
-                FLA_FundInfo fi = qri.next();
+//                FLA_FundInfo fi = qri.next();
                 fundInfoList.add(fi);
                 foundAnything = true;
 

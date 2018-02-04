@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cronentries>
+
+    <!--<cron><url>/testCron</url><description>Specific time</description>-->
+    <!--<schedule>every thursday 11:59</schedule><timezone>Europe/Stockholm</timezone>-->
+    <!--</cron>-->
+    <!--<cron><url>/testCron</url><description>Specific time Los Angeles</description>-->
+    <!--<schedule>every saturday 18:32</schedule><timezone>America/Los_Angeles</timezone>-->
+    <!--</cron>-->
+    <!--  This is every 11 minutes sharp between 00:00 and 23:59, regardless of termination time -->
+    <!--<cron>-->
+    <!--<url>/cronAnalyze</url>-->
+    <!--<description>Cron_Analyze</description>-->
+    <!--<schedule>every 10 minutes synchronized</schedule>-->
+    <!--<timezone>America/Los_Angeles</timezone>-->
+    <!--</cron>-->
+
+    <!--<cron>-->
+    <!--<url>/cronMaintenance</url>-->
+    <!--<description>Cron_Maintenance</description>-->
+    <!--<schedule>every 60 minutes from 00:55 to 23:55</schedule>-->
+    <!--<timezone>America/Los_Angeles</timezone>-->
+    <!--</cron>-->
+
+
+    <!--<cron>-->
+    <!--<url>/cronExtract</url>-->
+    <!--<description>Cron_Extract</description>-->
+    <!--<schedule>every 10 minutes from 09:10 to 12:50</schedule>-->
+    <!--<timezone>America/Los_Angeles</timezone>-->
+    <!--</cron>-->
+    <!--<cron>-->
+    <!--<url>/cronMaintenance</url>-->
+    <!--<description>Cron_Maintenance</description>-->
+    <!--<schedule>every 10 minutes from 13:00 to 13:20</schedule>-->
+    <!--<timezone>America/Los_Angeles</timezone>-->
+    <!--</cron>-->
+    <!--<cron>-->
+    <!--<url>/cronStoreInFirebaseServlet</url>-->
+    <!--<description>Cron_StoreInFirebaseServlet</description>-->
+    <!--<schedule>every 10 minutes from 13:30 to 13:50</schedule>-->
+    <!--<timezone>America/Los_Angeles</timezone>-->
+    <!--</cron>-->
+
+    <cron>
+        <url>/cronExtractNow</url>
+        <description>Cron_Extract_Now</description>
+        <schedule>every day 05:30</schedule>
+        <timezone>Europe/Stockholm</timezone>
+    </cron>
+    <cron>
+        <url>/cronExtract</url>
+        <description>Cron_Extract</description>
+        <schedule>every 10 minutes from 05:40 to 08:30</schedule>
+        <timezone>Europe/Stockholm</timezone>
+    </cron>
+    <cron>
+        <url>/cronMaintenance</url>
+        <description>Cron_Maintenance</description>
+        <schedule>every day 08:40</schedule>
+        <timezone>Europe/Stockholm</timezone>
+    </cron>
+    <cron>
+        <url>/cronStoreInFirebaseServlet</url>
+        <description>Cron_StoreInFirebaseServlet</description>
+        <schedule>every day 08:50</schedule>
+        <timezone>Europe/Stockholm</timezone>
+    </cron>
+
+    <cron>
+        <url>/cronWork</url>
+        <description>Cron_Work</description>
+        <schedule>every day 12:05</schedule>
+        <timezone>America/Los_Angeles</timezone>
+    </cron>
+
+    <!--<cron>-->
+        <!--<url>/cronWork</url>-->
+        <!--<description>Cron_Work</description>-->
+        <!--<schedule>every 2 minutes from 06:51 to 17:51</schedule>-->
+        <!--<timezone>America/Los_Angeles</timezone>-->
+    <!--</cron>-->
+
+    <!--<cron>-->
+    <!--<url>/cronWork</url>-->
+    <!--<description>Cron_Work</description>-->
+    <!--<schedule>every 5 minutes from 06:00 to 18:00</schedule>-->
+    <!--<timezone>America/Los_Angeles</timezone>-->
+    <!--</cron>-->
+
+
+</cronentries>

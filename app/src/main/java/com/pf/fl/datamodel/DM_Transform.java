@@ -34,11 +34,11 @@ public class DM_Transform {
     public static HashMap<String, DM_DPMatrix> indexToFundsHM = new HashMap<>();
     public static DM_DPMatrix indexAverages;
 
-    public static HashMap<String, DM_Fund> fundsByNameHM = new HashMap<>();
+    public static HashMap<String, DM_Fund> fundsByTypeAndNameHM = new HashMap<>();
     public static HashMap<Long, DM_Fund> fundsByIdHM = new HashMap<>();
     public static List<DM_Fund> getFunds() {
         List<DM_Fund> l = new ArrayList<>();
-        Iterator<DM_Fund> i = fundsByNameHM.values().iterator();
+        Iterator<DM_Fund> i = fundsByTypeAndNameHM.values().iterator();
         while (i.hasNext()) {
             l.add(i.next());
         }
@@ -106,7 +106,7 @@ public class DM_Transform {
 
     public static List<CheckableFund> getFunds(String type) {
         List<CheckableFund> l = new ArrayList<>();
-        Collection<DM_Fund> s = fundsByNameHM.values();
+        Collection<DM_Fund> s = fundsByTypeAndNameHM.values();
         Iterator<DM_Fund> iter = s.iterator();
         while (iter.hasNext()) {
             DM_Fund f = iter.next();
@@ -192,7 +192,7 @@ public class DM_Transform {
                 count++;
             }
 
-            if (fundsByNameHM.containsKey(f.getName())) {
+            if (fundsByTypeAndNameHM.containsKey(f.getName())) {
                 throw new AssertionError("Duplicate fund entry: " + f.getName());
             }
 
@@ -207,7 +207,7 @@ public class DM_Transform {
 //                    MM.printArray(f.values);
 //                }
 
-            fundsByNameHM.put(f.getName(), f);
+            fundsByTypeAndNameHM.put(f.getName(), f);
             fundsByIdHM.put(Long.valueOf(f.id), f);
             RowElem re = new RowElem();
             re.entity = f;

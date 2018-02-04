@@ -82,7 +82,7 @@ public class CronExtractServlet extends HttpServlet {
         mEE.timerStart();
 
         IndentWriter iwError = new IndentWriter();
-        FLOps1_Ext1_Extract extract = new FLOps1_Ext1_Extract(mEE, iwError);
+        FLOps1_Ext1_Extract extract = new FLOps1_Ext1_Extract(mEE, false, iwError);
         extract.doIt();
         String strError = iwError.getString().trim();
         if (strError.length() > 0) {

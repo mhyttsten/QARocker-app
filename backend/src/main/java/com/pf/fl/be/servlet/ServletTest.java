@@ -1,5 +1,6 @@
 package com.pf.fl.be.servlet;
 
+import com.google.api.core.ApiFuture;
 import com.pf.fl.be.datamodel.FLA_Cache;
 import com.pf.fl.be.datamodel.FLA_Cache_FundInfo;
 import com.pf.fl.be.datamodel.FLA_FundInfo;
@@ -18,14 +19,27 @@ import com.pf.shared.OTuple2G;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 //import com.pf.fl.be.FLOps1_Ext1_Extract;
+
+import com.google.auth.oauth2.GoogleCredentials;
+//import com.google.cloud.firestore.DocumentReference;
+//import com.google.cloud.firestore.QuerySnapshot;
+//import com.google.cloud.firestore.WriteResult;
+//import com.google.cloud.firestore.Firestore;
+//import com.google.firebase.cloud.FirestoreClient;
+//import com.google.firebase.FirebaseApp;
+//import com.google.firebase.FirebaseOptions;
+//import com.google.cloud.firestore.QuerySnapshot;
+//import com.google.cloud.firestore.DocumentSnapshot;
+//import com.google.cloud.firestore.CollectionReference;
 
 public class ServletTest extends HttpServlet {
     private static final Logger log = Logger.getLogger(ServletTest.class.getSimpleName());
@@ -47,6 +61,98 @@ public class ServletTest extends HttpServlet {
             throw new IOException(exc.toString());
         }
     }
+
+
+
+
+//    public void testFireStore(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+//        mEE = EE.getEE();
+//
+//        // Use the application default credentials
+//        GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+//        FirebaseOptions options = new FirebaseOptions.Builder()
+//                .setCredentials(credentials)
+//                .setProjectId("pffundlifter")
+//                .build();
+//        FirebaseApp.initializeApp(options);
+//
+//        Firestore db = FirestoreClient.getFirestore();
+//
+//        DocumentReference docRef = null;
+//        Map<String, Object> data = null;
+//        ApiFuture<WriteResult> result = null;
+//
+//        // Add document with id alovelace to the users collection
+//        docRef = db.collection("users").document("alovelace");
+//        docRef = db.document("users/alovelace");
+//        data = new HashMap<>();
+//        data.put("first", "Ada");
+//        data.put("last", "Lovelace");
+//        data.put("born", 1815);
+//        result = docRef.set(data);  // Asynchronous write
+//        System.out.println("Update time : " + result.get().getUpdateTime());  // get() blocks
+//
+//        // Add document with id aturing to the users collection
+//        docRef = db.collection("users").document("aturing");
+//        docRef = db.document("users/aturing");
+//        data = new HashMap<>();
+//        data.put("first", "Alan");
+//        data.put("middle", "Mathison");
+//        data.put("last", "Turing");
+//        data.put("born", 1912);
+//        result = docRef.set(data);  // Asynchronous write
+//        System.out.println("Update time : " + result.get().getUpdateTime());  // get() blocks
+//
+//        // When doing set, any previous content will be deleted
+//        // You can use merge to merge the two datasets
+//        //        ApiFuture<WriteResult> writeResult =
+//        //                db
+//        //                        .collection("cities")
+//        //                        .document("BJ")
+//        //                        .set(update, SetOptions.merge());
+//
+//
+//        CollectionReference cref = db.collection("users");
+//        ApiFuture<QuerySnapshot> query = cref.get();  // Asynch
+//        QuerySnapshot querySnapshot = query.get();  // get() blocks
+//        List<DocumentSnapshot> documents = querySnapshot.getDocuments();
+//        for (DocumentSnapshot document : documents) {
+//            System.out.println("User: " + document.getId());
+//            System.out.println("First: " + document.getString("first"));
+//            if (document.contains("middle")) {
+//                System.out.println("Middle: " + document.getString("middle"));
+//            }
+//            System.out.println("Last: " + document.getString("last"));
+//            System.out.println("Born: " + document.getLong("born"));
+//        }
+//
+//        // Subcollections
+//        // Notice the alternating pattern of collections and documents.
+//        // Your collections and documents must always follow this pattern.
+//        // You cannot reference a collection in a collection or a document in a document.
+//        // You can nest data up to 100 levels deep.
+//        // WARNING: When you delete a document that has associated subcollections,
+//        // the subcollections are not deleted. They are still accessible by reference.
+//        // For example, there may be a document referenced by
+//        // db.collection('coll').doc('doc').collection('subcoll').doc('subdoc') even though
+//        // the document referenced by db.collection('coll').doc('doc') no longer exists.
+//        // If you want to delete documents in subcollections when deleting a document,
+//        // you must do so manually, as shown in Delete Collections.
+//        DocumentReference document =
+//                db.collection("rooms")
+//                        .document("roomA")
+//                        .collection("messages")
+//                        .document("message1");
+//
+//        // ArrayList within a document: List is enclosed in doc (cant be queried & contributes to dod size
+//        // Subcollection within document: Can be queried separately and does not contribute to size
+//        // Rootcollection: Maximum query flexibility & scalability
+//
+//        // Data type: Reference references another doc
+//
+//
+//
+//    }
 
     public void deleteDuplicates(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         mEE = EE.getEE();

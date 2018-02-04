@@ -1,11 +1,18 @@
 package com.pf.fl.datamodel;
 
+import android.util.Log;
+
 import com.pf.shared.MM;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class DMA_Portfolio {
+    private static final String TAG = DMA_Portfolio.class.getSimpleName();
 
     public void setName(String aname) {
         name = aname;
@@ -16,4 +23,16 @@ public class DMA_Portfolio {
     public String name;
     public String date_created = MM.getNowAs_YYMMDD_HHMMSS(null);
     public List<Long> fund_ids = new ArrayList<>();
+
+    private Map<String, Void> hm;
+    public boolean existFundInPortfolio(String fundName) {
+        if (hm == null) {
+            hm = new HashMap<>();
+            for (Long l: fund_ids) {
+                hm.put(DM_Transform.fundsByIdHM.get(l).name, null);
+            }
+        }
+
+        return hm.containsKey(fundName);
+    }
 }

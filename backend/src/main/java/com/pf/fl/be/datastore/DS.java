@@ -209,11 +209,7 @@ public class DS {
 		ee.dinfo(log, TAG, "Will now delete FLA_FundInfo");
 		timeStart = System.currentTimeMillis();
 		do {
-			ArrayList<FLA_FundInfo> al = new ArrayList<>();
-			QueryResultIterator<FLA_FundInfo> qri = ofy().load().type(FLA_FundInfo.class).limit(1000).iterator();
-			while (qri.hasNext()) {
-				al.add(qri.next());
-			}
+			List<FLA_FundInfo> al = ofy().load().type(FLA_FundInfo.class).list();
 			for (int i=0; i < al.size(); i++) {
 				ofy().delete().key(Key.create(FLA_FundInfo.class,  al.get(i).mId)).now();
 			}
@@ -233,11 +229,7 @@ public class DS {
 		ee.dinfo(log, TAG, "Will now delete FLA_Currency");
 		timeStart = System.currentTimeMillis();
 		do {
-			ArrayList<FLA_Currency> al = new ArrayList<>();
-			QueryResultIterator<FLA_Currency> qri = ofy().load().type(FLA_Currency.class).limit(1000).iterator();
-			while (qri.hasNext()) {
-				al.add(qri.next());
-			}
+			List<FLA_Currency> al = ofy().load().type(FLA_Currency.class).limit(1000).list();
 			for (int i=0; i < al.size(); i++) {
 				ofy().delete().key(Key.create(FLA_Currency.class,  al.get(i).mKey_CurrencyName)).now();
 			}
@@ -257,11 +249,7 @@ public class DS {
 		ee.dinfo(log, TAG, "Will now delete FLA_FundCategory");
 		timeStart = System.currentTimeMillis();
 		do {
-			ArrayList<FLA_FundCategory> al = new ArrayList<>();
-			QueryResultIterator<FLA_FundCategory> qri = ofy().load().type(FLA_FundCategory.class).limit(1000).iterator();
-			while (qri.hasNext()) {
-				al.add(qri.next());
-			}
+			List<FLA_FundCategory> al = ofy().load().type(FLA_FundCategory.class).limit(1000).list();
 			for (int i=0; i < al.size(); i++) {
 				ofy().delete().key(Key.create(FLA_FundCategory.class,  al.get(i).mKey_CategoryName)).now();
 			}
@@ -281,11 +269,7 @@ public class DS {
 		ee.dinfo(log, TAG, "Will now delete FLA_FundIndex");
 		timeStart = System.currentTimeMillis();
 		do {
-			ArrayList<FLA_FundIndex> al = new ArrayList<>();
-			QueryResultIterator<FLA_FundIndex> qri = ofy().load().type(FLA_FundIndex.class).limit(1000).iterator();
-			while (qri.hasNext()) {
-				al.add(qri.next());
-			}
+			List<FLA_FundIndex> al = ofy().load().type(FLA_FundIndex.class).limit(1000).list();
 			for (int i=0; i < al.size(); i++) {
 				ofy().delete().key(Key.create(FLA_FundIndex.class,  al.get(i).mKey_IndexName)).now();
 			}

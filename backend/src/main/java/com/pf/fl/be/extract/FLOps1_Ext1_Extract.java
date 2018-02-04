@@ -25,16 +25,22 @@ public class FLOps1_Ext1_Extract {
 
     private EE mEE;
     private List<String> mIWDebugs = new ArrayList<>();
+    private boolean mIgnoreSchedule;
 
-    public FLOps1_Ext1_Extract(EE ee, IndentWriter iwErrors) {
+    public FLOps1_Ext1_Extract(EE ee, boolean ignoreSchedule, IndentWriter iwErrors) {
         mEE = ee;
+        mIgnoreSchedule = ignoreSchedule;
     }
 
     public static int SCH_WEEKLY = 1;
     public static int SCH_NOW = 2;
     public void doIt() throws Exception {
         // Production Line
-        doItImpl(SCH_WEEKLY, null, false);
+        if (mIgnoreSchedule) {
+            doItImpl(SCH_NOW, null, false);
+        } else {
+            doItImpl(SCH_WEEKLY, null, false);
+        }
     }
     private void doItImpl(
             int schedule,
@@ -106,10 +112,10 @@ public class FLOps1_Ext1_Extract {
                     .orderKey(false)
                     .offset(count)
                     .limit(50);
-            QueryResultIterator<FLA_FundInfo> qri = query.iterator();
-            while (qri.hasNext()) {
+            List<FLA_FundInfo> qri = query.list();
+            for (int i=0; i < qri.size(); i++) {
+                FLA_FundInfo fi = qri.get(i);
                 count++;
-                FLA_FundInfo fi = qri.next();
                 fundInfoList.add(fi);
 //                    if ((count % 100) == 0) {
 //                        mEE.dinfo(log, TAG, "......[" + count + "]: " + fi.mType + "." + fi.mName);

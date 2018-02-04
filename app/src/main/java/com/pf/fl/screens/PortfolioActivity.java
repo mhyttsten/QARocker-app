@@ -23,10 +23,15 @@ import com.pf.fl.datamodel.DMA_Portfolio;
 import com.pf.fl.datamodel.DM_Transform;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 public class PortfolioActivity extends AppCompatActivity {
     private static final String TAG = PortfolioActivity.class.getSimpleName();
+
+    private String mType = DM_Transform.T_SEB;
+    private DMA_Portfolio mPortfolio = new DMA_Portfolio();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,12 +60,15 @@ public class PortfolioActivity extends AppCompatActivity {
 //            }
 //        });
 
+        setupRecyclerView();
+
         RadioButton rbSEB = (RadioButton) findViewById(R.id.rb_seb_fl);
         rbSEB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mType = DM_Transform.T_SEB;
-                mRVAdapter.initializeList(mRV, mType);
+                mPortfolio = DM_Transform.portfoliosHM.get(mType);
+                mRVAdapter.initializeList(mRV, mType, mPortfolio);
             }
         });
         RadioButton rbVGD= (RadioButton) findViewById(R.id.rb_vanguard_fl);
@@ -68,7 +76,8 @@ public class PortfolioActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mType = DM_Transform.T_VANGUARD;
-                mRVAdapter.initializeList(mRV, mType);
+                mPortfolio = DM_Transform.portfoliosHM.get(mType);
+                mRVAdapter.initializeList(mRV, mType, mPortfolio);
             }
         });
         RadioButton rbPPM = (RadioButton) findViewById(R.id.rb_ppm_fl);
@@ -76,7 +85,8 @@ public class PortfolioActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mType = DM_Transform.T_PPM;
-                mRVAdapter.initializeList(mRV, mType);
+                mPortfolio = DM_Transform.portfoliosHM.get(mType);
+                mRVAdapter.initializeList(mRV, mType, mPortfolio);
             }
         });
         RadioButton rbSPP = (RadioButton) findViewById(R.id.rb_spp_fl);
@@ -84,32 +94,39 @@ public class PortfolioActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mType = DM_Transform.T_SPP;
-                mRVAdapter.initializeList(mRV, mType);
+                mPortfolio = DM_Transform.portfoliosHM.get(mType);
+                mRVAdapter.initializeList(mRV, mType, mPortfolio);
             }
         });
         if (rbSEB.isChecked()) {
             mType = DM_Transform.T_SEB;
+            mPortfolio = DM_Transform.portfoliosHM.get(mType);
+            mRVAdapter.initializeList(mRV, mType, mPortfolio);
         }
         if (rbSPP.isChecked()) {
-            mType = DM_Transform.T_SPP;
+            DMA_Portfolio p = DM_Transform.portfoliosHM.get(mType);
+            mPortfolio = DM_Transform.portfoliosHM.get(mType);
+            mRVAdapter.initializeList(mRV, mType, mPortfolio);
         }
         if (rbVGD.isChecked()) {
-            mType = DM_Transform.T_VANGUARD;
+            DMA_Portfolio p = DM_Transform.portfoliosHM.get(mType);
+            mPortfolio = DM_Transform.portfoliosHM.get(mType);
+            mRVAdapter.initializeList(mRV, mType, mPortfolio);
         }
         if (rbPPM.isChecked()) {
-            mType = DM_Transform.T_PPM;
+            DMA_Portfolio p = DM_Transform.portfoliosHM.get(mType);
+            mPortfolio = DM_Transform.portfoliosHM.get(mType);
+            mRVAdapter.initializeList(mRV, mType, mPortfolio);
         }
 
-        setupRecyclerView();
-
-        Button b = (Button) findViewById(R.id.b_save_fl);
+        Button b_save = (Button) findViewById(R.id.b_save_fl);
         final SaveHolder h = getHolder();
-        b.setOnClickListener(new View.OnClickListener() {
+        b_save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 DMA_Portfolio f = new DMA_Portfolio();
                 f.setName(mType);
-                for (DM_Transform.CheckableFund cf: h.rvAdapter.funds) {
+                for (DM_Transform.CheckableFund cf: h.rvAdapter.mFunds) {
                     if (cf.isChecked) {
                         f.fund_ids.add(cf.fund.id);
                     }
@@ -126,9 +143,6 @@ public class PortfolioActivity extends AppCompatActivity {
         });
 
     }
-
-    private String mType = DM_Transform.T_SEB;
-
 
     // **********
 
@@ -161,12 +175,13 @@ public class PortfolioActivity extends AppCompatActivity {
         mRV.setLayoutManager(mRVLayout);
         mRVAdapter = new MyRVAdapter(this);
         mRV.setAdapter(mRVAdapter);
-        mRVAdapter.initializeList(mRV, mType);
+//        mRVAdapter.initializeList(mRV, mType, mPortfolio);
     }
 
     private static class MyRVAdapter extends RecyclerView.Adapter<MyRVAdapter.MyRVViewHolder> {
         private AppCompatActivity mParent;
-        public List<DM_Transform.CheckableFund> funds = new ArrayList<>();
+        public List<DM_Transform.CheckableFund> mFunds = new ArrayList<>();
+        private DMA_Portfolio mPortfolio;
 
         private static class MyRVViewHolder extends RecyclerView.ViewHolder {
             private View mView;
@@ -181,10 +196,20 @@ public class PortfolioActivity extends AppCompatActivity {
             }
         }
 
-        public void initializeList(RecyclerView rv, String kind) {
-            int oldCount = funds.size();
-            funds = DM_Transform.getFunds(kind);
-            int newCount = funds.size();
+        public void initializeList(RecyclerView rv, String kind, DMA_Portfolio p) {
+            Log.i(TAG, "initializeList with type: " + kind);
+
+
+            int oldCount = mFunds.size();
+            mPortfolio = p;
+            mFunds = DM_Transform.getFunds(kind);
+            for (DM_Transform.CheckableFund f : mFunds) {
+                if (mPortfolio.existFundInPortfolio(f.fund.name)) {
+                    Log.i(TAG, "*** Setting to checked: " + f.fund.name);
+                    f.isChecked = true;
+                }
+            }
+            int newCount = mFunds.size();
             Log.i(TAG, "Refresh with: " + kind + ", new count: " + newCount + ", old: " + oldCount);
             notifyDataSetChanged();
         }
@@ -195,8 +220,8 @@ public class PortfolioActivity extends AppCompatActivity {
 
         @Override
         public int getItemCount() {
-            Log.i(TAG, "getItemCount, number of items: " + funds.size());
-            return funds.size();
+            Log.i(TAG, "getItemCount, number of items: " + mFunds.size());
+            return mFunds.size();
         }
 
         @Override
@@ -221,7 +246,7 @@ public class PortfolioActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(MyRVAdapter.MyRVViewHolder holder, final int position) {
             Log.i(TAG, "onBindViewHolder, pos: " + position);
-            String name = funds.get(position).fund.name;
+            String name = mFunds.get(position).fund.name;
             if (name.length() < 30) {
                 holder.mTextView.setTextAppearance(android.R.style.TextAppearance_Large);
             } else {
@@ -232,11 +257,12 @@ public class PortfolioActivity extends AppCompatActivity {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     Log.i(TAG, "...onCheckedChanged to: " + isChecked + " for position: " + position);
-                    DM_Transform.CheckableFund cf = funds.get(position);
+                    DM_Transform.CheckableFund cf = mFunds.get(position);
                     cf.isChecked = isChecked;
                 }
             });
-            holder.mCheckBox.setChecked(funds.get(position).isChecked);
+            holder.mCheckBox.setChecked(mFunds.get(position).isChecked);
+
         };
     }
 }
