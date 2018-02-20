@@ -2,9 +2,10 @@ package com.pf.fl.be.util;
 
 import java.io.IOException;
 import java.util.logging.Logger;
+
 import com.pf.fl.be.datastore.DS;
-import com.pf.shared.IndentWriter;
-import com.pf.shared.MM;
+import com.pf.shared.utils.IndentWriter;
+import com.pf.shared.utils.MM;
 
 public class EE {
 	
@@ -31,7 +32,7 @@ public class EE {
 	}
 		
 	//------------------------------------------------------------------------
-	public static final long INTERVAL_MAX = (9*60+40) * 1000;
+	public static final long INTERVAL_MAX = (8*60) * 1000;
 	private static long mTimerStart = (System.currentTimeMillis() - 5000);
 	public synchronized static void timerStart() {
 		mTimerStart = (System.currentTimeMillis() - 10000);	
@@ -141,4 +142,8 @@ public class EE {
 
 	private IndentWriter _iwLog;
 	private boolean _isInitialized = false;
+
+
+
+
 }

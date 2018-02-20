@@ -1,12 +1,9 @@
 package com.pf.fl.datamodel;
 
-import android.util.Log;
-
 import com.google.firebase.database.Exclude;
 import com.pf.fl.analysis.DataPoint;
 import com.pf.fl.analysis.TrendEntity;
-import com.pf.shared.IndentWriter;
-import com.pf.shared.MM;
+import com.pf.shared.utils.IndentWriter;
 
 import java.util.ArrayList;
 import java.util.List;

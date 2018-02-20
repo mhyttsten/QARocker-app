@@ -4,15 +4,13 @@ import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
-import com.pf.shared.OTuple2G;
 import com.pf.shared.base64.Base64;
-import com.pf.shared.Compresser;
+import com.pf.shared.utils.Compresser;
 import com.pf.fl.be.util.Constants;
 import com.pf.fl.be.util.EE;
-import com.pf.shared.MM;
+import com.pf.shared.utils.MM;
 import com.pf.shared.ExtractData;
-import com.pf.shared.Pair;
-import com.pf.fl.be.datamodel.FLA_Cache_FundInfo;
+import com.pf.shared.utils.OTuple2G;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,10 +57,10 @@ public class GotoFirebase {
                    && fi.mDateYYMMDD_Updated.compareTo(dateLastFridayYYMMDD) > 0) {
                 mExtract_Done++;
             } else if (!fi.mIsValid) {
-                extractData.urlsInvalid.add(new Pair<String, String>(fi.getTypeAndName(), fi.mURL));
+                extractData.urlsInvalid.add(new OTuple2G<String, String>(fi.getTypeAndName(), fi.mURL));
                 fundsInvalid.add(fi);
             } else {
-                extractData.urlsNotUpdated.add(new Pair<String, String>(fi.getTypeAndName(), fi.mURL));
+                extractData.urlsNotUpdated.add(new OTuple2G<String, String>(fi.getTypeAndName(), fi.mURL));
                 fundsNotUpdated.add(fi);
             }
             output_FundInfo(dates, mr, fi, index);

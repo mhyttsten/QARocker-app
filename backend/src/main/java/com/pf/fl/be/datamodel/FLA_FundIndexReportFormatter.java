@@ -1,7 +1,7 @@
 package com.pf.fl.be.datamodel;
 
-import com.pf.shared.MM;
-import com.pf.shared.OTuple2G;
+import com.pf.shared.utils.MM;
+import com.pf.shared.utils.OTuple2G;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,6 +1,5 @@
 package com.pf.fl.be.datamodel;
 
-import com.google.appengine.api.datastore.QueryResultIterator;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Ref;
 import com.googlecode.objectify.annotation.Entity;
@@ -9,26 +8,16 @@ import com.googlecode.objectify.annotation.Unindex;
 import com.googlecode.objectify.cmd.Query;
 import com.pf.fl.be.datastore.DS;
 import com.pf.fl.be.util.EE;
-import com.pf.shared.IndentWriter;
-import com.pf.shared.MM;
-import com.google.cloud.datastore.*;
+import com.pf.shared.utils.IndentWriter;
+import com.pf.shared.utils.MM;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 import java.util.logging.Logger;
 
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 import javax.persistence.Embedded;
 
 import static com.googlecode.objectify.ObjectifyService.ofy;

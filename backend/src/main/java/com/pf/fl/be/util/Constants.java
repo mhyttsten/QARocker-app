@@ -31,14 +31,6 @@ public class Constants {
         }
         return vgURL;
     }
-    public static final String getVanguardTickerFromFundName(String name) {
-        int io1 = name.lastIndexOf("(");
-        int io2 = name.lastIndexOf(")");
-        if (io1 == -1 || io2 == -1) {
-            return null;
-        }
-        return name.substring(io1+1, io2);
-    }
 
     public static final String ACCOUNT_TYPE_PPM = "PPM";
     public static final String ACCOUNT_TYPE_SEB = "SEB";

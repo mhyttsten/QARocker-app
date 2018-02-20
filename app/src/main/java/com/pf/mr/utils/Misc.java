@@ -1,7 +1,9 @@
 package com.pf.mr.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
@@ -11,11 +13,16 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Logger;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.execmodel.ESet;
+import com.pf.shared.extract.ExtractFromHTML_Helper;
+import com.pf.shared.utils.MM;
 
 import java.lang.reflect.Field;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -24,6 +31,36 @@ import java.util.List;
 
 public class Misc {
     public static final String TAG = Misc.class.getSimpleName();
+
+
+    public static byte[] getFirebaseStorageFile(String s) {
+//        FirebaseStorage storage = FirebaseStorage.getInstance();
+//        StorageReference sr = storage.getReferenceFromUrl(e.mBitmapURL);
+//        "gs://ql-magnushyttsten.appspot.com/backend/fundinfo-db-180220.bin.zip_MASTER_180216.zip";
+        return null;
+
+    }
+
+    public static void extractFundInfo() {
+        @SuppressLint("StaticFieldLeak") AsyncTask<URL, Integer, Long> at = new AsyncTask<URL, Integer, Long>() {
+            protected Long doInBackground(URL... urls) {
+//                String url = "https://www.google.com";
+//                try {
+//                    Log.i(TAG, "About to retrieve web page");
+//                    byte[] ba = MM.getURLContentBA(url);
+//                    Log.i(TAG, "Retrieved web page, size: " + ba.length);
+//                } catch(Exception exc) {
+//                    Log.i(TAG, "Exception when trying to get webpage: " + exc.toString());
+//                    Log.i(TAG, MM.getStackTraceString(exc));
+//                }
+                ExtractFromHTML_Helper.extractFund();
+                return 0L;
+            }
+
+            protected void onProgressUpdate(Integer... progress) { }
+            protected void onPostExecute(Long result) { }
+        }.execute();
+    }
 
     public static String getPartStr(String s) {
         s = s.replace('\n', ' ');

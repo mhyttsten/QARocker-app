@@ -1,7 +1,7 @@
 package com.pf.fl.be.servlet;
 
 import com.pf.fl.be.util.EE;
-import com.pf.shared.MM;
+import com.pf.shared.utils.MM;
 import com.pf.fl.be.datamodel.FLA_Cache;
 
 import java.io.IOException;

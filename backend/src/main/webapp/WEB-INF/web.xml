@@ -35,13 +35,14 @@
     <!-- **************** -->
 
 
+
     <servlet>
-        <servlet-name>cronExtractNowServlet</servlet-name>
-        <servlet-class>com.pf.fl.be.servlet.CronExtractNowServlet</servlet-class>
+        <servlet-name>cronExtractServlet_New</servlet-name>
+        <servlet-class>com.pf.fl.be.servlet.CronExtractServlet_New</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>cronExtractNowServlet</servlet-name>
-        <url-pattern>/cronExtractNow</url-pattern>
+        <servlet-name>cronExtractServlet_New</servlet-name>
+        <url-pattern>/cronExtractNew</url-pattern>
     </servlet-mapping>
 
     <servlet>
@@ -52,6 +53,7 @@
         <servlet-name>cronExtractServlet</servlet-name>
         <url-pattern>/cronExtract</url-pattern>
     </servlet-mapping>
+
 
     <servlet>
         <servlet-name>cronMaintenanceServlet</servlet-name>

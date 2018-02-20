@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import com.pf.shared.IndentWriter;
+import com.pf.shared.utils.IndentWriter;
 
 /**
  * Created by magnushyttsten on 3/26/16.

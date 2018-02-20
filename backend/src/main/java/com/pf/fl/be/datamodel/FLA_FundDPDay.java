@@ -1,7 +1,7 @@
 package com.pf.fl.be.datamodel;
 
-import com.pf.shared.IndentWriter;
-import com.pf.shared.MM;
+import com.pf.shared.utils.IndentWriter;
+import com.pf.shared.utils.MM;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,7 +9,14 @@ import java.util.Comparator;
 import java.util.List;
 
 public class FLA_FundDPDay {
-	
+
+	public static final Comparator<FLA_FundDPDay> COMPARATOR_DATE_ADJUSTED_REVERSE = new Comparator<FLA_FundDPDay>() {
+		public int compare(FLA_FundDPDay a1, FLA_FundDPDay a2) {
+			return -a1.mDateYYMMDD.compareTo(a2.mDateYYMMDD);
+		}
+	};
+
+
 	public static final Comparator<FLA_FundDPDay> COMPARATOR_DATE_ADJUSTED = new Comparator<FLA_FundDPDay>() {
 		public int compare(FLA_FundDPDay a1, FLA_FundDPDay a2) {
 			return a1.mDateYYMMDD.compareTo(a2.mDateYYMMDD);

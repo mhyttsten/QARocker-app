@@ -1,7 +1,7 @@
 package com.pf.fl.be.datamodel;
 
 import com.pf.fl.be.util.EE;
-import com.pf.shared.MM;
+import com.pf.shared.utils.MM;
 
 import java.util.logging.Logger;
 

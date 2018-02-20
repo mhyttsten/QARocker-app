@@ -6,9 +6,9 @@ import com.pf.fl.be.datamodel.FLA_Cache_FundInfo;
 import com.pf.fl.be.datamodel.FLA_FundIndex;
 import com.pf.fl.be.datamodel.FLA_FundInfo;
 import com.pf.fl.be.util.EE;
-import com.pf.shared.MM;
-import com.pf.shared.OTuple2G;
-import com.pf.shared.OTuple3G;
+import com.pf.shared.utils.MM;
+import com.pf.shared.utils.OTuple2G;
+import com.pf.shared.utils.OTuple3G;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,15 +1,13 @@
 package com.pf.fl.be.datastore;
 
-import com.google.appengine.api.datastore.QueryResultIterator;
 import com.pf.fl.be.datamodel.*;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.Ref;
 import com.pf.fl.be.util.EE;
-import com.pf.shared.IndentWriter;
-import com.pf.shared.MM;
+import com.pf.shared.utils.IndentWriter;
+import com.pf.shared.utils.MM;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;

@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.pf.shared.IndentWriter;
+import com.pf.shared.utils.IndentWriter;
 
 // Quizlet client Id: CEa4Mxvm4v
 //    https://api.quizlet.com/2.0/sets/415?client_id=CEa4Mxvm4v&whitespace=1

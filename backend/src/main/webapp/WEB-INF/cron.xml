@@ -48,12 +48,22 @@
         <schedule>every day 05:30</schedule>
         <timezone>Europe/Stockholm</timezone>
     </cron>
+
+    <cron>
+        <url>/cronExtractNew</url>
+        <description>Cron_Extract_New</description>
+        <schedule>every 10 minutes from 7:30 to 7:45</schedule>
+        <timezone>America/Los_Angeles</timezone>
+    </cron>
+
     <cron>
         <url>/cronExtract</url>
         <description>Cron_Extract</description>
         <schedule>every 10 minutes from 05:40 to 08:30</schedule>
         <timezone>Europe/Stockholm</timezone>
     </cron>
+
+
     <cron>
         <url>/cronMaintenance</url>
         <description>Cron_Maintenance</description>

@@ -28,10 +28,8 @@ import com.pf.fl.datamodel.DMA_ExtractInfo;
 import com.pf.mr.R;
 import com.pf.fl.datamodel.DMA_Portfolio;
 import com.pf.fl.datamodel.DM_Transform;
-import com.pf.shared.Compresser;
+import com.pf.shared.utils.Compresser;
 import com.pf.shared.base64.Base64;
-import com.pf.mr.datamodel.QLSet;
-import com.pf.mr.screens.DisplaySetListNVRVActivity;
 
 import java.util.ArrayList;
 import java.util.Iterator;

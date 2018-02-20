@@ -37,6 +37,8 @@ import com.pf.mr.screens.settings.SettingsActivity;
 import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.utils.Constants;
 import com.pf.mr.utils.Misc;
+import com.pf.shared.extract.ExtractFromHTML_Helper;
+import com.pf.shared.utils.MM;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -61,7 +63,15 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         Log.i(TAG, "onCreate");
+        MM.testLog();
+//        Log.w(TAG, MM.stripHTMLComments("hello  <!--how are you-->This is not <!--complicated--> at all"));
+        Log.w(TAG, MM.stripHTMLComments("hello  <!--how are you-->This is not<!--complicated-->" + "]"));
+        Misc.extractFundInfo();
+
+
+
         FirebaseCrash.log(this.getClass().getSimpleName() + ".onCreate");
 //        Log.e(TAG, "DisplaySetListNVRVActivity.onCreate");
 

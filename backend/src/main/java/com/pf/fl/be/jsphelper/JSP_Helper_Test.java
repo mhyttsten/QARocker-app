@@ -4,7 +4,7 @@ import com.pf.fl.be.datamodel.FLA_Cache;
 import com.pf.fl.be.datamodel.FLA_Cache_FundInfo;
 import com.pf.fl.be.datamodel.FLA_FundInfo;
 import com.pf.fl.be.util.EE;
-import com.pf.shared.MM;
+import com.pf.shared.utils.MM;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -24,12 +24,9 @@ targetCompatibility = JavaVersion.VERSION_1_7
 dependencies {
     appengineSdk 'com.google.appengine:appengine-java-sdk:1.9.60'
     compile 'com.google.appengine:appengine-api-1.0-sdk:1.9.60'
-    compile 'com.google.firebase:firebase-admin:5.8.0'
-
-
-//    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.10.0'
-//    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.10.0'
     compile 'com.google.cloud:google-cloud-storage:1.15.0'
+    compile 'com.google.cloud:google-cloud-core:1.15.0'
+//    compile 'com.google.appengine.tools:appengine-gcs-client:+'
     compile 'javax.servlet:servlet-api:2.5'
     compile 'com.googlecode.objectify:objectify:6.0a1'
     compile 'javax.persistence:persistence-api:1.0.2'

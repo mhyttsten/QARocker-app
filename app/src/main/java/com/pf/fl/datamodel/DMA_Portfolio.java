@@ -1,15 +1,11 @@
 package com.pf.fl.datamodel;
 
-import android.util.Log;
-
-import com.pf.shared.MM;
+import com.pf.shared.utils.MM;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class DMA_Portfolio {
     private static final String TAG = DMA_Portfolio.class.getSimpleName();

@@ -1,8 +1,8 @@
 package com.pf.fl.be.extract;
 
 import com.pf.fl.be.util.EE;
-import com.pf.shared.IndentWriter;
-import com.pf.shared.MM;
+import com.pf.shared.utils.IndentWriter;
+import com.pf.shared.utils.MM;
 
 import java.io.IOException;
 import java.util.logging.Logger;

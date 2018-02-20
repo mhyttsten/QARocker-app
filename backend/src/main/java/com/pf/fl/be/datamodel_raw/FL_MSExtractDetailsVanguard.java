@@ -2,21 +2,21 @@ package com.pf.fl.be.datamodel_raw;
 
 import com.pf.fl.be.datamodel.FLA_FundInfo;
 import com.pf.fl.be.util.Constants;
-import com.pf.shared.IndentWriter;
-import com.pf.shared.MM;
-import com.pf.shared.OTuple2G;
+import com.pf.shared.utils.IndentWriter;
+import com.pf.shared.utils.MM;
+import com.pf.shared.utils.OTuple2G;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
+
+import static com.pf.shared.extract.ExtractFromHTML_Vanguard.getVanguardTickerFromFundName;
 
 public class FL_MSExtractDetailsVanguard {
 	private static final Logger log = Logger.getLogger(FL_MSExtractDetailsVanguard.class.getName());
 	private static final String TAG = "FL_MSExtractDetails";
 
-	private static final String URL_MUTUAL_FUND = "https://performance.morningstar.com/perform/Performance/fund/trailing-total-returns.action";
-	private static final String URL_ETF = "https://performance.morningstar.com/perform/Performance/etf/trailing-total-returns.action";
+    private static final String URL_MUTUAL_FUND = "https://performance.morningstar.com/perform/Performance/fund/trailing-total-returns.action";
+    private static final String URL_ETF = "https://performance.morningstar.com/perform/Performance/etf/trailing-total-returns.action";
 
 	//------------------------------------------------------------------------
 	public static OTuple2G<Integer, REFundInfo> extractFundDetails(
@@ -126,7 +126,7 @@ public class FL_MSExtractDetailsVanguard {
 		ot = new OTuple2G<String, String>(null, nextTR);
 		String ticker = MM.assignAndReturnNextTagValue(ot, "<th");
 		log.info("...ticker: " + ticker);
-		String nameTicker = Constants.getVanguardTickerFromFundName(name);
+		String nameTicker = getVanguardTickerFromFundName(name);
 		if (ticker == null || nameTicker == null || !ticker.equals(nameTicker)) {
 			iw.println("*** Error"
 					+ "\nTicker from HTML: " + ticker
@@ -248,7 +248,7 @@ public class FL_MSExtractDetailsVanguard {
         String ticker = MM.assignAndReturnNextTagValue(ot, "<th");
         ticker = ticker.substring(0, ticker.indexOf(" "));
         log.info("...ticker: " + ticker);
-        String nameTicker = Constants.getVanguardTickerFromFundName(name);
+        String nameTicker = getVanguardTickerFromFundName(name);
         if (ticker == null || nameTicker == null || !ticker.equals(nameTicker)) {
             iw.println("*** Error name mismatch between ticker from name and ticker extracted"
                     + "\nTicker from HTML: " + ticker

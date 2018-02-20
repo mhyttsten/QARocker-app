@@ -3,7 +3,7 @@ package com.pf.mr.be;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import com.pf.shared.IndentWriter;
+import com.pf.shared.utils.IndentWriter;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
