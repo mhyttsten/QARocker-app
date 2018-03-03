@@ -2,7 +2,7 @@ package com.pf.fl.analysis;
 
 
 public class TrendEntity {
-
+/*
     // TrendParser constants
     public static final int T_TYPE_UP = 1;
     public static final int T_TYPE_DOWN = 2;
@@ -17,8 +17,6 @@ public class TrendEntity {
         }
     }
 
-    /**
-     */
     public void initialize(int trendType, DataPoint[] dps, int start, int end) {
         mDPs = dps;
         mStart = start;
@@ -51,4 +49,5 @@ public class TrendEntity {
     public String toString() {
         return getTrend() + ", " + MasterTrend.getString(mDPs, mStart, mEnd);
     }
+*/
 }

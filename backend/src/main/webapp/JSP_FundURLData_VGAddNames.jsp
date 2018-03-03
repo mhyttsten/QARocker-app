@@ -1,25 +1,13 @@
-<%@ page import="static com.googlecode.objectify.ObjectifyService.ofy" %>
-<%@ page import="com.googlecode.objectify.Key" %>
-<%@ page import="com.pf.fl.be.datastore.DS" %>
-<%@ page import="com.pf.fl.be.datamodel.FLA_Cache_FundInfo" %>
-<%@ page import="com.pf.fl.be.datamodel.FLA_Cache" %>
-<%@ page import="com.pf.fl.be.datamodel.FLA_FundInfo" %>
-<%@ page import="com.pf.fl.be.datamodel.FLA_FundIndex" %>
-<%@ page import="com.pf.fl.be.datamodel.FLA_FundPortfolio" %>
-<%@ page import="com.pf.fl.be.util.EE" %>
-<%@ page import="com.pf.shared.utils.MM" %>
-<%@ page import="com.googlecode.objectify.Key" %>
-<%@ page import="com.googlecode.objectify.Ref" %>
 <%@ page import="java.util.logging.Logger" %>
-<%@ page import="com.pf.shared.utils.OTuple2G" %>
-<%@ page import="com.pf.shared.utils.OTuple3G" %>
-<%@ page import="com.pf.fl.be.jsphelper.JSP_Helper_fundURLData" %>
-<%@ page import="java.util.Iterator" %>
+<%@ page import="com.pf.fl.be.jsphelper.JSP_Constants" %>
+<%@ page import="com.pf.fl.be.extract.D_DB" %>
+<%@ page import="com.pf.shared.datamodel.D_FundInfo" %>
+<%@ page import="com.pf.shared.utils.MM" %>
+<%@ page import="com.pf.shared.Constants" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.util.Map" %>
 <%@ page import="java.util.HashMap" %>
-<%@ page import="java.net.URLDecoder" %>
 <%@ page import="java.util.ArrayList" %>
-<%@ page import="com.pf.fl.be.util.Constants" %>
 
 <!-- PARAM_TYPE is null, INVALID, or fund Type -->
 
@@ -39,21 +27,19 @@
     response.setContentType("text/html");
     response.setCharacterEncoding("UTF-8");
 
-    EE ee = EE.getEE();
+    String argOperation = request.getParameter(JSP_Constants.ARG_OPERATION);
 
-    String argOperation = request.getParameter(Constants.ARG_OPERATION);
-
-    List<FLA_Cache_FundInfo> list = FLA_Cache.cacheFundInfosByTypeOrNull(Constants.ACCOUNT_TYPE_VANGUARD);
-    HashMap<String, Void> hm = new HashMap<>();
+    List<D_FundInfo> list = D_DB.getFundsByType(D_FundInfo.TYPE_VANGUARD);
+    Map<String, Void> hm = new HashMap<>();
     StringBuffer strb = new StringBuffer();
-    for (FLA_Cache_FundInfo fi: list) {
-       hm.put(fi.mName, null);
-       strb.append(fi.mName + "<br>");
+    for (D_FundInfo fi: list) {
+       hm.put(fi._nameMS, null);
+       strb.append(fi._nameMS + "<br>");
     }
 
 // COMMIT
-if (argOperation != null && argOperation.equals(Constants.OP_COMMIT)) {
-String fundsWLF = request.getParameter(Constants.PARAM_NAME);
+if (argOperation != null && argOperation.equals(JSP_Constants.OP_COMMIT)) {
+String fundsWLF = request.getParameter(JSP_Constants.PARAM_NAME);
 String[] funds = fundsWLF.split("\n");
 
 
@@ -68,17 +54,20 @@ for (String s: funds) {
        continue;
     }
 
-    String url = Constants.url_getVanguard(s);
-    FLA_FundInfo fi = new FLA_FundInfo();
-    fi.mType = FLA_FundInfo.TYPE_VANGUARD;
-    fi.mName = s;
-    fi.mURL = url;
-    fi.mMSRating = -1;
-    fi.mPPMNumber = -1;
-    fi.mDateYYMMDD_Updated = MM.getNowAs_YYMMDD(null);
-    fi.mDateYYMMDD_Update_Attempted = fi.mDateYYMMDD_Updated;
-    ofy().save().entity(fi).now();
-    FLA_Cache.updateCacheAdd(fi);
+    String url = JSP_Constants.url_getVanguard(s);
+    D_FundInfo fi = new D_FundInfo();
+    fi._type = D_FundInfo.TYPE_VANGUARD;
+    fi._nameOrig = s;
+    fi._url = url;
+    fi._msRating = -1;
+    fi._ppmNumber = "";
+
+    String today = MM.getNowAs_YYMMDD(Constants.TIMEZONE_STOCKHOLM);
+    String lfriday = MM.tgif_getLastFridayTodayExcl(today);
+
+    fi._dateYYMMDD_Updated = lfriday;
+    fi._dateYYMMDD_Update_Attempted = lfriday;
+    D_DB.addAndSaveFundInfo(fi);
 
     hm.put(s, null);
     fundsSaved.add(s);
@@ -101,12 +90,12 @@ else {
 %>
 
 <form action="JSP_FundURLData_VGAddNames.jsp" method="POST" accept-charset="utf-8" id="usrform">
-<input type="hidden" name="<%=Constants.ARG_OPERATION%>" value="<%=Constants.OP_COMMIT%>">
+<input type="hidden" name="<%=JSP_Constants.ARG_OPERATION%>" value="<%=JSP_Constants.OP_COMMIT%>">
 
 <br>
 <input type="submit" value="Add Vanguard Funds">
 </form>
-<textarea rows="50" cols="80" name="<%=Constants.PARAM_NAME%>" form="usrform"></textarea>
+<textarea rows="50" cols="80" name="<%=JSP_Constants.PARAM_NAME%>" form="usrform"></textarea>
 
 <% } %>
 

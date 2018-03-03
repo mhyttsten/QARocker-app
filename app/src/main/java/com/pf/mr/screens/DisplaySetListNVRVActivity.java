@@ -1,8 +1,11 @@
 package com.pf.mr.screens;
 
+import android.content.AsyncQueryHandler;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -40,6 +43,7 @@ import com.pf.mr.utils.Misc;
 import com.pf.shared.extract.ExtractFromHTML_Helper;
 import com.pf.shared.utils.MM;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -65,15 +69,34 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         Log.i(TAG, "onCreate");
-        MM.testLog();
-//        Log.w(TAG, MM.stripHTMLComments("hello  <!--how are you-->This is not <!--complicated--> at all"));
-        Log.w(TAG, MM.stripHTMLComments("hello  <!--how are you-->This is not<!--complicated-->" + "]"));
-        Misc.extractFundInfo();
+        AsyncTask<Void, Void, Void> at = new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                ExtractFromHTML_Helper.extractFund();
+                return null;
+            }
+        };
+        at.execute();
 
+//        MM.testLog();
+//        Log.w(TAG, MM.stripHTMLComments("hello  <!--how are you-->This is not <!--complicated--> at all"));
+//        Log.w(TAG, MM.stripHTMLComments("hello  <!--how are you-->This is not<!--complicated-->" + "]"));
+//        Misc.getFirebaseStorageFile();
+//        Misc.extractFundInfo();
+
+//        Log.e(TAG, "Will now try GCS API");
+//        try {
+//            List<Blob> bs = D_BEDB.gcsGetBlobsInAscendingOrder(com.pf.shared.Constants.PREFIX_FUNDINFO_DB);
+//            for (Blob b: bs) {
+//                Log.e(TAG, "Found blob: " + b.getBucket() + "." + b.getName());
+//            }
+//        } catch (IOException exc) {
+//            Log.e(TAG, "Caught exception: " + exc.getLocalizedMessage());
+//        }
 
 
         FirebaseCrash.log(this.getClass().getSimpleName() + ".onCreate");
-//        Log.e(TAG, "DisplaySetListNVRVActivity.onCreate");
+        Log.e(TAG, "DisplaySetListNVRVActivity.onCreate");
 
         setContentView(R.layout.activity_display_set_list_nvrv);
 
@@ -196,7 +219,7 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
                     ESet esetAll = new ESet(Constants.SETNAME_ALL, esets);
                     list.add(esetAll);
                     for (ESet e : esets) {
-                        Log.i(TAG, "Now adding: " + e.getSetTitle() + " with stats.size: " + e.mETermsAll.size());
+//                        Log.i(TAG, "Now adding: " + e.getSetTitle() + " with stats.size: " + e.mETermsAll.size());
                         list.add(e);
                     }
                     ESet[] sa = list.toArray(new ESet[mQuizList.size()]);

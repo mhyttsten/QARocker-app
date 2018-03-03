@@ -5,7 +5,10 @@ import com.pf.fl.be.datamodel.FLA_Cache_FundDPWeek;
 import com.pf.fl.be.datamodel.FLA_Cache_FundInfo;
 import com.pf.fl.be.datamodel.FLA_FundIndex;
 import com.pf.fl.be.datamodel.FLA_FundInfo;
+import com.pf.fl.be.extract.D_DB;
 import com.pf.fl.be.util.EE;
+import com.pf.shared.datamodel.D_FundDPDay;
+import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.utils.MM;
 import com.pf.shared.utils.OTuple2G;
 import com.pf.shared.utils.OTuple3G;
@@ -20,109 +23,104 @@ public class JSP_Helper_DataSorter {
     private static final Logger log = Logger.getLogger(JSP_Helper_DataSorter.class.getName());
     private static final String TAG = MM.getClassName(JSP_Helper_DataSorter.class.getName());
 
-// Lowest points x weeks
-// Highest return x weeks
-// getDateSequence(startingIndex, numberOfWeeks);
+
+//    public static List<D_FundInfo> getSEBMatches(
+//            List<String> dates,
+//            List<D_FundInfo> list) throws Exception {
+//        EE ee = EE.getEE();
+//        List<D_FundInfo> rlCFIs = new ArrayList<>();
 //
-// Highest return last week (and position 2 weeks ago)
-// Best points 2 weeks added together
-
-    public static List<FLA_Cache_FundInfo> getSEBMatches(
-            List<String> dates,
-            List<FLA_Cache_FundInfo> list) throws Exception {
-        EE ee = EE.getEE();
-        List<FLA_Cache_FundInfo> rlCFIs = new ArrayList<>();
-
-        List<FLA_Cache_FundInfo> sebs = new ArrayList<FLA_Cache_FundInfo>();
-        List<FLA_Cache_FundInfo> others = new ArrayList<FLA_Cache_FundInfo>();
-
-        // Sort out the SEBs
-        for (FLA_Cache_FundInfo cfi : list) {
-            if (cfi.mType.equals(FLA_FundInfo.TYPE_SEB)) {
-                sebs.add(cfi);
-            } else {
-                others.add(cfi);
-            }
-        }
-
-        // Create suggestions to SEBs
-        for (FLA_Cache_FundInfo cfi : sebs) {
-            rlCFIs.add(cfi);
-            ee.dinfo(log, TAG, "Adding SEB: " + cfi + ", result size: " + rlCFIs.size());
-
-            for (String t: FLA_FundInfo.TYPES) {
-                if (!t.equals(FLA_FundInfo.TYPE_SEB)) {
-                    ee.dinfo(log, TAG, "...type: " + t);
-                    // Find matching alternative
-                    if (t.equals(FLA_FundInfo.TYPE_PPM) && cfi.mPPMNumber > 0) {
-                        FLA_Cache_FundInfo cfiPPM = FLA_Cache.cachePPMFundByNumber(cfi.mPPMNumber);
-                        if (cfiPPM == null) {
-                            cfiPPM = cfi.createCopy();
-                            cfiPPM.mType = FLA_FundInfo.TYPE_PPM;
-                            cfiPPM.mName = "ERR:#NotFound:" + cfi.mPPMNumber + " " + cfiPPM.mName;
-                            ee.dinfo(log, TAG, "...PPM number ERROR, could not find PPM fund");
-                        } else {
-                            ee.dinfo(log, TAG, "...PPM number SUCCESS");
-                        }
-                        ee.dinfo(log, TAG, "...Add PPM fund by number: " + cfiPPM.mType + "." + cfiPPM.mName);
-                        rlCFIs.add(cfiPPM);
-                    } else if (cfi.mIndexCompare != null) {
-                        FLA_FundIndex fundIndex = cfi.mIndexCompare.get();
-                        if (fundIndex.mKey_IndexName == null || fundIndex.mKey_IndexName.trim().equals("-")) {
-                            ee.dinfo(log, TAG, "...Add null, index not found");
-                            rlCFIs.add(null);
-                        } else {
-                            // Sort by best results last two weeks added together
-                            List<FLA_Cache_FundInfo> cfiIndexes = FLA_Cache.cacheFundInfosByIndexAndType(t, fundIndex.mKey_IndexName);
-                            List<OTuple3G<FLA_Cache_FundInfo, List<Double>, String>> rfull = new ArrayList<>();
-                            getCachedFundInfoWithinDates(
-                                    dates,
-                                    cfiIndexes,
-                                    null,
-                                    rfull);
-                            rfull = dataSort_GetBestLastXWeeks(10, 2, rfull);
-                            if (rfull.size() > 0) {
-                                FLA_Cache_FundInfo cfiBestIndexMatch = rfull.get(0)._o1;
-                                ee.dinfo(log, TAG, "...Add best match from index: " + cfiBestIndexMatch.mType + "." + cfiBestIndexMatch.mName);
-                                rlCFIs.add(cfiBestIndexMatch);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Add all other, null to separate pack
-        if (others.size() > 0) {
-            ee.dinfo(log, TAG, "...Add null because we had others");
-            rlCFIs.add(null);
-        }
-        for (FLA_Cache_FundInfo cfi : others) {
-            ee.dinfo(log, TAG, "...Add others: " + cfi.mType + "." + cfi.mName);
-            rlCFIs.add(cfi);
-        }
-
-        return rlCFIs;
-    }
+//        List<D_FundInfo> sebs = new ArrayList<>();
+//        List<D_FundInfo> others = new ArrayList<>();
+//
+//        // Sort out the SEBs
+//        for (D_FundInfo cfi : list) {
+//            if (cfi._type.equals(FLA_FundInfo.TYPE_SEB)) {
+//                sebs.add(cfi);
+//            } else {
+//                others.add(cfi);
+//            }
+//        }
+//
+//        // Create suggestions to SEBs
+//        for (D_FundInfo cfi : sebs) {
+//            rlCFIs.add(cfi);
+//            ee.dinfo(log, TAG, "Adding SEB: " + cfi + ", result size: " + rlCFIs.size());
+//
+//            for (String t: D_FundInfo.TYPES) {
+//                if (!t.equals(D_FundInfo.TYPE_SEB)) {
+//                    ee.dinfo(log, TAG, "...type: " + t);
+//                    // Find matching alternative
+//                    if (t.equals(D_FundInfo.TYPE_PPM)) {
+//                        D_FundInfo cfiPPM = D_DB.getFundByPPMNumber(cfi.mPPMNumber);
+//                        if (cfiPPM == null) {
+//                            cfiPPM.mType = FLA_FundInfo.TYPE_PPM;
+//                            cfiPPM.mName = "ERR:#NotFound:" + cfi.mPPMNumber + " " + cfiPPM.mName;
+//
+//                            ee.dinfo(log, TAG, "...PPM number ERROR, could not find PPM fund");
+//                        } else {
+//                            ee.dinfo(log, TAG, "...PPM number SUCCESS");
+//                        }
+//                        ee.dinfo(log, TAG, "...Add PPM fund by number: " + cfiPPM.mType + "." + cfiPPM.mName);
+//                        rlCFIs.add(cfiPPM);
+//                    } else if (cfi.mIndexCompare != null) {
+//                        FLA_FundIndex fundIndex = cfi.mIndexCompare.get();
+//                        if (fundIndex.mKey_IndexName == null || fundIndex.mKey_IndexName.trim().equals("-")) {
+//                            ee.dinfo(log, TAG, "...Add null, index not found");
+//                            rlCFIs.add(null);
+//                        } else {
+//                            // Sort by best results last two weeks added together
+//                            List<D_FundInfo> cfiIndexes = D_DB.getByTypeAndIndex(t, fundIndex);
+//                            List<OTuple3G<FLA_Cache_FundInfo, List<Double>, String>> rfull = new ArrayList<>();
+//                            getCachedFundInfoWithinDates(
+//                                    dates,
+//                                    cfiIndexes,
+//                                    null,
+//                                    rfull);
+//                            rfull = dataSort_GetBestLastXWeeks(10, 2, rfull);
+//                            if (rfull.size() > 0) {
+//                                FLA_Cache_FundInfo cfiBestIndexMatch = rfull.get(0)._o1;
+//                                ee.dinfo(log, TAG, "...Add best match from index: " + cfiBestIndexMatch.mType + "." + cfiBestIndexMatch.mName);
+//                                rlCFIs.add(cfiBestIndexMatch);
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        // Add all other, null to separate pack
+//        if (others.size() > 0) {
+//            ee.dinfo(log, TAG, "...Add null because we had others");
+//            rlCFIs.add(null);
+//        }
+//        for (FLA_Cache_FundInfo cfi : others) {
+//            ee.dinfo(log, TAG, "...Add others: " + cfi.mType + "." + cfi.mName);
+//            rlCFIs.add(cfi);
+//        }
+//
+//        return rlCFIs;
+//    }
 
     /**
      *
      */
-    public static OTuple2G<String[], List<FLA_Cache_FundInfo>>
-    convertToTableRows(List<OTuple3G<FLA_Cache_FundInfo, List<Double>, String>> arg) {
-        List<String> cols1 = new ArrayList<>();
-        List<FLA_Cache_FundInfo> fcfi = new ArrayList<>();
-        for (int i=0; i < arg.size(); i++) {
-            cols1.add(arg.get(i)._o3);
-            fcfi.add(arg.get(i)._o1);
-        }
-        String[] cols1A = cols1.toArray(new String[cols1.size()]);
-
-        OTuple2G<String[], List<FLA_Cache_FundInfo>> r = new OTuple2G<>();
-        r._o1 = cols1A;
-        r._o2 = fcfi;
-        return r;
-    }
+//    public static OTuple2G<String[], List<D_FundInfo>>
+//    convertToTableRows(List<OTuple2G<D_FundInfo, List<Double>>> arg) {
+//        List<String> cols1 = new ArrayList<>();
+//        List<D_FundInfo> fcfi = new ArrayList<>();
+//
+//        for (int i=0; i < arg.size(); i++) {
+//            cols1.add(arg.get(i)._o3);
+//            fcfi.add(arg.get(i)._o1);
+//        }
+//        String[] cols1A = cols1.toArray(new String[cols1.size()]);
+//
+//        OTuple2G<String[], List<D_FundInfo>> r = new OTuple2G<>();
+//        r._o1 = cols1A;
+//        r._o2 = fcfi;
+//        return r;
+//    }
 
     /**
      *
@@ -157,78 +155,45 @@ public class JSP_Helper_DataSorter {
     /**
      *
      */
-    public static void getCachedFundInfoWithinDates(
+    public static List<OTuple2G<D_FundInfo, List<Double>>> getCachedFundInfoWithinDates(
             List<String> dates,
-            List<FLA_Cache_FundInfo> args,
-            List<FLA_Cache_FundInfo> resultNonQualifieds,
-            List<OTuple3G<FLA_Cache_FundInfo, List<Double>, String>> result) throws Exception {
+            List<D_FundInfo> args) throws Exception {
 
-        if (resultNonQualifieds == null) {
-            resultNonQualifieds = new ArrayList<>();
-        }
-        resultNonQualifieds.clear();
-        result.clear();
+        List<OTuple2G<D_FundInfo, List<Double>>> result = new ArrayList<>();
 
-        int count_t = 0;
-        int count_df = 0;
-        int count_ffd = 0;
-        int count_fnfd = 0;
-        for (FLA_Cache_FundInfo cfi : args) {
-            List<FLA_Cache_FundDPWeek> fws = cfi.getDPWeeks();
-            log.info("Processing fund: " + cfi.getTypeAndName());
-            for (FLA_Cache_FundDPWeek fw: fws) {
-                log.info("...week: " + fw.mDateYYMMDD);
-            }
-
-            count_t++;
+        for (D_FundInfo cfi : args) {
+            List<D_FundDPDay> fws = cfi._dpDays;
             List<Double> doubleList = new ArrayList<>();
-            List<FLA_Cache_FundDPWeek> dpws = cfi.getDPWeeks();
+            List<D_FundDPDay> dpws = cfi._dpDays;
             boolean foundDate = false;
-            log.info("Need one of dates");
             for (String d : dates) {
-                log.info("...date: " + d);
-                foundDate = false;
-                for (FLA_Cache_FundDPWeek dpw : dpws) {
-                    if (dpw.mDateYYMMDD.equals(d) && dpw.mR1w != null) {
-                        count_df++;
-                        foundDate = true;
-                        doubleList.add(dpw.mR1w);
+                Double r1w = null;
+                for (D_FundDPDay dpw : dpws) {
+                    if (dpw._dateYYMMDD.equals(d) && dpw._r1w != D_FundDPDay.FLOAT_NULL) {
+                        r1w = new Double(dpw._r1w);
                     }
                 }
-                if (!foundDate) {
-                    break;
-                }
-            }
-            if (foundDate) {
-                count_ffd++;
-                OTuple3G<FLA_Cache_FundInfo, List<Double>, String> ot = new OTuple3G<>(cfi, doubleList, null);
-                result.add(ot);
-            } else {
-                count_fnfd++;
-                resultNonQualifieds.add(cfi);
+                doubleList.add(r1w);
             }
         }
-        EE.getEE().dinfo(log, TAG, "Total: " + count_t +
-                ", dateFound: " + count_df +
-                ", fundFoundDate: " + count_ffd +
-                ", fundNotFoundDate: " + count_fnfd);
+        return result;
     }
 
     /**
      *
      */
-    public static List<OTuple3G<FLA_Cache_FundInfo, List<Double>, String>>
+    public static List<OTuple3G<D_FundInfo, List<Double>, String>>
     dataSort_GetBestLastXWeeks(
             int limitCount,
             final int weekCount,
-            List<OTuple3G<FLA_Cache_FundInfo, List<Double>, String>> arg) throws Exception {
+            List<OTuple3G<D_FundInfo, List<Double>, String>> arg) throws Exception {
 
-        List<OTuple3G<FLA_Cache_FundInfo, List<Double>, String>> l = new ArrayList<>();
+        List<OTuple3G<D_FundInfo, List<Double>, String>> l = new ArrayList<>();
         l.addAll(arg);
 
-        Collections.sort(l, new Comparator<OTuple3G<FLA_Cache_FundInfo, List<Double>, String>>() {
+        Collections.sort(l, new Comparator<OTuple3G<D_FundInfo, List<Double>, String>>() {
             @Override
-            public int compare(OTuple3G<FLA_Cache_FundInfo, List<Double>, String> o1, OTuple3G<FLA_Cache_FundInfo, List<Double>, String> o2) {
+            public int compare(OTuple3G<D_FundInfo, List<Double>, String> o1, OTuple3G<D_FundInfo, List<Double>, String> o2) {
                 double o1d = 0.0D;
                 double o2d = 0.0D;
                 for (int i=0; i < weekCount; i++) {
@@ -257,21 +222,17 @@ public class JSP_Helper_DataSorter {
         return l.subList(0, limitCount);
     }
 
-
-
-
-
     /**
      *
      */
-    public static List<OTuple3G<FLA_Cache_FundInfo, List<Double>, String>>
+    public static List<OTuple3G<D_FundInfo, List<Double>, String>>
     dataSort_GetBestScoreLast2Weeks(
             int limitCount,
-            List<OTuple3G<FLA_Cache_FundInfo, List<Double>, String>> arg) throws Exception {
+            List<OTuple3G<D_FundInfo, List<Double>, String>> arg) throws Exception {
 
-        List<OTuple3G<FLA_Cache_FundInfo, List<Double>, List<Integer>>> l = new ArrayList<>();
-        for (OTuple3G<FLA_Cache_FundInfo, List<Double>, String> e : arg) {
-            OTuple3G<FLA_Cache_FundInfo, List<Double>, List<Integer>> ne = new OTuple3G<>();
+        List<OTuple3G<D_FundInfo, List<Double>, List<Integer>>> l = new ArrayList<>();
+        for (OTuple3G<D_FundInfo, List<Double>, String> e : arg) {
+            OTuple3G<D_FundInfo, List<Double>, List<Integer>> ne = new OTuple3G<>();
             ne._o1 = e._o1;
             ne._o2 = e._o2;
             ne._o3 = new ArrayList<Integer>();
@@ -279,10 +240,10 @@ public class JSP_Helper_DataSorter {
         }
 
         // Sort according to week 1
-        Collections.sort(l, new Comparator<OTuple3G<FLA_Cache_FundInfo, List<Double>, List<Integer>>>() {
+        Collections.sort(l, new Comparator<OTuple3G<D_FundInfo, List<Double>, List<Integer>>>() {
             @Override
-            public int compare(OTuple3G<FLA_Cache_FundInfo, List<Double>, List<Integer>> o1,
-                               OTuple3G<FLA_Cache_FundInfo, List<Double>, List<Integer>> o2) {
+            public int compare(OTuple3G<D_FundInfo, List<Double>, List<Integer>> o1,
+                               OTuple3G<D_FundInfo, List<Double>, List<Integer>> o2) {
                 if (o1._o2.get(0) > o2._o2.get(0)) {
                     return -1;
                 }
@@ -291,15 +252,15 @@ public class JSP_Helper_DataSorter {
         });
         // Assign the positions
         for (int i=0; i < l.size(); i++) {
-            OTuple3G<FLA_Cache_FundInfo, List<Double>, List<Integer>> e = l.get(i);
+            OTuple3G<D_FundInfo, List<Double>, List<Integer>> e = l.get(i);
             e._o3.add(new Integer(i+1));
         }
 
         // Sort according to week 2
-        Collections.sort(l, new Comparator<OTuple3G<FLA_Cache_FundInfo, List<Double>, List<Integer>>>() {
+        Collections.sort(l, new Comparator<OTuple3G<D_FundInfo, List<Double>, List<Integer>>>() {
             @Override
-            public int compare(OTuple3G<FLA_Cache_FundInfo, List<Double>, List<Integer>> o1,
-                               OTuple3G<FLA_Cache_FundInfo, List<Double>, List<Integer>> o2) {
+            public int compare(OTuple3G<D_FundInfo, List<Double>, List<Integer>> o1,
+                               OTuple3G<D_FundInfo, List<Double>, List<Integer>> o2) {
                 if (o1._o2.get(1) > o2._o2.get(1)) {
                     return -1;
                 }
@@ -308,15 +269,15 @@ public class JSP_Helper_DataSorter {
         });
         // Assign the positions
         for (int i=0; i < l.size(); i++) {
-            OTuple3G<FLA_Cache_FundInfo, List<Double>, List<Integer>> e = l.get(i);
+            OTuple3G<D_FundInfo, List<Double>, List<Integer>> e = l.get(i);
             e._o3.add(new Integer(i+1));
         }
 
         // Sort according to positions
-        Collections.sort(l, new Comparator<OTuple3G<FLA_Cache_FundInfo, List<Double>, List<Integer>>>() {
+        Collections.sort(l, new Comparator<OTuple3G<D_FundInfo, List<Double>, List<Integer>>>() {
             @Override
-            public int compare(OTuple3G<FLA_Cache_FundInfo, List<Double>, List<Integer>> o1,
-                               OTuple3G<FLA_Cache_FundInfo, List<Double>, List<Integer>> o2) {
+            public int compare(OTuple3G<D_FundInfo, List<Double>, List<Integer>> o1,
+                               OTuple3G<D_FundInfo, List<Double>, List<Integer>> o2) {
                 int o1Pos = o1._o3.get(0) + o1._o3.get(1);
                 int o2Pos = o2._o3.get(0) + o2._o3.get(1);
                 if (o1Pos < o2Pos) {
@@ -326,10 +287,10 @@ public class JSP_Helper_DataSorter {
             }
         });
 
-        List<OTuple3G<FLA_Cache_FundInfo, List<Double>, String>> rlist = new ArrayList<>();
+        List<OTuple3G<D_FundInfo, List<Double>, String>> rlist = new ArrayList<>();
         for (int i=0; i < l.size(); i++) {
-            OTuple3G<FLA_Cache_FundInfo, List<Double>, List<Integer>> e = l.get(i);
-            OTuple3G<FLA_Cache_FundInfo, List<Double>, String> r = new OTuple3G<>();
+            OTuple3G<D_FundInfo, List<Double>, List<Integer>> e = l.get(i);
+            OTuple3G<D_FundInfo, List<Double>, String> r = new OTuple3G<>();
             StringBuilder strb = new StringBuilder();
             for (int j=0; j < e._o3.size(); j++) {
                 strb.append(String.valueOf(e._o3.get(j)));

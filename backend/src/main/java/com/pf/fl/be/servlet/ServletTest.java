@@ -1,27 +1,20 @@
 package com.pf.fl.be.servlet;
 
 import com.googlecode.objectify.cmd.Query;
-import com.pf.fl.be.datamodel.FLA_Cache;
-import com.pf.fl.be.datamodel.FLA_Cache_FundInfo;
 import com.pf.fl.be.datamodel.FLA_FundInfo;
 import com.pf.fl.be.datamodel.D_FundInfo_From_FLA_FundInfo_Serializer;
-import com.pf.shared.datamodel.D_FundDPDay;
+import com.pf.fl.be.extract.D_DB;
 import com.pf.fl.be.extract.FLOps1_Ext1_Extract_New;
-import com.pf.fl.be.datamodel_raw.FL_MSExtractDetails;
-import com.pf.fl.be.datamodel_raw.REFundInfo;
 import com.pf.fl.be.datastore.DS;
-import com.pf.fl.be.extract.FLOps1_Ext1_Extract_SingleFund;
-import com.pf.fl.be.extract.FLOps1_Ext1_HTMLGet;
-import com.pf.fl.be.util.Constants;
+import com.pf.shared.Constants;
 import com.pf.fl.be.util.EE;
+import com.pf.shared.extract.ExtractFromHTML_Helper;
 import com.pf.shared.utils.IndentWriter;
 import com.pf.shared.utils.MM;
-import com.pf.shared.utils.OTuple2G;
 import com.pf.shared.datamodel.D_FundInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
@@ -46,7 +39,9 @@ public class ServletTest extends HttpServlet {
         mEE = EE.getEE();
         try {
             ee.dinfo(log, TAG, "Now executing servletTest");
-            doItAll();
+//            readAndStore();
+//            createSmallSet();
+//            doItAll();
             // cvsRead();
             // cvsGenerate();
             // fixDPYear();
@@ -64,6 +59,90 @@ public class ServletTest extends HttpServlet {
         }
     }
 
+    public void extractAFund() throws Exception {
+        ExtractFromHTML_Helper.extractFund();
+    }
+
+
+    public void readAndStore() throws Exception {
+        log.info("readAndStore");
+        List<D_FundInfo> funds = D_DB.readFundList(Constants.FUNDINFO_DB_MASTER);
+        log.info("Number of fund read: " + funds.size());
+//        D_DB.saveFundList(null, funds, Constants.FUNDINFO_DB_MASTER, false);
+        log.info("Done");
+    }
+
+
+    public void createSmallSet() throws Exception {
+        log.info("createSmallSet");
+        List<D_FundInfo> funds = D_DB.readFundList(Constants.FUNDINFO_DB_MASTER);
+        List<D_FundInfo> r = new ArrayList<>();
+        int ppmC = 0;
+        int ppmIC = 0;
+        int sebC = 0;
+        int sebIC = 0;
+        int sppC = 0;
+        int sppIC = 0;
+        int vgdC = 0;
+        int vgdIC = 0;
+
+        for (D_FundInfo fi: funds) {
+            if (fi._type.equals(D_FundInfo.TYPE_PPM) && ppmC <= 4) {
+                ppmC++;
+                if (ppmIC == 0) {
+                    fi._errorCode = 998;
+                    log.info("PPM, setting ec: 998, ppmIC is: " + ppmIC);
+                }
+                else if (ppmIC == 1) {
+                    log.info("PPM, setting ec: 999, ppmIC is: " + ppmIC);
+                    fi._errorCode = 999;
+                    log.info("PPM, setting invalid, ppmIC is: " + ppmIC);
+                    log.info("invalid fund is: " + fi.getTypeAndName());
+                    fi._isValid = false;
+                }
+                ppmIC++;
+                r.add(fi);
+            }
+            if (fi._type.equals(D_FundInfo.TYPE_SEB) && sebC <= 4) {
+                sebC++;
+                if (sebIC <= 1) {
+                    fi._errorCode = D_FundInfo.IC_COM_NO_DECODABLE_DATA;
+                    if (sebIC == 1) {
+                        fi._isValid = false;
+                    }
+                    sebIC++;
+                }
+                r.add(fi);
+            }
+            if (fi._type.equals(D_FundInfo.TYPE_SPP) && sppC <= 4) {
+                sppC++;
+                if (sppIC <= 1) {
+                    fi._errorCode = D_FundInfo.IC_COM_NO_DECODABLE_DATA;
+                    if (sppIC == 1) {
+                        fi._isValid = false;
+                    }
+                    sppIC++;
+                }
+                r.add(fi);
+            }
+            if (fi._type.equals(D_FundInfo.TYPE_VANGUARD) && vgdC <= 4) {
+                vgdC++;
+                if (vgdIC <= 1) {
+                    fi._errorCode = D_FundInfo.IC_COM_NO_DECODABLE_DATA;
+                    if (vgdIC == 1) {
+                        fi._isValid = false;
+                    }
+                    vgdIC++;
+                }
+                r.add(fi);
+            }
+        }
+        log.info("Result r has size: " + r.size());
+        log.info("Now saving: " + Constants.FUNDINFO_DB_TEST_JSP);
+        D_DB.saveFundList(null, r, Constants.FUNDINFO_DB_TEST_JSP, false);
+        log.info("Done, exiting");
+    }
+
     public void doItAll() throws Exception {
         EE ee = EE.getEE();
 
@@ -77,50 +156,30 @@ public class ServletTest extends HttpServlet {
         funds = convert_FLA_FundInfos(fundsOld);
         ee.dinfo(log, TAG, "...Done converting FLA_FundInfos");
 
-        String lFriday = MM.tgif_getLastFridayTodayExcl(MM.getNowAs_YYMMDD(null));
-        String llFriday = MM.tgif_getLastFridayTodayExcl(lFriday);
-        String llSaturday = MM.tgif_getNextWeekday(llFriday, Calendar.SATURDAY);
-        int count = 0;
-        for (D_FundInfo fi : funds) {
-            fi._dateYYMMDD_Updated = llSaturday;
-            fi._dateYYMMDD_Update_Attempted = llSaturday;
-
-            D_FundDPDay dpd = fi._dpDays.remove(0);
-            if (!dpd._dateYYMMDD.equals(lFriday)) {
-                ee.dsevere(log, TAG, "Count: " + count + ". Expected: " + lFriday + ", got: " + dpd._dateYYMMDD + ", fund: " + fi.getTypeAndName());
-                return;
-            }
-            count++;
-        }
-        ee.dinfo(log, TAG, "Successfully removed last Friday DPD");
+//        String lFriday = MM.tgif_getLastFridayTodayExcl(MM.getNowAs_YYMMDD(null));
+//        String llFriday = MM.tgif_getLastFridayTodayExcl(lFriday);
+//        String llSaturday = MM.tgif_getNextWeekday(llFriday, Calendar.SATURDAY);
+//        int count = 0;
+//        for (D_FundInfo fi : funds) {
+//            fi._dateYYMMDD_Updated = llSaturday;
+//            fi._dateYYMMDD_Update_Attempted = llSaturday;
+//
+//            D_FundDPDay dpd = fi._dpDays.remove(0);
+//            if (!dpd._dateYYMMDD.equals(lFriday)) {
+//                ee.dsevere(log, TAG, "Count: " + count + ". Expected: " + lFriday + ", got: " + dpd._dateYYMMDD + ", fund: " + fi.getTypeAndName());
+//                return;
+//            }
+//            count++;
+//        }
+//        ee.dinfo(log, TAG, "Successfully removed last Friday DPD");
 
         ee.dinfo(log, TAG, "Now writing BIN file");
-        FLOps1_Ext1_Extract_New.saveFundList(funds);
+        D_DB.saveFundList(null, funds, Constants.FUNDINFO_DB_MASTER, false);
         ee.dinfo(log, TAG, "...Done writing BIN file");
 
         ee.dinfo(log, TAG, "Now reading BIN file");
-        funds = FLOps1_Ext1_Extract_New.readFundList();
+        funds = D_DB.readFundList(Constants.FUNDINFO_DB_MASTER);
         ee.dinfo(log, TAG, "...Done reading BIN file, number of entries: " + funds.size());
-
-// Check that null was managed correctly
-//        FLA_FundInfo fiOld = null;
-//        for (FLA_FundInfo fiOldIter: fundsOld) {
-//            fiOld = fiOldIter;
-//            for (FLA_FundDPDay dpdO: fiOld.mDPDays) {
-//                if (dpdO.mR1w == null) {
-//                    break;
-//                }
-//            }
-//        }
-//        if (fiOld == null) {
-//            ee.dsevere(log, TAG, "Could not find a single NULL day");
-//        } else {
-//            for (D_FundInfo fi: funds) {
-//                if (fi.getTypeAndName().equals(fiOld.getTypeAndName())) {
-//                    ee.dinfo(log, TAG, "Here is one with NULL\n" + fi.toString());
-//                }
-//            }
-//        }
 
         D_FundInfo fi1 = funds.get(0);
         D_FundInfo fi2 = funds.get(funds.size()-1);
@@ -297,98 +356,4 @@ public class ServletTest extends HttpServlet {
             }
         }
     }
-
-    public void collectAVanguard(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        mEE = EE.getEE();
-
-        // Test
-        log.info("Log test: info");
-        //log.warning("Log test: warning");
-        //log.severe("Log test: severe");
-        System.out.println("Log test: System.out");
-        resp.getOutputStream().write((ServletTest.class.getName()
-                + ", v5 executed at: " + new java.util.Date().toString()).getBytes());
-        log.info("That was it from ServletTest");
-
-        List<FLA_Cache_FundInfo> l = FLA_Cache.cacheFundInfosByTypeOrNull(Constants.ACCOUNT_TYPE_VANGUARD);
-        log.info("Total # funds: " + l.size());
-        for (FLA_Cache_FundInfo cfi: l) {
-            if (!cfi.mName.toLowerCase().contains("etf")) {
-                continue;
-            }
-//            if (!cfi.mName.contains("Vanguard Mega Cap Value Index Fund ETF Shares")) {
-//                continue;
-//            }
-            FLA_FundInfo fi = DS.getFundInfoById(cfi.mId);
-
-            // Collect the data
-            FLOps1_Ext1_Extract_SingleFund esf = new FLOps1_Ext1_Extract_SingleFund();
-            esf.extractFund(fi, true);
-            if (esf.mError) {
-                log.warning("ERROR WHILE EXTRACTING FUND: " + fi.getTypeAndName() + "\n"
-                    + esf.mIWE.getString());
-            } else {
-                IndentWriter iw = new IndentWriter();
-                fi.dumpInfo(iw);
-                log.info("EXTRACTED SUCCESSFULLY: " + fi.getTypeAndName() + "\n" + iw.getString());
-            }
-//            break;
-        }
-
-
-//        checkURL();
-    }
-
-
-
-    public void checkURL() {
-        try {
-            checkURLImpl();
-        } catch(Exception exc) {
-            System.out.println("Exception: " + exc.getMessage());
-            System.out.println(MM.getStackTraceString(exc));
-        }
-    }
-    private void checkURLImpl() throws Exception {
-        IndentWriter iw = new IndentWriter();
-
-        String url = "http://www.morningstar.se/Funds/Quicktake/Overview.aspx?perfid=0P0000I3LA&programid=0000000000";
-        byte[] pageDataUncompressed = FLOps1_Ext1_HTMLGet.htmlGet(
-                mEE,
-                iw,
-                url,
-                5000,
-                6);
-
-        String htmlString = MM.newString(pageDataUncompressed, EE.ENCODING_FILE_READ);
-        OTuple2G<Integer, REFundInfo> reFundInfo = FL_MSExtractDetails.extractFundDetails(
-                Constants.ACCOUNT_TYPE_SEB,
-                url,
-                htmlString,
-                iw);
-        iw = new IndentWriter();
-        reFundInfo._o2.addString(iw);
-        System.out.println(iw.getString());
-    }
-
-//    private void checkURLImpl() throws Exception {
-//        IndentWriter iw = new IndentWriter();
-//
-//        String url = "http://www.morningstar.se/Funds/Quicktake/Overview.aspx?perfid=0P0000I3LA&programid=0000000000";
-//
-//        byte[] pageContent = MM.getURLContentBA(url);
-//        // MM.fileWrite("pageContent.html", pageContent);
-//        String htmlString = MM.newString(pageContent, EE.ENCODING_FILE_READ);
-//        REFundInfo reFundInfo = FL_MSExtractDetails.extractFundDetails(
-//                Constants.ACCOUNT_TYPE_SEB,
-//                url,
-//                htmlString,
-//                iw);
-//        iw = new IndentWriter();
-//        reFundInfo.addString(iw);
-//        System.out.println("**** RESULT IS:\n" + iw.getString());
-//    }
-
-
-
 }

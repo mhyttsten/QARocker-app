@@ -17,19 +17,23 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.pf.fl.analysis.DPSequenceAnalyzer;
-import com.pf.fl.datamodel.DMA_ExtractInfo;
+//import com.pf.fl.datamodel.DMA_ExtractInfo;
+import com.pf.fl.datamodel.FL_DB;
+import com.pf.fl.datamodel.FL_DBCallback;
 import com.pf.mr.R;
-import com.pf.fl.datamodel.DMA_Portfolio;
-import com.pf.fl.datamodel.DM_Transform;
+import com.pf.shared.Constants;
+import com.pf.shared.datamodel.D_FundInfo;
+import com.pf.shared.datamodel.D_Portfolio;
 import com.pf.shared.utils.Compresser;
 import com.pf.shared.base64.Base64;
+import com.pf.shared.utils.MMMob;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -54,18 +58,10 @@ public class MainActivity extends AppCompatActivity {
 
     private DrawerLayout mDrawerLayout;
 
-    private FirebaseDatabase mDB;
-    private DatabaseReference mDBRef;
-    private List<DMA_Portfolio> mPortfolios = new ArrayList<>();
-
-    private boolean mHasDB = false;
-    private boolean mHasPortfolios = false;
-    private boolean mHasExtractInfo = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "MainActivity.onCreate");
+        Log.w(TAG, "MainActivity.onCreate");
         setContentView(R.layout.activity_main_fl);
 
         Toolbar t = (Toolbar)findViewById(R.id.toolbar_fl);
@@ -97,107 +93,71 @@ public class MainActivity extends AppCompatActivity {
         }
 //        navigationView.inflateMenu(R.menu.nv_menu_fl);
 
-        mDB = FirebaseDatabase.getInstance();
+        if (FL_DB._initialized) {
+            processInitSequence(true);
+            return;
+        }
 
-        // Initialize all fund data from raw database
-        mDBRef = mDB.getReference("funddata/data");
-        mDBRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String value = dataSnapshot.getValue(String.class);
-                byte[] ba = Base64.decodeBase64(value);
-                ba = Compresser.dataUncompress(ba);
-                try {
-                    value = new String(ba, "UTF-8");
-                } catch(Exception exc) {
-                    throw new AssertionError("Character encoding error for UTF-8");
+        FL_DB.initializeDB(Constants.FUNDINFO_DB_MASTER_BIN, new FL_DBCallback() {
+            public void callback(boolean isError, String errorMessage, Object result) {
+                if (isError) {
+                    Toast.makeText(MainActivity.this, "Error reading fundinfo DB: " + errorMessage, Toast.LENGTH_SHORT).show();
+                    return;
                 }
-                Log.d(TAG, "BA length: " + ba.length + ", orig string length: " + value.length());
-                value = new String(ba);
-                Log.d(TAG, "Value length: " + value.length() + ", content: " + (value.length() <= 500 ? value : value.substring(0, 500)));
-
-                Log.d(TAG, "Now initializing data structures");
-                DM_Transform.initializeFromRawDB(value);
-                mHasDB = true;
-                setupRecyclerView();
+                List<D_FundInfo> fis = (List<D_FundInfo>)result;
+                FL_DB.initialize1_Funds(fis);
+                processInitSequence(false);
             }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) { }
         });
 
-        mDBRef = mDB.getReference("extractdata");
-        mDBRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Iterator<DataSnapshot> iter = dataSnapshot.getChildren().iterator();
-                List<DMA_ExtractInfo> l = new ArrayList<>();
-                while (iter.hasNext()) {
-                    DataSnapshot dsh = iter.next();
-                    Object o = dsh.getValue();
-                    DMA_ExtractInfo s = null;
-                    try {
-                        s = (DMA_ExtractInfo) dsh.getValue(DMA_ExtractInfo.class);
-                        l.add(s);
-                    } catch (Exception exc) {
-                        System.out.println("Error");
-                        exc.printStackTrace();
-                        throw exc;
-                    }
+        FL_DB.initializeDB(Constants.PORTFOLIO_DB_MASTER_BIN, new FL_DBCallback() {
+            public void callback(boolean isError, String errorMessage, Object result) {
+                if (isError) {
+                    Toast.makeText(MainActivity.this, "Error reading portfolio DB: " + errorMessage, Toast.LENGTH_SHORT).show();
+                    return;
                 }
-                DM_Transform.initializeFromExtractList(l);
-                mHasExtractInfo = true;
-                setupRecyclerView();
+                List<D_Portfolio> pos = (List<D_Portfolio>)result;
+                FL_DB.initialize2_Portfolios(pos);
+                processInitSequence(false);
             }
+        });
 
-
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) { }
+        FL_DB.initializeDB(Constants.FUNDINFO_LOGS_EXTRACT_MASTER_TXT, new FL_DBCallback() {
+            public void callback(boolean isError, String errorMessage, Object result) {
+                if (isError) {
+                    Toast.makeText(MainActivity.this, "Error reading extract log: " + errorMessage, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String s = (String)result;
+                FL_DB.initialize3_ExtractStatistics(s);
+                processInitSequence(false);
+            }
         });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.i(TAG, "MainActivity.onResume, hasDB: " + mHasDB + ", hasP: " + mHasPortfolios);
-//        if (mRVAdapter != null) {
-//            mRVAdapter.notifyDataSetChanged();
-//        }
-        // Get the portfolios
-        mDBRef = mDB.getReference("portfolios");
-        mDBRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot qs) {
-                mPortfolios.clear();
-                Iterator<DataSnapshot> iter = qs.getChildren().iterator();
-                while (iter.hasNext()) {
-                    DataSnapshot dsh = iter.next();
-                    Object o = dsh.getValue();
-                    DMA_Portfolio p = null;
-                    try {
-                        p = (DMA_Portfolio) dsh.getValue(DMA_Portfolio.class);
-                    } catch (Exception exc) {
-                        System.out.println("Error");
-                        exc.printStackTrace();
-                        throw exc;
-                    }
-                    if (p != null) {
-                        mPortfolios.add(p);
-                    }
-                }
-                mHasPortfolios = true;
-                System.out.println("Initializing portfolios");
-                DM_Transform.initializePortfolios(mPortfolios);
-                setupRecyclerView();
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) { }
-        });
-
-        setupRecyclerView();
+        Log.w(TAG, "MainActivity.onResume");
+        if (mRVAdapter != null) {
+            mRVAdapter.notifyDataSetChanged();
+        }
     }
 
+    private int _initSequenceCount = 3;
+    private void processInitSequence(boolean done) {
+        if (done) {
+            _initSequenceCount = 0;
+        } else {
+            _initSequenceCount--;
+        }
+        Log.e(TAG, "*** initSequenceCount down to: " + _initSequenceCount);
+        if (_initSequenceCount == 0) {
+            Log.e(TAG, "*** initSequenceCount final, calling setupRecyclerView()");
+            FL_DB._initialized = true;
+            setupRecyclerView();
+        }
+    }
 
     // **********
 
@@ -205,22 +165,20 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager mRVLayout;
     private MyRVAdapter mRVAdapter;
     private void setupRecyclerView() {
-        System.out.println("Now doing recycler view setup");
-        if (!mHasDB || !mHasPortfolios || !mHasExtractInfo) {
-            return;
-        }
-        System.out.println("...for real");
+        Log.e(TAG, "setupRecyclerView 1");
         mRV = (RecyclerView)findViewById(R.id.recycler_view_fl);
         mRVLayout = new LinearLayoutManager(this);
         mRV.setLayoutManager(mRVLayout);
         mRVAdapter = new MyRVAdapter(this);
-        mRVAdapter.mPortfolios = mPortfolios;
+        mRVAdapter.mPortfolios = FL_DB.getPortfolios();
         mRV.setAdapter(mRVAdapter);
+        Log.e(TAG, "setupRecyclerView 3");
         mRVAdapter.notifyDataSetChanged();
+        Log.e(TAG, "setupRecyclerView 4");
     }
     private static class MyRVAdapter extends RecyclerView.Adapter<MyRVAdapter.MyRVViewHolder> {
         private AppCompatActivity mParent;
-        List<DMA_Portfolio> mPortfolios = new ArrayList<>();
+        List<D_Portfolio> mPortfolios = new ArrayList<>();
 
         private static class MyRVViewHolder extends RecyclerView.ViewHolder {
             private TextView mTextView;
@@ -251,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     String name = tv.getText().toString();
-                    DM_Transform.listPopulatePortfolioView(name);
+                    FL_DB.listPopulatePortfolioView(name);
                     Intent i = new Intent(mParent, ListActivity.class);
                     mParent.startActivity(i);
                 }
@@ -261,8 +219,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(MyRVViewHolder holder, int position) {
-            Log.i(TAG, "Now setting name for: " + position + ", " + mPortfolios.get(position).name);
-            holder.mTextView.setText(mPortfolios.get(position).name);
+            Log.i(TAG, "Now setting name for: " + position + ", " + mPortfolios.get(position)._name);
+            holder.mTextView.setText(mPortfolios.get(position)._name);
         }
     }
 
@@ -293,9 +251,9 @@ public class MainActivity extends AppCompatActivity {
                                 startActivity(i1);
                                 return true;
                             case R.id.nv_show_change_fl:
-                                DPSequenceAnalyzer.createList();
-                                Intent i2 = new Intent(MainActivity.this, ListActivity.class);
-                                startActivity(i2);
+//                                DPSequenceAnalyzer.createList();
+//                                Intent i2 = new Intent(MainActivity.this, ListActivity.class);
+//                                startActivity(i2);
                                 return true;
                             case R.id.nv_trend_up_len_fl:
                                 return true;
@@ -306,7 +264,6 @@ public class MainActivity extends AppCompatActivity {
                             case R.id.nv_trend_down_value_fl:
                                 return true;
                         }
-
                         return true;
                     }
                 });

@@ -7,6 +7,7 @@ import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.pf.shared.Constants;
+import com.pf.shared.datamodel.D_FundDPDay;
 import com.pf.shared.extract.ExtractFromHTML_Helper;
 import com.pf.fl.be.util.EE;
 import com.pf.shared.datamodel.D_FundInfo;
@@ -36,6 +37,9 @@ public class FLOps1_Ext1_Extract_New {
     private EE mEE;
     private List<String> mIWDebugs = new ArrayList<>();
     private boolean mIgnoreSchedule;
+    private String _nowYYMMDD;
+    private String _fridayLastYYMMDD;
+    private String _fridayLast2YYMMDD;
 
     public FLOps1_Ext1_Extract_New(EE ee, boolean ignoreSchedule, IndentWriter iwErrors) {
         mEE = ee;
@@ -48,13 +52,14 @@ public class FLOps1_Ext1_Extract_New {
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(EE.TIMEZONE_STOCKHOLM));
         int nowDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
         int nowHourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
-        String nowYYMMDD = MM.getNowAs_YYMMDD(EE.TIMEZONE_STOCKHOLM);
+        _nowYYMMDD = MM.getNowAs_YYMMDD(EE.TIMEZONE_STOCKHOLM);
         String nowYYMMDD_HHMMSS = MM.getNowAs_YYMMDD_HHMMSS(EE.TIMEZONE_STOCKHOLM);
-        String fridayLastYYMMDD = MM.tgif_getLastFridayTodayExcl(nowYYMMDD);
-        String sunYYMMDD = MM.tgif_getNextWeekday(fridayLastYYMMDD, Calendar.SUNDAY);
-        String monYYMMDD = MM.tgif_getNextWeekday(fridayLastYYMMDD, Calendar.MONDAY);
-        String tueYYMMDD = MM.tgif_getNextWeekday(fridayLastYYMMDD, Calendar.TUESDAY);
-        String wedYYMMDD = MM.tgif_getNextWeekday(fridayLastYYMMDD, Calendar.WEDNESDAY);
+        _fridayLastYYMMDD  = MM.tgif_getLastFridayTodayExcl(_nowYYMMDD);
+        _fridayLast2YYMMDD = MM.tgif_getLastFridayTodayExcl(_fridayLastYYMMDD);
+        String sunYYMMDD = MM.tgif_getNextWeekday(_fridayLastYYMMDD, Calendar.SUNDAY);
+        String monYYMMDD = MM.tgif_getNextWeekday(_fridayLastYYMMDD, Calendar.MONDAY);
+        String tueYYMMDD = MM.tgif_getNextWeekday(_fridayLastYYMMDD, Calendar.TUESDAY);
+        String wedYYMMDD = MM.tgif_getNextWeekday(_fridayLastYYMMDD, Calendar.WEDNESDAY);
 
         // Same algorithm for collection and recollecting
         //if ((nowDayOfWeek == Calendar.SATURDAY && nowHourOfDay > 5)
@@ -63,69 +68,38 @@ public class FLOps1_Ext1_Extract_New {
         if (!mIgnoreSchedule) {
             boolean scheduledPlay =
                     (nowDayOfWeek == Calendar.SATURDAY && nowHourOfDay >= 5)
-                            || (nowYYMMDD.equals(sunYYMMDD) && nowHourOfDay >= 5)
-                            || (nowYYMMDD.equals(monYYMMDD) && nowHourOfDay >= 5)
-                            || (nowYYMMDD.equals(tueYYMMDD) && nowHourOfDay >= 5)
-                            || (nowYYMMDD.equals(wedYYMMDD) && nowHourOfDay >= 5);
+                            || (_nowYYMMDD.equals(sunYYMMDD) && nowHourOfDay >= 5)
+                            || (_nowYYMMDD.equals(monYYMMDD) && nowHourOfDay >= 5)
+                            || (_nowYYMMDD.equals(tueYYMMDD) && nowHourOfDay >= 5)
+                            || (_nowYYMMDD.equals(wedYYMMDD) && nowHourOfDay >= 5);
             if (!scheduledPlay) {
-                mEE.dinfo(log, TAG, "Not time for extraction now: " + nowYYMMDD + ", " + MM.tgif_getDayOfWeekStr(nowDayOfWeek) + "@" + nowHourOfDay + ", lastFriday: " + fridayLastYYMMDD);
+                mEE.dinfo(log, TAG, "Not time for extraction now: " + _nowYYMMDD + ", " + MM.tgif_getDayOfWeekStr(nowDayOfWeek) + "@" + nowHourOfDay + ", lastFriday: " + _fridayLastYYMMDD);
                 return;
             }
         }
 
         // *** 1: It is time to extract
-        mEE.dinfo(log, TAG, "Now: " + nowYYMMDD_HHMMSS + ", " + MM.tgif_getDayOfWeekStr(nowDayOfWeek) + "@" + nowHourOfDay + ", lastFriday: " + fridayLastYYMMDD);
+        mEE.dinfo(log, TAG, "Now: " + nowYYMMDD_HHMMSS + ", " + MM.tgif_getDayOfWeekStr(nowDayOfWeek) + "@" + nowHourOfDay + ", lastFriday: " + _fridayLastYYMMDD);
 
         IndentWriter iw_header = new IndentWriter();
         iw_header.println("\n*********************************************************************");
         iw_header.println("Extracting now: " + nowYYMMDD_HHMMSS + " (Stockholm time)");
-        iw_header.println("Last Friday is: " + fridayLastYYMMDD);
+        iw_header.println("Last Friday is: " + _fridayLastYYMMDD);
 
         // Get all Funds and Classify them
-        List<D_FundInfo> fiAllFunds = FLOps1_Ext1_Extract_New.readFundList();
-        int fiAllFundsInitialCount = fiAllFunds.size();
-        List<D_FundInfo> fiToExtract = new ArrayList<>();
-        List<D_FundInfo> fiInvalid = new ArrayList<>();
-        List<D_FundInfo> fiAlreadyExtracted = new ArrayList<>();
-        List<D_FundInfo> fiAlreadyAttemptedToday = new ArrayList<>();
-        for (int i=0; i < fiAllFunds.size(); i++) {
-            D_FundInfo fi = fiAllFunds.get(i);
-            if (!fi._isValid) {
-                fiInvalid.add(fi);
-            } else if (fi._dateYYMMDD_Update_Attempted == null || fi._dateYYMMDD_Update_Attempted.length() != 6) {
-                throw new IOException("Attempted field wrong: " + fi._type + "." + fi._nameMS);
-            } else if (fi._dateYYMMDD_Updated.compareTo(fridayLastYYMMDD) >= 0) {
-                fiAlreadyExtracted.add(fi);
-            } else if (fi._dateYYMMDD_Update_Attempted.compareTo(nowYYMMDD) < 0) {
-                fiToExtract.add(fi);
-            } else if (fi._dateYYMMDD_Update_Attempted.compareTo(nowYYMMDD) == 0) {
-                fiAlreadyAttemptedToday.add(fi);
-            } else {
-                throw new IOException("Weird state for fund: " + fi.toString());
-            }
-        }
+        List<D_FundInfo> fiAllFunds = D_DB.readFundList(Constants.FUNDINFO_DB_MASTER);
+        printExtractStats(iw_header, fiAllFunds);
+        List<D_FundInfo> fiToExtract = _fiToExtract;
 
-        // *** 2: It is time to extract
-        iw_header.println("*** Extract list created");
-        iw_header.push();
-        iw_header.println("Total funds considered: " + fiAllFunds.size());
-        iw_header.println("Already extracted this week: " + fiAlreadyExtracted.size());
-//        printListStr(iw_header, "Already Extracted this week", fiAlreadyExtracted);
-        // iw_header.println("Already attempted extract today: " + fiAlreadyAttemptedToday.size());
-        printListStr(iw_header, "Already Attempted Extract Today", fiAlreadyAttemptedToday);
-        iw_header.println("To extract: " + fiToExtract.size());
-        printListStr(iw_header, "Funds Invalid", fiInvalid);
-        iw_header.pop();
         mEE.dinfo(log, TAG, iw_header.getString());
 
         // Return if there is no work
         if (fiToExtract.size() == 0) {
-            mEE.dinfo(log, TAG, "No entries to extract, extractList was empty: " + nowYYMMDD + ", " + MM.tgif_getDayOfWeekStr(nowDayOfWeek) + "@" + nowHourOfDay + ", lastFriday: " + fridayLastYYMMDD);
+            mEE.dinfo(log, TAG, "No entries to extract, extractList was empty: " + _nowYYMMDD + ", " + MM.tgif_getDayOfWeekStr(nowDayOfWeek) + "@" + nowHourOfDay + ", lastFriday: " + _fridayLastYYMMDD);
             iw_header.println("No entries to extract, extractList was empty");
             return;
         }
         iw_header.println();
-
 
         IndentWriter iw_fund_infos = new IndentWriter();
         iw_fund_infos.push();
@@ -134,12 +108,7 @@ public class FLOps1_Ext1_Extract_New {
         IndentWriter iw_fund_error_details = new IndentWriter();
         iw_fund_error_details.push();
         int countTotal = 0;
-        List<D_FundInfo> fiNotUpdated = new ArrayList<>();
-        List<D_FundInfo> fiUpdated = new ArrayList<>();
-        fiInvalid = new ArrayList<D_FundInfo>();
-        List<D_FundInfo> fiDeleted = new ArrayList<>();
-        List<D_FundInfo> fiError = new ArrayList<>();
-        List<D_FundInfo> fiKeep = new ArrayList<>();
+        List<D_FundInfo> fiRemoved = new ArrayList<>();
         while (fiToExtract.size() > 0) {
             D_FundInfo fi = fiToExtract.remove(0);
 
@@ -152,7 +121,6 @@ public class FLOps1_Ext1_Extract_New {
             ExtractFromHTML_Helper eh = new ExtractFromHTML_Helper();
             OTuple2G<Integer, String> rc = eh.extractFundDetails(fi);
             if (rc._o1 == ExtractFromHTML_Helper.RC_SUCCESS) {
-                fiUpdated.add(fi);
                 String s = rc._o2;
                 if (s != null && s.trim().length() > 0) {
                     iw_fund_infos.println("- INFO: " + fi.getTypeAndName() + ", " + fi._url);
@@ -169,7 +137,6 @@ public class FLOps1_Ext1_Extract_New {
 
                 if (ic_before != D_FundInfo.IC_NO_ERROR && fi._errorCode != D_FundInfo.IC_NO_ERROR) {
                     iwtmp.println("*** Became invalid, IC before: " + ic_before + ", now: " + fi._errorCode);
-                    fiInvalid.add(fi);
                     fi._isValid = false;
                 }
 
@@ -177,11 +144,9 @@ public class FLOps1_Ext1_Extract_New {
                 switch(rc._o1) {
                     case ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND:
                         iwtmp.println("RC_ERROR_KEEP_FUND");
-                        fiError.add(fi);
                         break;
                     case ExtractFromHTML_Helper.RC_ERROR_REMOVE_FUND:
                         iwtmp.println("RC_ERROR_REMOVE_FUND");
-                        fiDeleted.add(fi);
                         int countDel = 0;
                         while (countDel < fiAllFunds.size()) {
                             if (fi.getTypeAndName().equals(fiAllFunds.get(countDel).getTypeAndName())) {
@@ -190,14 +155,13 @@ public class FLOps1_Ext1_Extract_New {
                             }
                             countDel++;
                         }
+                        fiRemoved.add(fi);
                         break;
                     case ExtractFromHTML_Helper.RC_SUCCESS_BUT_DATA_WAS_UPDATED:
                         iwtmp.println("RC_SUCCESS_BUT_DATA_WAS_UPDATED");
-                        fiUpdated.add(fi);
                         break;
                     case ExtractFromHTML_Helper.RC_WARNING_NO_DPDAY_FOUND:
                         should_log = false;
-                        fiNotUpdated.add(fi);
                         break;
                     default:
                         iwtmp.println("ReturnCode: <UNEXPECTED RETURN CODE>");
@@ -210,18 +174,13 @@ public class FLOps1_Ext1_Extract_New {
                     iw_fund_error_shorts.println(iwtmp.getString());
 
                     fi.dumpInfo(iwtmp);
-                    mEE.dwarning(log, TAG, "\n" + iwtmp.getString());
+                    mEE.dsevere(log, TAG, "\n" + iwtmp.getString());
 
-                    iwtmp.println("HTML content:\n" + eh._htmlPageContent);
+                    // iwtmp.println("HTML content:\n" + eh._htmlPageContent);
                     iwtmp.pop();
                     iw_fund_error_details.println(iwtmp.getString());
                 }
             }
-
-//            mEE.dinfo(log, TAG, "\nExtract completed, result:\n" + fi.toString());
-//            if (countTotal > 2) {
-//                break;
-//            }
 
             // If we are out of time, then break
             if (!EE.timerContinue()) {
@@ -232,18 +191,8 @@ public class FLOps1_Ext1_Extract_New {
         }
 
         IndentWriter iwExtract = new IndentWriter();
-        iwExtract.println("*** End information. Processed a total of: " + countTotal + " funds");
-        iwExtract.push();
+        printExtractStats(iwExtract, fiAllFunds);
 
-        iwExtract.println("Total in DB at start: " + fiAllFundsInitialCount);
-        iwExtract.println("Keeping in DB: " + fiAllFunds.size());
-        iwExtract.println("Updated: " + fiUpdated.size());
-//        iwExtract.println("Not updated: " + fiNotUpdated.size());
-        printListStr(iwExtract, "Not Updated", fiNotUpdated);
-        printListStr(iwExtract, "Had Errors", fiError);
-//        iwExtract.println("Became invalid: " + fiInvalid.size());
-        printListStr(iwExtract, "Became Invalid", fiInvalid);
-        printListStr(iwExtract, "Permanently Deleted", fiDeleted);
         mEE.dinfo(log, TAG, "---------------------------\nDone extracting, summary info:\n" + iwExtract.getString());
         iwExtract.println("");
 
@@ -263,17 +212,121 @@ public class FLOps1_Ext1_Extract_New {
 
         // Write log file
         String logfileContent = "";
-        byte[] logfileBA = gcsReadFile(Constants.PREFIX_FUNDINFO_LOGS, false);
+        byte[] logfileBA = D_DB.gcsReadFile(Constants.PREFIX_FUNDINFO_LOGS_DEBUG, Constants.EXT_TXT, false);
         if (logfileBA != null && logfileBA.length > 0) {
             logfileContent = new String(logfileBA, EE.ENCODING_FILE_READ);
         }
         logfileContent = iw_header.getString() + logfileContent;
-        gcsWriteFile(Constants.PREFIX_FUNDINFO_LOGS, Constants.EXT_TXT, logfileContent.getBytes(EE.ENCODING_FILE_WRITE), false);
+        D_DB.gcsWriteFile(_fridayLastYYMMDD, Constants.PREFIX_FUNDINFO_LOGS_DEBUG, Constants.EXT_TXT, logfileContent.getBytes(EE.ENCODING_FILE_WRITE), true, false);
 
-        // Write fund file
-        saveFundList(fiAllFunds);
+        // Updated file with permanently deleted funds
+        if (fiRemoved.size() > 0) {
+            List<D_FundInfo> fiRemovedOlds = D_DB.readFundList(Constants.PREFIX_FUNDINFO_DELETED);
+            IndentWriter iw = new IndentWriter();
+            iw.println("Funds that have been deleted from main DB");
+            iw.push();
+            for (int i = fiRemoved.size() - 1; i >= 0; i--) {
+                D_FundInfo fi = fiRemoved.get(i);
+                fiRemovedOlds.add(0, fi);
+                iw.println(fi.getTypeAndName() + ", last dp: " + getLastestDate(fi._dpDays) + ", url: " + fi._url);
+            }
+            for (D_FundInfo fi: fiRemovedOlds) {
+                iw.println(fi.getTypeAndName() + ", last dp: " + getLastestDate(fi._dpDays) + ", url: " + fi._url);
+            }
+            iw.pop();
+            D_DB.saveFundList(_fridayLastYYMMDD, fiRemovedOlds, Constants.PREFIX_FUNDINFO_DELETED, false);
+            D_DB.gcsWriteFile(_fridayLastYYMMDD, Constants.PREFIX_FUNDINFO_DELETED, Constants.EXT_TXT, iw.getString().getBytes(Constants.ENCODING_FILE_WRITE), false, false);
+        }
 
-        MM.sleepInMS(1000);
+        // Write fund DB files
+        D_DB.saveFundList(_fridayLastYYMMDD, fiAllFunds, Constants.FUNDINFO_DB_MASTER, false);
+        D_DB.saveFundList(_fridayLastYYMMDD, fiAllFunds, Constants.PREFIX_FUNDINFO_DB, true);
+
+        // Write Extract Summary File
+        String extractInfo = getExtractSummaryFile();
+        D_DB.gcsWriteFile(_fridayLastYYMMDD, Constants.PREFIX_FUNDINFO_LOGS_EXTRACT, Constants.EXT_TXT, extractInfo.getBytes(Constants.ENCODING_FILE_WRITE), true, false);
+        D_DB.gcsWriteFile(null, Constants.FUNDINFO_LOGS_EXTRACT_MASTER_TXT, "", extractInfo.getBytes(Constants.ENCODING_FILE_WRITE), false, false);
+
+        MM.sleepInMS(4000);
+    }
+
+    private String getExtractSummaryFile() throws IOException {
+        List<D_FundInfo> fiNow = D_DB.readFundList(Constants.PREFIX_FUNDINFO_DB);
+        List<Blob> blobs = D_DB.gcsGetBlobsInAscendingOrder(Constants.PREFIX_FUNDINFO_DB);
+        Blob b2use = null;
+        for (Blob b: blobs) {
+            if (b.getName().contains(_fridayLast2YYMMDD)) {
+                b2use = b;
+                break;
+            }
+        }
+
+        List<D_FundInfo> fiPrev = null;
+        if (b2use != null) {
+            byte[] data = D_DB.gcsReadBlob(b2use, true);
+            if (data != null) {
+                fiPrev = D_DB.readFundListFromData(data);
+            }
+        }
+
+        String p_total = "***not available***";
+        int p_totalI = -1;
+        String p_extracted = "***not available***";
+        int p_extractedI = -1;
+        String p_invalids = "***not available***";
+        String p_errors = "***not available***";
+        int p_todayAlreadyAttempted = -1;
+        int p_todayLeftToTry = -1;
+        if (fiPrev != null && fiPrev.size() > 0) {
+            extractStats(fiPrev);
+            p_total = String.valueOf(_fiAllFunds.size());
+            p_totalI = _fiAllFunds.size();
+            p_extracted = String.valueOf(_fiAlreadyExtracted.size());
+            p_extractedI = _fiAlreadyExtracted.size();
+            p_invalids = String.valueOf(_fiInvalids.size());
+            p_errors = String.valueOf(_fiErrors.size());
+            p_todayAlreadyAttempted = _fiAlreadyAttemptedToday.size();
+            p_todayLeftToTry = p_totalI - p_extractedI - p_todayAlreadyAttempted;
+        }
+
+        extractStats(fiNow);
+        int todayLeftToTry = _fiAllFunds.size() - _fiAlreadyExtracted.size() - _fiAlreadyAttemptedToday.size();
+        IndentWriter iw = new IndentWriter();
+        iw.println("Current date: " + _fridayLastYYMMDD + ", (compared to: " + _fridayLast2YYMMDD + ")");
+        iw.println("Total funds to extract: " + _fiAllFunds.size() + " (" + p_total + ")");
+        iw.println("Current stats");
+        iw.println("...Extracted: " + _fiAlreadyExtracted.size() + " (" + p_extracted + ")");
+        iw.println("...Not Extracted: " + (_fiAllFunds.size() - _fiAlreadyExtracted.size()) + " (" + String.valueOf(p_totalI-p_extractedI) + ")");
+        iw.println("...Today, attempted (no data): " + _fiAlreadyAttemptedToday.size() + " (" + String.valueOf(p_totalI-p_extractedI) + ")");
+        iw.println("...Today, left to try: " + todayLeftToTry + " (" + String.valueOf(p_totalI-p_extractedI) + ")");
+
+        iw.println("...Today, attempted (but no data): " + _fiAlreadyAttemptedToday.size());
+        for (int i=0; i < _fiAlreadyAttemptedToday.size(); i++) {
+            D_FundInfo fi = _fiAlreadyAttemptedToday.get(i);
+            iw.println(".....[" + i + "]: " + "<a href=\"" + fi._url + "\">" + fi.getTypeAndName() + "</a>");
+        }
+
+        iw.println("Invalids: " + _fiInvalids.size() + " (" + p_invalids + ")<br>");
+        for (int i=0; i < _fiInvalids.size(); i++) {
+            D_FundInfo fi = _fiInvalids.get(i);
+            iw.println(".....[" + i + "]: " + "<a href=\"" + fi._url + "\">" + fi.getTypeAndName() + "</a><br>");
+        }
+
+        iw.println("Errors: " + _fiErrors.size() + " (" + p_errors + ")<br>");
+        for (int i=0; i < _fiErrors.size(); i++) {
+            D_FundInfo fi = _fiErrors.get(i);
+            iw.println(".....[" + i + "]: " + "<a href=\"" + fi._url + "\">" + fi.getTypeAndName() + "</a><br>");
+        }
+        iw.println();
+        return iw.getString();
+    }
+
+    private static String getLastestDate(List<D_FundDPDay> dps) {
+        if (dps == null) return "null";
+        if (dps.size() == 0) return "";
+        String date = dps.get(0)._dateYYMMDD;
+        if (date == null) return "null_date";
+        return date;
     }
 
     private static String printListStr(IndentWriter iw, String header, List<D_FundInfo> l) {
@@ -302,114 +355,52 @@ public class FLOps1_Ext1_Extract_New {
         return iw.getString();
     }
 
-    // ******************************************************************
-
-    public static List<D_FundInfo> readFundList() throws IOException {
-        byte[] data = gcsReadFile(Constants.PREFIX_FUNDINFO_DB, true);
-
-        ByteArrayInputStream bin = new ByteArrayInputStream(data);
-        DataInputStream din = new DataInputStream(bin);
-        List<D_FundInfo> l = new ArrayList<>();
-        while (din.available() > 0) {
-            D_FundInfo fi = D_FundInfo_Serializer.decrunch_D_FundInfo(din);
-            l.add(fi);
-        }
-        return l;
-    }
-
-    public static void saveFundList(List<D_FundInfo> l) throws IOException {
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        DataOutputStream dout = new DataOutputStream(bout);
-
-        for (D_FundInfo fi: l) {
-            D_FundInfo_Serializer.crunch_D_FundInfo(dout, fi);
-        }
-
-        dout.flush();
-        byte[] data = bout.toByteArray();
-        gcsWriteFile(Constants.PREFIX_FUNDINFO_DB, Constants.EXT_BIN, data, true);
-    }
-
-    // ******************************************************************
-
-    public static void gcsWriteFile(String prefix, String ext, byte[] data, boolean compress) throws IOException {
-
-        Blob blob = gcsGetBlob(prefix);
-        if (blob != null) {
-            blob.delete();
-        }
-
-        Storage storage = null;
-        storage = StorageOptions.getDefaultInstance().getService();
-        String fname = prefix + MM.getNowAs_YYMMDD(null) + ext;
-        try {
-            if (compress) {
-                byte[] cdata = Compresser.dataCompress(fname, data);
-                blob = storage.create(BlobInfo.newBuilder(Constants.BUCKET, fname).build(), cdata);
+    List<D_FundInfo> _fiAllFunds;
+    List<D_FundInfo> _fiToExtract;
+    List<D_FundInfo> _fiInvalids;
+    List<D_FundInfo> _fiErrors;
+    List<D_FundInfo> _fiAlreadyExtracted;
+    List<D_FundInfo> _fiAlreadyAttemptedToday;
+    private void extractStats(List<D_FundInfo> fiAllFunds) {
+        _fiAllFunds = fiAllFunds;
+        _fiToExtract = new ArrayList<>();
+        _fiInvalids = new ArrayList<>();
+        _fiErrors = new ArrayList<>();
+        _fiAlreadyExtracted = new ArrayList<>();
+        _fiAlreadyAttemptedToday = new ArrayList<>();
+        for (int i = 0; i < fiAllFunds.size(); i++) {
+            D_FundInfo fi = fiAllFunds.get(i);
+            if (!fi._isValid) {
+                _fiInvalids.add(fi);
+            } else if (fi._errorCode != D_FundInfo.IC_NO_ERROR) {
+                _fiErrors.add(fi);
+            } else if (fi._dateYYMMDD_Update_Attempted == null || fi._dateYYMMDD_Update_Attempted.length() != 6) {
+                throw new AssertionError("Attempted field wrong: " + fi._type + "." + fi._nameMS);
+            } else if (fi._dateYYMMDD_Updated.compareTo(_fridayLastYYMMDD) >= 0) {
+                _fiAlreadyExtracted.add(fi);
+            } else if (fi._dateYYMMDD_Update_Attempted.compareTo(_nowYYMMDD) < 0) {
+                _fiToExtract.add(fi);
+            } else if (fi._dateYYMMDD_Update_Attempted.compareTo(_nowYYMMDD) == 0) {
+                _fiAlreadyAttemptedToday.add(fi);
+            } else {
+                throw new AssertionError("Weird state for fund: " + fi.toString());
             }
-        } catch(Exception exc) {
-            throw new AssertionError(exc);
         }
     }
 
-    public static byte[] gcsReadFile(String prefix, boolean decompress) throws IOException {
-        // Old school
-        Storage storage = null;
-        storage = StorageOptions.getDefaultInstance().getService();
+    private void printExtractStats(IndentWriter iw, List<D_FundInfo> fiAllFunds) {
+        extractStats(fiAllFunds);
 
-        EE ee = EE.getEE();
-
-        try {
-            Blob blob = gcsGetBlob(prefix);
-            if (blob == null) {
-                return null;
-            }
-            ee.dinfo(log, TAG, "Reading file: " + blob.getName());
-            storage = StorageOptions.getDefaultInstance().getService();
-            byte[] dataBA = blob.getContent();
-            if (decompress) {
-                dataBA = Compresser.dataUncompress(dataBA);
-            }
-            return dataBA;
-        } catch(Exception exc) {
-            throw new AssertionError(exc);
-        }
+        iw.println("*** Fund report: " + MM.getNowAs_YYMMDD_HHMMSS(Constants.TIMEZONE_STOCKHOLM));
+        iw.push();
+        iw.println("Total funds in DB: " + fiAllFunds.size());
+        iw.println("Extract done: " + _fiAlreadyExtracted.size());
+        printListStr(iw, "Fund Invalids", _fiInvalids);
+        printListStr(iw, "Fund Errors", _fiErrors);
+        printListStr(iw, "Already Attempted To Extract Today (but without success)", _fiAlreadyAttemptedToday);
+        iw.pop();
     }
 
-    public static Blob gcsGetBlob(String prefix) throws IOException {
-        Storage storage = null;
-        storage = StorageOptions.getDefaultInstance().getService();
-
-        EE ee = EE.getEE();
-
-        try {
-            Bucket bucket = storage.get(Constants.BUCKET);
-            Page<Blob> pblob = bucket.list();
-            Iterable<Blob> iterator = pblob.iterateAll();
-            List<Blob> blobs = new ArrayList<>();
-            for (Blob blob : iterator) {
-                String bname = blob.getName();
-                if (bname != null && bname.startsWith(prefix)) {
-                    blobs.add(blob);
-                }
-            }
-
-            Collections.sort(blobs, new Comparator<Blob>() {
-                @Override
-                public int compare(Blob o1, Blob o2) {
-                    return -o1.getName().compareTo(o2.getName());
-                }
-            });
-
-            if (blobs.size() == 0) {
-                return null;
-            }
-
-            return blobs.get(0);
-        } catch(Exception exc) {
-            throw new AssertionError(exc);
-        }
-    }
 
 
 }

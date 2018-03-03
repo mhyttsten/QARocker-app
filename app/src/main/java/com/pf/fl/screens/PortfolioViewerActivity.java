@@ -13,10 +13,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.pf.fl.datamodel.FL_DB;
 import com.pf.mr.R;
-import com.pf.fl.datamodel.DMA_Portfolio;
-import com.pf.fl.datamodel.DM_Fund;
-import com.pf.fl.datamodel.DM_Transform;
+import com.pf.shared.datamodel.D_FundInfo;
+import com.pf.shared.datamodel.D_Portfolio;
 
 public class PortfolioViewerActivity extends AppCompatActivity {
     private static final String TAG = PortfolioViewerActivity.class.getSimpleName();
@@ -32,18 +32,18 @@ public class PortfolioViewerActivity extends AppCompatActivity {
         ab.setDisplayHomeAsUpEnabled(true);
 
         Intent i = getIntent();
-        String pname = i.getStringExtra(DM_Transform.EXTRA_PORTFOLIO_NAME);
+        String pname = i.getStringExtra(FL_DB.INTENT_EXTRA_PORTFOLIO_NAME);
 
         TextView tv = (TextView) findViewById(R.id.textView_fl);
         tv.setText(pname);
 
-        mPortfolio = DM_Transform.portfoliosHM.get(pname);
+        mPortfolio = FL_DB.portfoliosHM.get(pname);
         setupRecyclerView();
     }
 
     // **********
 
-    private DMA_Portfolio mPortfolio;
+    private D_Portfolio mPortfolio;
 
     private RecyclerView mRV;
     private RecyclerView.LayoutManager mRVLayout;
@@ -59,7 +59,7 @@ public class PortfolioViewerActivity extends AppCompatActivity {
     }
     private static class MyRVAdapter extends RecyclerView.Adapter<MyRVAdapter.MyRVViewHolder> {
         private AppCompatActivity mParent;
-        DMA_Portfolio mPortfolio;
+        D_Portfolio mPortfolio;
 
         private static class MyRVViewHolder extends RecyclerView.ViewHolder {
             private TextView mTextView;
@@ -76,7 +76,7 @@ public class PortfolioViewerActivity extends AppCompatActivity {
 
         @Override
         public int getItemCount() {
-            return mPortfolio.fund_ids.size();
+            return mPortfolio._urls.size();
         }
 
         @Override
@@ -91,10 +91,10 @@ public class PortfolioViewerActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(MyRVViewHolder holder, int position) {
-            Long id = mPortfolio.fund_ids.get(position);
-            DM_Fund fund = DM_Transform.fundsByIdHM.get(id);
-            Log.i(TAG, "Now setting name for: " + position + ", " + fund.name);
-            holder.mTextView.setText(fund.name);
+            String url = mPortfolio._urls.get(position);
+            D_FundInfo fund = FL_DB.fundsByURL.get(url);
+            Log.i(TAG, "Now setting name for: " + position + ", " + fund._nameMS);
+            holder.mTextView.setText(fund._nameMS);
         }
     }
 

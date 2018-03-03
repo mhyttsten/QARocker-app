@@ -10,6 +10,33 @@ import java.util.logging.Logger;
 public class D_FundInfo_Serializer {
     private static final Logger log = Logger.getLogger(D_FundInfo_Serializer.class.getName());
 
+    public static final String TAG_POR_START = "DPORS";
+    public static D_Portfolio decrunch_D_Portfolio(DataInputStream din) throws IOException {
+        if (din.available() <= 0) {
+            return null;
+        }
+        String tag = din.readUTF();
+        if (!tag.equals(TAG_POR_START)) {
+            throw new IOException("Could not find tag, found: " + tag);
+        }
+        D_Portfolio p = new D_Portfolio();
+        p._name = din.readUTF();
+        int urlCount = din.readInt();
+        for (int i=0; i < urlCount; i++) {
+            String url = din.readUTF();
+            p._urls.add(url);
+        }
+        return p;
+    }
+    public static void crunch_D_Portfolio(DataOutputStream dout, D_Portfolio p) throws IOException {
+        dout.writeUTF(TAG_POR_START);
+        dout.writeUTF(p._name);
+        dout.writeInt(p._urls.size());
+        for (String url: p._urls) {
+            dout.writeUTF(url);
+        }
+    }
+
     public static final String TAG_FI_START = "DFIS";
     public static final String TAG_DPD_START = "DPDS";
     public static final String TAG_FI_END = "DFIE";
@@ -18,6 +45,7 @@ public class D_FundInfo_Serializer {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         DataOutputStream dout = new DataOutputStream(bout);
         dout.writeUTF(fi._url);
+        dout.writeBoolean(fi._isValid);
         dout.writeInt(fi._errorCode);
         dout.writeUTF(fi._type);
         dout.writeUTF(fi._nameMS);
@@ -80,6 +108,7 @@ public class D_FundInfo_Serializer {
         DataInputStream din = new DataInputStream(bin);
 
         fi._url = din.readUTF();
+        fi._isValid = din.readBoolean();
         fi._errorCode = din.readInt();
         fi._type = din.readUTF();
         fi._nameMS = din.readUTF();

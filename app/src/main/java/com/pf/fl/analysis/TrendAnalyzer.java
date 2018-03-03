@@ -1,10 +1,10 @@
 package com.pf.fl.analysis;
 
-import static com.pf.fl.analysis.TrendEntity.T_TYPE_DOWN;
-import static com.pf.fl.analysis.TrendEntity.T_TYPE_UP;
+//import static com.pf.fl.analysis.TrendEntity.T_TYPE_DOWN;
+//import static com.pf.fl.analysis.TrendEntity.T_TYPE_UP;
 
 public class TrendAnalyzer {
-
+/*
     // Tests
     // x - Strip trailing nulls, 0.0 or values contrary to trend
     // x - First contrary value to trend brings it below/above trend start value (+, - to <= 1.0)
@@ -39,8 +39,6 @@ public class TrendAnalyzer {
     private double mValueCap;
     private boolean mAmICut;
 
-    /**
-     */
     public TrendEntity getTrendResult() {
         if (!mAmICut) {
             cutTrend(mLastIndexProcessed);
@@ -48,8 +46,6 @@ public class TrendAnalyzer {
         return mTrend;
     }
 
-    /**
-     */
     public void initialize(DataPoint[] dps) {
         mDPs = dps;
     }
@@ -61,13 +57,12 @@ public class TrendAnalyzer {
         return mTrendType == TrendEntity.T_TYPE_UP ? mValue : -mValue;
     }
 
-    /**
-     * Input: Can assume non-null. For first call, you can assume a non-zero value
-     * Returns: False if needs more data, true if saturated
-     *
-     * Algo: Never drop beneath previous low --> we can never have 2 consecutive negative values
-     * Your Job: Come up with something better...
-     */
+
+//     * Input: Can assume non-null. For first call, you can assume a non-zero value
+//     * Returns: False if needs more data, true if saturated
+//     *
+//     * Algo: Never drop beneath previous low --> we can never have 2 consecutive negative values
+//     * Your Job: Come up with something better...
     public boolean consumeDataPoint(String dataSetDebug, int index) {
         mLastIndexProcessed = index;
 
@@ -126,8 +121,6 @@ public class TrendAnalyzer {
         return false;
     }
 
-    /**
-     */
     public void cutTrend(int end) {
         if (mAmICut) {
             return;
@@ -137,4 +130,5 @@ public class TrendAnalyzer {
         mTrend = te;
         mAmICut = true;
     }
+    */
 }

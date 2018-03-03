@@ -79,34 +79,32 @@
     <FrameLayout
         android:id="@+id/frameLayout_fl"
 
-        app:layout_constraintVertical_weight="2"
-        app:layout_constraintTop_toBottomOf="@+id/radioGroup_fl"
+        android:layout_width="match_parent"
+        android:layout_height="418dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintBottom_toTopOf="@+id/b_save_fl"
         app:layout_constraintLeft_toLeftOf="parent"
+
         app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/radioGroup_fl"
 
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="16dp" >
+        app:layout_constraintVertical_weight="2">
 
         <!--<TextView-->
-            <!--android:id="@+id/textView2"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:text="TextView2"/>-->
+        <!--android:id="@+id/textView2"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:text="TextView2"/>-->
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/recycler_view_fl"
-            android:scrollbars="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            tools:layout_editor_absoluteX="9dp"
             android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/b_save_fl" />
+            android:scrollbars="vertical"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            app:layout_constraintTop_toBottomOf="@+id/b_save_fl"
+            tools:layout_editor_absoluteX="9dp" />
     </FrameLayout>
 
     <Button

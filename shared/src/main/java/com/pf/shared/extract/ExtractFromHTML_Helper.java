@@ -9,6 +9,7 @@ import com.pf.shared.utils.MM;
 import com.pf.shared.utils.OTuple2G;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.logging.Logger;
 
 public class ExtractFromHTML_Helper {
@@ -22,6 +23,7 @@ public class ExtractFromHTML_Helper {
     public static final int RC_WARNING_NO_DPDAY_FOUND = 5;
 
     private IndentWriter _iw = new IndentWriter();
+    private IndentWriter _iwdb = new IndentWriter();
 
     public String _htmlPageContent = "";
 
@@ -36,16 +38,13 @@ public class ExtractFromHTML_Helper {
 //            fi._nameMS = "Vanguard High Dividend Yield Index Fund ETF Shares (VYM)";
 //            fi._url = "http://performance.morningstar.com/perform/Performance/etf/trailing-total-returns.action?&t=VYM&region=usa&culture=en-US&cur=&ops=clear&s=0P00001MJB&ndec=2&ep=true&align=d&annlz=true&comparisonRemove=false&loccat=&taxadj=&benchmarkSecId=&benchmarktype=";
 
-//            fi._url = "http://performance.morningstar.com/perform/Performance/etf/trailing-total-returns.action?&t=VONE&region=usa&culture=en-US&cur=&ops=clear&s=0P00001MJB&ndec=2&ep=true&align=d&annlz=true&comparisonRemove=false&loccat=&taxadj=&benchmarkSecId=&benchmarktype=";
+//            fi._type = "VGD";
+//            fi._nameMS = "Royce Special Equity Fund Service Class (RSEFX)";
+//            fi._url = "https://performance.morningstar.com/perform/Performance/fund/trailing-total-returns.action?&t=XNAS:RSEFX&region=usa&culture=en-US&cur=&ops=clear&s=0P00001MJB&ndec=2&ep=true&align=d&annlz=true&comparisonRemove=false&loccat=&taxadj=&benchmarkSecId=&benchmarktype=";
 
-
-            fi._type = "VGD";
-            fi._nameMS = "Royce Special Equity Fund Service Class (RSEFX)";
-            fi._url = "https://performance.morningstar.com/perform/Performance/fund/trailing-total-returns.action?&t=XNAS:RSEFX&region=usa&culture=en-US&cur=&ops=clear&s=0P00001MJB&ndec=2&ep=true&align=d&annlz=true&comparisonRemove=false&loccat=&taxadj=&benchmarkSecId=&benchmarktype=";
-
+            fi._url = "http://www.morningstar.se/Funds/Quicktake/Overview.aspx?perfid=0P0000PRDQ&programid=0000000000";
 
             ExtractFromHTML_Helper eh = new ExtractFromHTML_Helper();
-
             log.warning("**** Will now extract fund: " + fi._url);
             OTuple2G<Integer, String> rc = eh.extractFundDetails(fi);
 
@@ -83,6 +82,10 @@ public class ExtractFromHTML_Helper {
             iwr.println("Error for: " + fi.getTypeAndName() + ", ec: " + rv);
             iwr.push();
             iwr.println(_iw.getString());
+            iwr.pop();
+            iwr.println("Debug information");
+            iwr.push();
+            iwr.println(_iwdb.getString());
             iwr.pop();
             return new OTuple2G<>(rv, iwr.getString());
         }
@@ -125,13 +128,14 @@ public class ExtractFromHTML_Helper {
         if (fi._type.equals(D_FundInfo.TYPE_VANGUARD)) {
             errorCode = ExtractFromHTML_Vanguard.extractFundDetails(_iw, fi, _htmlPageContent);
         } else {
-            errorCode = ExtractFromHTML_Morningstar.extractFundDetails(_iw, fi, _htmlPageContent);
+            errorCode = ExtractFromHTML_Morningstar.extractFundDetails(_iw, _iwdb, fi, _htmlPageContent);
         }
         if (errorCode != ExtractFromHTML_Helper.RC_SUCCESS) {
             return errorCode;
         }
 
-        D_FundDPDay dpd = fi._dpDays.get(0);
+        D_FundDPDay dpd = fi._dpDays.remove(0);  // Lets look at the things just added
+
         // A current DP was found
         if (dpd._dateYYMMDD == null) {
             _iw.println("Lastest DPDay had null for _dateYYMMDD");
@@ -146,11 +150,45 @@ public class ExtractFromHTML_Helper {
 
         // Weekly was null
         if (dpd._r1w == D_FundDPDay.FLOAT_NULL) {
-            fi._dpDays.remove(0);
             _iw.println("No update. r1w was null for good _dateYYMMDD: " + dpd._dateYYMMDD
                     + ", _dateYYMMDD_Actual: " + dpd._dateYYMMDD_Actual
                     + ", for friday: " + _dateLastFriday_YYMMDD);
             return RC_WARNING_NO_DPDAY_FOUND;
+        }
+
+        String dateNow_YYMMDD = MM.getNowAs_YYMMDD(Constants.TIMEZONE_STOCKHOLM);
+        String dateLastFriday_YYMMDD   = MM.tgif_getLastFridayTodayExcl(dateNow_YYMMDD);
+        String dateLastSaturday_YYMMDD   = MM.tgif_getNextWeekday(dateLastFriday_YYMMDD, Calendar.SATURDAY);
+        String dateLastSunday_YYMMDD   = MM.tgif_getNextWeekday(dateLastFriday_YYMMDD, Calendar.SUNDAY);
+        String dateLastMonday_YYMMDD   = MM.tgif_getNextWeekday(dateLastFriday_YYMMDD, Calendar.MONDAY);
+        String dateLastTuesday_YYMMDD   = MM.tgif_getNextWeekday(dateLastFriday_YYMMDD, Calendar.TUESDAY);
+        String dateLastThursday_YYMMDD = MM.tgif_getPrevWeekday(dateLastFriday_YYMMDD, Calendar.THURSDAY);
+
+        // We have a valid extraction if actual date is last Friday or Thursday, or Mon/Tue week after
+        if (dpd._dateYYMMDD_Actual.equals(dateLastFriday_YYMMDD)
+                || dpd._dateYYMMDD_Actual.equals(dateLastThursday_YYMMDD)
+                || dpd._dateYYMMDD_Actual.equals(dateLastSaturday_YYMMDD)
+                || dpd._dateYYMMDD_Actual.equals(dateLastSunday_YYMMDD)
+                || dpd._dateYYMMDD_Actual.equals(dateLastMonday_YYMMDD)
+                || dpd._dateYYMMDD_Actual.equals(dateLastTuesday_YYMMDD)) {
+            dpd._dateYYMMDD = dateLastFriday_YYMMDD;
+            fi._dpDays.add(0, dpd);
+        }
+        // Otherwise, we should wait until next data point
+        else {
+            _iw.println("Want to extract for friday: " + dateLastFriday_YYMMDD);
+            _iw.println("But found DP: " + dpd._dateYYMMDD_Actual);
+            _iw.println("Which is not in expected range: " + dateLastThursday_YYMMDD + "-" + dateLastTuesday_YYMMDD);
+
+            int daydiff = MM.tgif_dayCountDiff(dateLastFriday_YYMMDD, dpd._dateYYMMDD_Actual);
+            if (daydiff > 14) {
+                _iw.println("*** Setting fund invalid, number of days since last DPDay: " + daydiff);
+                fi._errorCode = D_FundInfo.IC_NO_RECENT_DPDAY;
+                fi._isValid = false;
+                return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            }
+
+            return ExtractFromHTML_Helper.RC_WARNING_NO_DPDAY_FOUND;
         }
 
         fi._dateYYMMDD_Updated = _dateLastFriday_YYMMDD;
@@ -159,7 +197,7 @@ public class ExtractFromHTML_Helper {
 
     public static OTuple2G<Boolean, Float> validFloat(String s) {
         if (s == null || s.trim().length() == 0) {
-            return new OTuple2G<>(false, null);
+            return new OTuple2G<>(true, D_FundDPDay.FLOAT_NULL);
         }
         s = s.trim();
         if (s.equals("-")) {

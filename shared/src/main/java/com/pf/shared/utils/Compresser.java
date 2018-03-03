@@ -30,7 +30,7 @@ public class Compresser {
 	}
 	
 	//----------------------------------------------
-	public static byte[] dataCompress(String name, byte[] data) throws Exception {
+	public static byte[] dataCompress(String name, byte[] data) throws IOException {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		ZipOutputStream zos = new ZipOutputStream(bos);
 		zos.putNextEntry(new ZipEntry(name));

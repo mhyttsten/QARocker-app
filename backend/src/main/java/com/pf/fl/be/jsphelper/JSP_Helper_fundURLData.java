@@ -1,14 +1,12 @@
 package com.pf.fl.be.jsphelper;
 
-import com.pf.fl.be.datastore.DS;
-import com.pf.fl.be.datamodel.FLA_Cache;
-import com.pf.fl.be.datamodel.FLA_Cache_FundInfo;
-import com.pf.fl.be.datamodel.FLA_FundInfo;
-import com.pf.fl.be.util.Constants;
-import com.pf.fl.be.util.EE;
+import com.pf.fl.be.extract.D_DB;
+import com.pf.fl.be.jsphelper.JSP_Constants;
+import com.pf.shared.Constants;
 import com.pf.shared.utils.IndentWriter;
 import com.pf.shared.utils.MM;
 import com.pf.shared.utils.OTuple2G;
+import com.pf.shared.datamodel.D_FundInfo;
 
 import java.util.Enumeration;
 import java.util.List;
@@ -32,7 +30,7 @@ public class JSP_Helper_fundURLData {
     public static final int FL_MODE_FILL_EXISTING = 2;
     public static final int FL_MODE_FILL_REPORT = 3;
 
-    public static String urlControl_DisplayFundEmptiesAndList(List<FLA_Cache_FundInfo> l) throws Exception {
+    public static String urlControl_DisplayFundEmptiesAndList(List<D_FundInfo> l) throws Exception {
         StringBuilder strb = new StringBuilder();
 
         int count = 0;
@@ -42,7 +40,7 @@ public class JSP_Helper_fundURLData {
         }
 
         for (int i = 0; i < l.size(); i++) {
-            FLA_Cache_FundInfo cfi = l.get(i);
+            D_FundInfo cfi = l.get(i);
             urlControl_DisplayFund(true, null, false, false, strb, FL_MODE_FILL_EXISTING, cfi, count, i+1);
             count++;
         }
@@ -54,11 +52,8 @@ public class JSP_Helper_fundURLData {
      *
      */
     public static String urlControl_VerifyOrExecute(boolean isVerify, HttpServletRequest r) throws Exception {
-        EE ee = EE.getEE();
-        ee.dinfo(log, TAG, "JSP_Helper_fundURLData.urlControl_VerifyOrExecute");
-
         StringBuilder strb = new StringBuilder();
-        List<FLA_Cache_FundInfo> allFunds = FLA_Cache.cacheFundInfosByTypeOrNull(null);
+        List<D_FundInfo> allFunds = D_DB._fis;
 
         int count = 0;
         int i = -1;
@@ -79,17 +74,17 @@ public class JSP_Helper_fundURLData {
             }
             // ee.dinfo(log, TAG, "Parameter names:\n" + tmpsb.toString());
 
-            String p_idStr = Constants.PARAM2_ID_ + String.valueOf(i);
+            String p_idStr = JSP_Constants.PARAM2_ID_ + String.valueOf(i);
             String v_idStr = r.getParameter(p_idStr);
-            String p_delete = Constants.PARAM2_DELETE_ + String.valueOf(i);
+            String p_delete = JSP_Constants.PARAM2_DELETE_ + String.valueOf(i);
             String v_delete = r.getParameter(p_delete);
-            String p_setvalid = Constants.PARAM2_SETVALID_ + String.valueOf(i);
+            String p_setvalid = JSP_Constants.PARAM2_SETVALID_ + String.valueOf(i);
             String v_setvalid = r.getParameter(p_setvalid);
-            String p_type = Constants.PARAM2_TYPE_ + String.valueOf(i);
+            String p_type = JSP_Constants.PARAM2_TYPE_ + String.valueOf(i);
             String v_type = r.getParameter(p_type);
-            String p_name = Constants.PARAM2_NAME_ + String.valueOf(i);
+            String p_name = JSP_Constants.PARAM2_NAME_ + String.valueOf(i);
             String v_name = r.getParameter(p_name);
-            String p_url = Constants.PARAM2_URL_ + String.valueOf(i);
+            String p_url = JSP_Constants.PARAM2_URL_ + String.valueOf(i);
             String v_url = r.getParameter(p_url);
 
             if (v_idStr == null && v_delete == null && v_type == null && v_setvalid == null && v_name == null && v_url == null) {
@@ -114,7 +109,7 @@ public class JSP_Helper_fundURLData {
                 }
             }
 
-            OTuple2G<FLA_FundInfo, FLA_Cache_FundInfo> fi = getFLA_FundInfo(allFunds, v_id, v_type, v_name, v_url, v_delete, v_setvalid);
+            OTuple2G<D_FundInfo, D_FundInfo> fi = getD_FundInfo(allFunds, v_id, v_type, v_name, v_url, v_delete, v_setvalid);
             if (fi == null) {
                 // ee.dinfo(log, TAG, "FundInfo is null, no more work to do at index: " + i);
                 continue;
@@ -134,8 +129,8 @@ public class JSP_Helper_fundURLData {
 
             if (v_id == null) {
                 if (isVerify) {
-                    FLA_FundInfo fiDB1 = DS.getFundInfoByTypeAndName(fi._o2.mType, fi._o2.mName);
-                    FLA_FundInfo fiDB2 = DS.getFundInfoByTypeAndURL(fi._o2.mType, fi._o2.mURL);
+                    D_FundInfo fiDB1 = D_DB.getFundInfoByTypeAndName(fi._o2._type, fi._o2._nameMS);
+                    D_FundInfo fiDB2 = D_DB.getFundInfoByTypeAndURL(fi._o2._type, fi._o2._url);
                     if (fiDB1 != null || fiDB2 != null) {
                         String text = "";
                         if (fiDB1 != null) {
@@ -144,16 +139,15 @@ public class JSP_Helper_fundURLData {
                             text = "URL exists will not insert: ";
                         }
                         strb.append("<tr bgcolor=\"#FF0000\"><td colspan=\"5\">");
-                        strb.append(text + fi._o2.mType + "." + fi._o2.mName + " [" + fi._o2.mId + "]");
+                        strb.append(text + fi._o2._type + "." + fi._o2._nameMS);
                         strb.append("</td></tr>\n");
                     } else {
                         urlControl_DisplayFund(true, "", false, false, strb, FL_MODE_FILL_EXISTING, fi._o2, count, -1);
                         count++;
                     }
                 } else {
-                    ee.dinfo(log, TAG, "Will now save new entity: " + fi._o1.mType + "." + fi._o1.mName);
-                    ofy().save().entity(fi._o1).now();
-                    FLA_Cache.updateCacheAdd(fi._o1);
+                    log.info("Will now save new entity: " + fi._o1 + "." + fi._o2);
+                    D_DB.addAndSaveFundInfo(fi._o1);
                 }
 
             } else {
@@ -177,20 +171,17 @@ public class JSP_Helper_fundURLData {
                     count++;
                 } else {
                     if (isDelete) {
-                        ee.dwarning(log, TAG, "Will now delete entity: " + fi._o1.mType + "." + fi._o1.mName + " [" + fi._o1.mId + "]");
-                        DS.deleteFundInfo(fi._o1);
-                        FLA_Cache.updateCacheDelete(fi._o1);
-                        ee.dwarning(log, TAG, "...delete performed");
+                        log.warning("Will now delete entity: " + fi._o1._type + "." + fi._o1._nameMS);
+                        D_DB.deleteFundInfo(fi._o1);
+                        log.warning("...delete performed");
                     } else if (isValid) {
-                        fi._o1.mIsValid = true;
-                        fi._o1.mInvalidCode = FLA_FundInfo.IC_NONE;
-                        ee.dinfo(log, TAG, "Will now set entity to valid: " + fi._o1.mType + "." + fi._o1.mName + " [" + fi._o1.mId + "]");
-                        ofy().save().entity(fi._o1).now();
-                        FLA_Cache.updateCacheUpdate(fi._o1);
+                        fi._o1._isValid = true;
+                        fi._o1._errorCode = D_FundInfo.IC_NO_ERROR;
+                        log.info("Will now set entity to valid: " + fi._o1._type + "." + fi._o1._nameMS);
+                        D_DB.saveFundInfo();
                     } else {
-                        ee.dinfo(log, TAG, "Will update entity: " + fi._o1.mType + "." + fi._o1.mName + " [" + fi._o1.mId + "], url: " + fi._o1.mURL);
-                        ofy().save().entity(fi._o1).now();
-                        FLA_Cache.updateCacheUpdate(fi._o1);
+                        log.info("Will update entity: " + fi._o1._type + "." + fi._o1._nameMS + ", url: " + fi._o1._url);
+                        D_DB.saveFundInfo();
                     }
                 }
             }
@@ -207,39 +198,42 @@ public class JSP_Helper_fundURLData {
             boolean hiddenDelete,
             StringBuilder strb,
             int mode,
-            FLA_Cache_FundInfo elem,
+            D_FundInfo elem,
             int count,
             int index) throws Exception {
 
         if (doRow) {
-            if (elem != null && !elem.mIsValid && text == null) {
+            if (elem != null && !elem._isValid && text == null) {
                 strb.append("<tr bgcolor=\"#FF0000\">\n");
             } else {
                 strb.append("<tr>\n");
             }
         }
 
-        if (mode == FL_MODE_FILL_EXISTING && elem.mId != null) {
-            strb.append("<input type=\"hidden\" name=\"" + Constants.PARAM2_ID_ + String.valueOf(count) + "\" value=\"" + elem.mId + "\"/>");
+        if (mode == FL_MODE_FILL_EXISTING) {
+            if (elem == null) {
+                log.severe("Elem is null!!!");
+            }
+            strb.append("<input type=\"hidden\" name=\"" + JSP_Constants.PARAM2_ID_ + String.valueOf(count) + "\" value=\"" + elem.getTypeAndName().hashCode() + "\"/>");
         }
 
         if (text != null) {
             strb.append("<td colspan=\"4\">" + text + "</td>");
             if (hiddenDelete) {
-                strb.append("<input type=\"hidden\" name=\"" + Constants.PARAM2_DELETE_ + String.valueOf(count) + "\" value=\"" + elem.mId + "\"/>");
+                strb.append("<input type=\"hidden\" name=\"" + JSP_Constants.PARAM2_DELETE_ + String.valueOf(count) + "\" value=\"" + elem.getTypeAndName().hashCode() + "\"/>");
             }
             if (hiddenSetValid) {
-                strb.append("<input type=\"hidden\" name=\"" + Constants.PARAM2_SETVALID_ + String.valueOf(count) + "\" value=\"" + elem.mId + "\"/>");
+                strb.append("<input type=\"hidden\" name=\"" + JSP_Constants.PARAM2_SETVALID_ + String.valueOf(count) + "\" value=\"" + elem.getTypeAndName().hashCode() + "\"/>");
             }
         } else if (mode == FL_MODE_FILL_EXISTING) {
             strb.append("<td width=\"50\" align=\"right\">" +  String.valueOf(index) + ".</td>");
-            strb.append("<td width=\"30\" align=\"left\"><input type=\"checkbox\" name=\"" + Constants.PARAM2_DELETE_ + String.valueOf(count) + "\" value=\"" + elem.mId + "\"/>D</td>");
-            if (elem.mIsValid) {
-                strb.append("<td width=\"70\" align=\"left\"><input type=\"checkbox\" disabled name=\"" + Constants.PARAM2_SETVALID_ + String.valueOf(count) + "\" value=\"" + elem.mId + "\"/>SV</td>");
+            strb.append("<td width=\"30\" align=\"left\"><input type=\"checkbox\" name=\"" + JSP_Constants.PARAM2_DELETE_ + String.valueOf(count) + "\" value=\"" + elem.getTypeAndName().hashCode() + "\"/>D</td>");
+            if (elem._isValid) {
+                strb.append("<td width=\"70\" align=\"left\"><input type=\"checkbox\" disabled name=\"" + JSP_Constants.PARAM2_SETVALID_ + String.valueOf(count) + "\" value=\"" + elem.getTypeAndName().hashCode() + "\"/>SV</td>");
             } else {
-                strb.append("<td width=\"70\" align=\"left\"><input type=\"checkbox\" name=\"" + Constants.PARAM2_SETVALID_ + String.valueOf(count) + "\" value=\"" + elem.mId + "\"/>SV/" + elem.mInvalidCode + "</td>");
+                strb.append("<td width=\"70\" align=\"left\"><input type=\"checkbox\" name=\"" + JSP_Constants.PARAM2_SETVALID_ + String.valueOf(count) + "\" value=\"" + elem.getTypeAndName().hashCode() + "\"/>SV/" + elem._errorCode + "</td>");
             }
-            strb.append("<td width=\"30\" align=\"left\">[" +  elem.getDPWeeks().size() + "]</td>\n");
+            strb.append("<td width=\"30\" align=\"left\">[" +  elem._dpDays.size() + "]</td>\n");
         } else if (mode == FL_MODE_EMPTIES) {
             strb.append("<td width=\"50\"></td>\n");
             strb.append("<td align=\"left\" width=\"30\"></td>\n");
@@ -247,15 +241,16 @@ public class JSP_Helper_fundURLData {
             strb.append("<td align=\"left\" width=\"30\"></td>\n");
         }
 
+        // Type
         if (mode == FL_MODE_FILL_EXISTING) {
-            strb.append("<td width=\"40\">" + elem.mType + "</td>\n");
-            strb.append("<input type=\"hidden\" name=\"" + Constants.PARAM2_TYPE_ + String.valueOf(count) + "\" value=\"" + elem.mType + "\"/>");
+            strb.append("<td width=\"40\">" + elem._type + "</td>\n");
+            strb.append("<input type=\"hidden\" name=\"" + JSP_Constants.PARAM2_TYPE_ + String.valueOf(count) + "\" value=\"" + elem._type + "\"/>");
         } else if (mode == FL_MODE_EMPTIES) {
             strb.append("<td width=\"40\">\n");
-            strb.append("<select name=\"" + Constants.PARAM2_TYPE_ + String.valueOf(count) + "\">\n");
-            for (int j = 0; j < FLA_FundInfo.TYPES.length; j++) {
-                strb.append("<option value=\"" + FLA_FundInfo.TYPES[j] + "\">" +
-                        FLA_FundInfo.TYPES[j] + "</option>\n");
+            strb.append("<select name=\"" + JSP_Constants.PARAM2_TYPE_ + String.valueOf(count) + "\">\n");
+            for (int j = 0; j < D_FundInfo.TYPES.length; j++) {
+                strb.append("<option value=\"" + D_FundInfo.TYPES[j] + "\">" +
+                        D_FundInfo.TYPES[j] + "</option>\n");
             }
             strb.append("</select>\n");
             strb.append("</td>");
@@ -264,29 +259,29 @@ public class JSP_Helper_fundURLData {
         String valueName = "";
         String valueURL = "";
         if (mode == FL_MODE_FILL_EXISTING) {
-            valueName = elem.mName;
-            valueURL = elem.mURL;
+            valueName = elem._nameMS;
+            valueURL = elem._url;
         }
 
         strb.append("<td width=\"300\">" +
                 "<input style=\"width:300px;\" type=\"text\"" +
-                " name=\"" + Constants.PARAM2_NAME_ + String.valueOf(count) + "\"" +
+                " name=\"" + JSP_Constants.PARAM2_NAME_ + String.valueOf(count) + "\"" +
                 " value=\"" + valueName + "\"" +
-                " size=\"150\"></td>\n");
+                " size=\"150\" readonly></td>\n");
 
         strb.append("<td width=\"600\">" +
                 "<input style=\"width:600px;\" type=\"text\"" +
-                " name=\"" + Constants.PARAM2_URL_ + String.valueOf(count) + "\"" +
+                " name=\"" + JSP_Constants.PARAM2_URL_ + String.valueOf(count) + "\"" +
                 " value=\"" + valueURL + "\"" +
-                " size=\"150\"></td>\n");
+                " size=\"150\" readonly></td>\n");
 
         if (mode == FL_MODE_FILL_EXISTING) {
             String href = "JSP_Report02_Weekly_Display.jsp" +
-                    "?" + Constants.PARAM_TYPE + "=" + JSP_Helper.WT_FILTER_FUND +
-                    "&" + Constants.PARAM_ID + "=" + elem.mFundInfoId;
-            strb.append("<td><a href=\"" + elem.mURL + "\"" + " target=\"_blank\">ms</a></td>");
+                    "?" + JSP_Constants.PARAM_TYPE + "=" + JSP_Helper.WT_FILTER_FUND +
+                    "&" + JSP_Constants.PARAM_ID + "=" + elem.getTypeAndName().hashCode();
+            strb.append("<td><a href=\"" + elem._url + "\"" + " target=\"_blank\">ms</a></td>");
             strb.append("<td><a href=\"" + href + "\"" + " target=\"_blank\">us</a></td>");
-            strb.append("<td><p style=\"font-size:11px\">[" + elem.mId + "]</p></td>");
+//            strb.append("<td><p style=\"font-size:11px\">[id:N/A]</p></td>");
         } else if (mode == FL_MODE_EMPTIES) {
             strb.append("<td width=\"20\"></td>");
             strb.append("<td width=\"20\"></td>");
@@ -298,8 +293,8 @@ public class JSP_Helper_fundURLData {
     /**
      *
      */
-    private static OTuple2G<FLA_FundInfo, FLA_Cache_FundInfo> getFLA_FundInfo(
-            List<FLA_Cache_FundInfo> allFunds,
+    private static OTuple2G<D_FundInfo, D_FundInfo> getD_FundInfo(
+            List<D_FundInfo> allFunds,
             Long v_id,
             String v_type,
             String v_name,
@@ -307,12 +302,10 @@ public class JSP_Helper_fundURLData {
             String v_delete,
             String v_setvalid) throws Exception {
 
-        EE ee = EE.getEE();
-        // ee.dinfo(log, TAG, "Entering with id: " + v_id + ", type: " + v_type + ", name: " + v_name + " [" + v_id + "], url: " + v_url + ", setvalid: " + v_setvalid + ", delete: " + v_delete);
+        log.info("Entering with, type: " + v_type + ", name: " + v_name + ", url: " + v_url + ", setvalid: " + v_setvalid + ", delete: " + v_delete);
 
         if (v_name != null && v_name.startsWith("T. Rowe")) {
-            log.info("getFLA_FundInfo, arguments"
-                    + "\nv_id:       " + v_id
+            log.info("getD_FundInfo, arguments"
                     + "\nv_type:     " + v_type
                     + "\nv_name:     " + v_name
                     + "\nv_url:      " + v_url
@@ -324,9 +317,9 @@ public class JSP_Helper_fundURLData {
             return null;
         }
 
-        if (v_type.equals(Constants.ACCOUNT_TYPE_VANGUARD)
+        if (v_type.equals(D_FundInfo.TYPE_VANGUARD)
                 && (v_url == null || v_url.length() == 0 || v_url.equals("null"))) {
-            v_url = Constants.url_getVanguard(v_name);
+            v_url = JSP_Constants.url_getVanguard(v_name);
             log.info("Vanguard with null URL\nname: " + v_name + "\n" + "url: " + v_url);
         }
 
@@ -334,35 +327,32 @@ public class JSP_Helper_fundURLData {
             return null;
         }
 
-        FLA_FundInfo fi = new FLA_FundInfo();
-        if (v_id != null) {
-            for (FLA_Cache_FundInfo fiElem : allFunds) {
-                if (v_id.equals(fiElem.mFundInfoId)
-                        && v_type.equals(fiElem.mType)
-                        && v_name.equals(fiElem.mName)
-                        && v_url.equals(fiElem.mURL)
-                        && v_setvalid == null
-                        && v_delete == null) {
-                    // ee.dinfo(log, TAG, "Fund existed in exactly this form already, so wont update it!");
-                    return null;
-                }
+
+        D_FundInfo fi = null;
+        for (D_FundInfo fitmp: D_DB._fis) {
+            if (v_type.equals(fitmp._type) && v_name.equals(fitmp._nameMS) && v_url.equals(fitmp._url)) {
+                fi = fitmp;
             }
-            fi = ofy().load().type(FLA_FundInfo.class).id(v_id.longValue()).now();
-            fi.mName = v_name;
-            fi.mURL = v_url;
-        } else {
-            fi.mId = v_id;
-            fi.mType = v_type;
-            fi.mName = v_name;
-            fi.mURL = v_url;
-            fi.mMSRating = -1;
-            fi.mPPMNumber = -1;
-            fi.mDateYYMMDD_Updated = MM.getNowAs_YYMMDD(null);
-            fi.mDateYYMMDD_Update_Attempted = fi.mDateYYMMDD_Updated;
         }
 
-        FLA_Cache_FundInfo fic = FLA_Cache_FundInfo.instantiate(fi);
-        return new OTuple2G<>(fi, fic);
+        if (v_delete != null || v_setvalid != null) {
+            return new OTuple2G<>(fi, fi);
+        }
+        return null;   // No update
+
+        // This was back in the day when we supported updating fund information
+//        D_FundInfo fi = new D_FundInfo();
+//        fi._type = v_type;
+//        fi._nameMS = v_name;
+//        fi._url = v_url;
+//        fi._msRating = -1;
+//        fi._ppmNumber = "";
+//        String lfriday = MM.tgif_getLastFridayTodayExcl(MM.getNowAs_YYMMDD(Constants.TIMEZONE_STOCKHOLM));
+//        fi._dateYYMMDD_Updated = lfriday;
+//        fi._dateYYMMDD_Update_Attempted = lfriday;
+//
+//        D_FundInfo fic = fi.duplicate();
+//        return new OTuple2G<>(fi, fic);
     }
 }
 

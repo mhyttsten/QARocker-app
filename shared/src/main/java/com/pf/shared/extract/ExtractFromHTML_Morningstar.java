@@ -22,6 +22,7 @@ public class ExtractFromHTML_Morningstar {
 	//------------------------------------------------------------------------
 	public static int extractFundDetails(
 			IndentWriter iw,
+			IndentWriter iwdb,
 			D_FundInfo fi,
 			String pageContent) throws Exception {
 
@@ -31,7 +32,8 @@ public class ExtractFromHTML_Morningstar {
 		String findTo = null;
 		String result = null;
 		int returnCode = ExtractFromHTML_Helper.RC_SUCCESS;
-		
+
+		iwdb.println("Finding fund name");
 		ot = new OTuple2G<String, String>(null, pageContent);
 		String fundName = MM.assignAndReturnNextTagValue(ot, "<h2");
 		if(fundName == null || (fundName.startsWith("S") && fundName.endsWith("k Fonder"))) {
@@ -41,6 +43,7 @@ public class ExtractFromHTML_Morningstar {
 		}
 
 		fundName = MM.htmlReplaceHTMLCodes(fundName);
+		iwdb.println("...done, fundName: " + fundName);
 		if (!fi._nameMS.equals(fundName)) {
 			iw.println("Fund changed name. Before: " + fi._nameMS + ". Now: " + fundName);
 			returnCode = ExtractFromHTML_Helper.RC_SUCCESS_BUT_DATA_WAS_UPDATED;
@@ -48,6 +51,7 @@ public class ExtractFromHTML_Morningstar {
 		fi._nameMS = fundName;
 
 		// MS Category
+		iwdb.println("Finding category name");
 		findTagLoc = "<span class=\"quicktakecolContainer\" title=\"Morningstar Kategori";
 		findAfter = ">";
 		findTo = "</span>";
@@ -56,7 +60,7 @@ public class ExtractFromHTML_Morningstar {
 		findAfter = "href=\"";
 		findTo = "\"";
 		if (ahref == null) {
-			iw.println("Fund changed name. Before: " + fi._nameMS + ". Now: " + fundName);
+			iw.println("Could not find category name ahref was null");
 			fi._errorCode = D_FundInfo.IC_HTML_MS_CATEGORY;
 			return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
 		}
@@ -70,10 +74,12 @@ public class ExtractFromHTML_Morningstar {
 			iw.println("Fund category change. Before: " + fi._categoryName + ". Now: " + msCategoryText);
 			returnCode = ExtractFromHTML_Helper.RC_SUCCESS_BUT_DATA_WAS_UPDATED;
 		}
-		fi._nameMS = fundName;
+		fi._categoryName = msCategoryText;
+		iwdb.println("...done, categoryName: " + fi._categoryName);
 
 		// MS Rating
 		// <span class="quicktakecolContainer" title="Morningstar Rating"
+		iwdb.println("Finding MS Rating");
 		findTagLoc = "<span class=\"quicktakecolContainer\" title=\"Morningstar Rating";
 		findAfter = "class=\"";
 		findTo = "\"";
@@ -108,59 +114,79 @@ public class ExtractFromHTML_Morningstar {
 			return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
 		}
 		fi._msRating = rating;
+		iwdb.println("...rating: " + rating);
 
 		// PPM Number
-		findTagLoc = "<span class=\"quicktakecolContainer\" title=\"PPM-nummer\""; 
+		iwdb.println("PPM Number");
+		findTagLoc = "<span class=\"quicktakecolContainer\" title=\"PPM-nummer\"";
 		findAfter = ">";
 		findTo = "</span>";
 		String ppmNumber = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
 		ppmNumber = MM.htmlReplaceHTMLCodes(ppmNumber).trim();
         fi._ppmNumber = ppmNumber;
+		iwdb.println("...number: " + ppmNumber);
 
         D_FundDPDay dpd = new D_FundDPDay();
         fi._dpDays.add(0, dpd);
 
+		iwdb.println("Yearly return table");
 		// Yearly returns (table), I??r!!!
 		findTagLoc = "<th class=\"decimal\">Fond</th><th class=\"decimal\">Kategori</th><th class=\"decimal\">Index</th>";
 		findAfter = "</tr>";
 		findTo = "</table>";
 		String yearlyReturnTable = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
-		int dpy_rc = processYearlyReturnTable(iw, fi, yearlyReturnTable);
+		int dpy_rc = processYearlyReturnTable(iw, iwdb, fi, yearlyReturnTable);
 		if (dpy_rc != ExtractFromHTML_Helper.RC_SUCCESS) {
+			iwdb.println("...error");
 			return dpy_rc;
 		}
+		iwdb.println("...done");
 
+		iwdb.println("Kursdatum");
 		findTagLoc = "<b>Kursdatum";
 		findAfter = "</b>:";
 		findTo = "<br />";
 		String yearlyReturnsLastUpdatedDate = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
+		iwdb.println("...done");
 
 		// Comparison category
+		iwdb.println("Index name");
 		findTagLoc = "<b>Kategorins j";
 		findAfter = "</b>:";
 		findTo = "<br />";
 		String indexCompare = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
 		fi._indexName = indexCompare;
+		iwdb.println("...done, indexName: " + indexCompare);
 
 		// Get currency in which NAV is measured
+		iwdb.println("Senaste NAV");
 		findTagLoc = "<td>Senaste NAV</td>";
 		findAfter = "<td>";
 		findTo = "</td>";
 		result = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
 		result = getFromFirstLetter(result);
+		if (!fi._currencyName.equals(result)) {
+			iw.println("Fund currency change. Before: " + fi._currencyName + ". Now: " + result);
+			returnCode = ExtractFromHTML_Helper.RC_SUCCESS_BUT_DATA_WAS_UPDATED;
+		}
 		fi._currencyName = result;
+		iwdb.println("...done, currency: " + result);
 
 		// Return (daily, month, 3m, 6m, 1y)
+		iwdb.println("Recent returns");
 		findTagLoc = "Avkastning %";
 		findAfter = "<table class=\"alternatedtoplist\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">";
 		findTo = "</table>";
 		String recentReturnTable = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
-		int dpd_rv = processRecentReturnsTable(iw, fi, recentReturnTable);
+		int dpd_rv = processRecentReturnsTable(iw, iwdb, fi, recentReturnTable);
 		if (dpd_rv != ExtractFromHTML_Helper.RC_SUCCESS) {
+			iwdb.println("...error");
 			return dpd_rv;
 		}
+		iwdb.println("...done, recent returns");
 
 		// Returns: Date of last recorded data point
+		iwdb.println("Avkastning %");
 		findTagLoc = "Avkastning %";
 		findAfter = "<table class=\"alternatedtoplist\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">";
 		findTo = "</html>";
@@ -171,32 +197,9 @@ public class ExtractFromHTML_Morningstar {
 		String returnsLastDate = MM.getRegExp(null, result, findTagLoc, findAfter, findTo, true);
 		returnsLastDate = returnsLastDate.trim();
 		returnsLastDate = MM.dateConvert_YYYYDMMDDD_To_YYMMDD(returnsLastDate);
-
-		String dateNow_YYMMDD = MM.getNowAs_YYMMDD(Constants.TIMEZONE_STOCKHOLM);
-		String dateLastFriday_YYMMDD   = MM.tgif_getLastFridayTodayExcl(dateNow_YYMMDD);
-		String dateLastSaturday_YYMMDD   = MM.tgif_getNextWeekday(dateLastFriday_YYMMDD, Calendar.SATURDAY);
-		String dateLastSunday_YYMMDD   = MM.tgif_getNextWeekday(dateLastFriday_YYMMDD, Calendar.SUNDAY);
-		String dateLastMonday_YYMMDD   = MM.tgif_getNextWeekday(dateLastFriday_YYMMDD, Calendar.MONDAY);
-		String dateLastTuesday_YYMMDD   = MM.tgif_getNextWeekday(dateLastFriday_YYMMDD, Calendar.TUESDAY);
-		String dateLastThursday_YYMMDD = MM.tgif_getPrevWeekday(dateLastFriday_YYMMDD, Calendar.THURSDAY);
-
-		// We have a valid extraction if actualy date is last Friday or Thursday
-		if (returnsLastDate.equals(dateLastFriday_YYMMDD)
-				|| returnsLastDate.equals(dateLastThursday_YYMMDD)
-				|| returnsLastDate.equals(dateLastSaturday_YYMMDD)
-				|| returnsLastDate.equals(dateLastSunday_YYMMDD)
-				|| returnsLastDate.equals(dateLastMonday_YYMMDD)
-				|| returnsLastDate.equals(dateLastTuesday_YYMMDD)) {
-			fi._dpDays.get(0)._dateYYMMDD_Actual = returnsLastDate;
-			fi._dpDays.get(0)._dateYYMMDD = dateLastFriday_YYMMDD;
-			return ExtractFromHTML_Helper.RC_SUCCESS;
-		}
-		// Otherwise, we should wait until next data point
-		else {
-			fi._dpDays.remove(0);
-			iw.println("Want to extract for friday: " + dateLastFriday_YYMMDD + ", but DP is not in range: " + dateLastThursday_YYMMDD + "-" + dateLastTuesday_YYMMDD);
-			return ExtractFromHTML_Helper.RC_WARNING_NO_DPDAY_FOUND;
-		}
+		fi._dpDays.get(0)._dateYYMMDD_Actual = returnsLastDate;
+		iwdb.println("...done, avkastning %");
+		return ExtractFromHTML_Helper.RC_SUCCESS;
 	}
 
 	// ***********************************************************************
@@ -204,8 +207,10 @@ public class ExtractFromHTML_Morningstar {
 	//------------------------------------------------------------------------
 	public static int processRecentReturnsTable(
 			IndentWriter iw,
+			IndentWriter iwdb,
 			D_FundInfo fi,
 			String recentReturnTable) throws Exception {
+		iwdb.println("processRecentReturnsTable");
 
 		/*
 		<tr>
@@ -227,9 +232,11 @@ public class ExtractFromHTML_Morningstar {
 
 		List<D_FundDPDay> dpds = new ArrayList<>();
 		List<String> entries = MM.getTagValues(recentReturnTable, "<tr");
+		iwdb.println("...entries: " + entries.size());
 
 		// Each column header is its separate currency
 		List<String> headers = MM.getTagValues(entries.get(0), "<th");
+		iwdb.println("...headers: " + entries.size());
 		for(int i=1; i < headers.size(); i++) {
 			String header = headers.get(i);
 			D_FundDPDay dpd = new D_FundDPDay();
@@ -240,6 +247,9 @@ public class ExtractFromHTML_Morningstar {
 		// Get the daily for each currency (each currency is its separate column)
 		for(int i=1; i < entries.size(); i++) {
 			ArrayList<String> tdColumns = MM.getTagValues(entries.get(i), "<td");
+			for (String s: tdColumns) {
+				iwdb.println("..." + s);
+			}
 
 			String timePeriod = tdColumns.get(0);
 			for(int j=1; j < tdColumns.size(); j++) {
@@ -331,6 +341,7 @@ public class ExtractFromHTML_Morningstar {
 	//------------------------------------------------------------------------
 	public static int processYearlyReturnTable(
 			IndentWriter iw,
+			IndentWriter iwdb,
 			D_FundInfo fi,
 			String table) throws Exception {
 		boolean found = true;

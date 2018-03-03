@@ -45,6 +45,18 @@ public class MM {
 		log.warning("*** THIS IS MY WARNING LOG message ***");
 	}
 
+	//------------------------------------------------------------------------
+	public static String strArray2CSV(String[] ss) {
+		StringBuffer strb = new StringBuffer();
+		for (int i=0; i < ss.length; i++) {
+			strb.append(ss[i]);
+			if (i+1 < ss.length) {
+				strb.append(", ");
+			}
+		}
+		return strb.toString();
+	}
+
 
 	//------------------------------------------------------------------------
 	public static String stripHTMLComments(String str) {
@@ -141,6 +153,13 @@ public class MM {
         throw new AssertionError("Unknown day of week: " + dayOfWeek);
     }
 
+    public static int tgif_dayCountDiff(String newerYYMMDD, String olderYYMMDD) {
+		java.util.Date dnewer = getDateFrom_YYMMDD(null, newerYYMMDD);
+		java.util.Date dolder = getDateFrom_YYMMDD(null, olderYYMMDD);
+		long diff = dnewer.getTime() - dolder.getTime();
+		diff = diff / (1000*3600*24);
+		return (int)diff;
+	}
 
     /**
      *

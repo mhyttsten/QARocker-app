@@ -9,8 +9,7 @@ import java.util.logging.Logger;
 
 public class FLOps1_Ext1_HTMLGet {
 	private static final Logger log = Logger.getLogger(FLOps1_Ext1_HTMLGet.class.getName());
-	private static final String TAG = MM.getClassName(FLOps1_Ext1_HTMLGet.class.getName());
-	
+
 	public static class Response {
 		public byte[] _pageContentBA;
 		public String _httpURL;
@@ -18,12 +17,12 @@ public class FLOps1_Ext1_HTMLGet {
 	}
 
     public static byte[] htmlGet(
-            EE ee,
+    		EE ee,
             IndentWriter iw,
             String url,
             int retryIntervalInMS, int retryCount) throws IOException {
         iw.println("FLOps1_Ext1_HTMLGet.htmlGet, entered with URL: " + url + "retryIntervalMS: " + retryIntervalInMS + ", retryCount: " + retryCount);
-        byte[] result = htmlGetImpl(ee, iw, url, retryIntervalInMS, retryCount);
+        byte[] result = htmlGetImpl(iw, url, retryIntervalInMS, retryCount);
         if (result != null) {
             iw.println("Returning: " + result.length + " number of bytes");
         } else {
@@ -33,7 +32,6 @@ public class FLOps1_Ext1_HTMLGet {
     }
 
 	private static byte[] htmlGetImpl(
-			EE ee,
 			IndentWriter iw,
 			String url,
 			int retryIntervalInMS, int retryCount) throws IOException {
@@ -44,7 +42,7 @@ public class FLOps1_Ext1_HTMLGet {
 				pageContent = MM.getURLContentBA(url);
 				return pageContent;
 			} catch(Exception exc) {
-				ee.dwarning(log, TAG, "*****************************************************\n" +
+				log.warning("*****************************************************\n" +
 						"    ERROR ERROR ERROR, error, error, error\n" +
 						"    Exception caught while extracting the HTML pages\n" + 
 						"    Retry count: " + retryCount + "\n" +

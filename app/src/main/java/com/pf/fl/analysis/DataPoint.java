@@ -1,19 +1,20 @@
 package com.pf.fl.analysis;
 
-import com.pf.fl.datamodel.DM_Fund;
+import com.pf.shared.datamodel.D_FundDPDay;
+import com.pf.shared.datamodel.D_FundInfo;
 
 public class DataPoint {
-    public DataPoint(DM_Fund fund, String friday, Double value) {
+    public DataPoint(D_FundInfo fund, String friday, float value) {
         mFund = fund;
         mFridayYYMMDD = friday;
         mValue = value;
     }
 
     public String toString() {
-        return mValue == null ? "null" : String.format("%.2f", mValue.doubleValue());
+        return mValue == D_FundDPDay.FLOAT_NULL ? "null" : String.format("%.2f", mValue);
     }
 
-    public DM_Fund mFund;
+    public D_FundInfo mFund;
     public String mFridayYYMMDD;
-    public Double mValue;
+    public float mValue = D_FundDPDay.FLOAT_NULL;
 }

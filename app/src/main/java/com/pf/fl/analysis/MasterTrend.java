@@ -1,13 +1,13 @@
 package com.pf.fl.analysis;
 
 
-import com.pf.fl.datamodel.DM_Fund;
 import com.pf.shared.utils.IndentWriter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MasterTrend  {
+    /*
     private static final String TAG = MasterTrend.class.getSimpleName();
 
     public List<TrendEntity> mTrends = new ArrayList<>();
@@ -17,14 +17,10 @@ public class MasterTrend  {
 
     private String mDataSet;
 
-    /**
-     */
     public void initialize(DM_Fund f) {
         initialize(f.mDPs);
     }
 
-    /**
-     */
     public void initialize(DataPoint[] dps) {
         mDPs = dps;
 
@@ -48,8 +44,6 @@ public class MasterTrend  {
 //        System.out.println("*** Done merging trends, results\n" + toString());
     }
 
-    /**
-     */
     private TrendEntity getNextTrend() {
         // No more data to process trend from
         if (mStart >= mDPs.length) {
@@ -98,8 +92,6 @@ public class MasterTrend  {
         return te;
     }
 
-    /**
-     */
     private void stripTrailingNulls(TrendEntity te) {
         // A None trend, can contain whatever and end with whatever
         if (te.mTrendType == TrendEntity.T_TYPE_NONE) {
@@ -147,8 +139,6 @@ public class MasterTrend  {
         return;
     }
 
-    /**
-     */
     private void mergeAdjacentMarginalTrends() {
         boolean didMerge = false;
         do {
@@ -265,4 +255,5 @@ public class MasterTrend  {
         }
         return dps;
     }
+    */
 }

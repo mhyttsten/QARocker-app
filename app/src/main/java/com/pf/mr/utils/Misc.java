@@ -4,8 +4,11 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -13,14 +16,18 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Logger;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.execmodel.ESet;
+import com.pf.mr.execmodel.ETerm;
 import com.pf.shared.extract.ExtractFromHTML_Helper;
+import com.pf.shared.utils.Compresser;
 import com.pf.shared.utils.MM;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.ArrayList;
@@ -32,10 +39,40 @@ import java.util.List;
 public class Misc {
     public static final String TAG = Misc.class.getSimpleName();
 
+    public static byte[] getFirebaseStorageFile() {
+        Log.w(TAG, "*** Will now try to download content");
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        StorageReference sr = storage.getReference(com.pf.shared.Constants.FUNDINFO_DB_MASTER_BIN);
+        Log.w(TAG, "...bucket: " + sr.getBucket());
+        Log.w(TAG, "...path: " + sr.getPath() + ", name: " + sr.getName());
+        Task<byte[]> t = sr.getBytes(20*1024*1024);
+        t.addOnCompleteListener(
+                new OnCompleteListener<byte[]>() {
+                    @Override
+                    public void onComplete(@NonNull Task<byte[]> task) {
+                        Log.w(TAG, "...Task is complete");
+                        if(task.isComplete()) {
+                            Log.w(TAG, "...Task is complete");
+                        } else {
+                            Log.w(TAG, "...Task is not complete");
+                        }
+                        if(task.isSuccessful()) {
+                            Log.w(TAG, "...Task is successful");
+                        } else {
+                            Log.w(TAG, "...Task is not successful");
+                        }
+                        if (task.isSuccessful()) {
+                            byte[] rdata = task.getResult();
+                            Log.w(TAG, "...Result size: " + task.getResult().length);
+                            Log.w(TAG, "...Now uncompressing");
+                            rdata = Compresser.dataUncompress(rdata);
+                            Log.w(TAG, "...Done uncompressing, new data: " + rdata.length);
 
-    public static byte[] getFirebaseStorageFile(String s) {
-//        FirebaseStorage storage = FirebaseStorage.getInstance();
-//        StorageReference sr = storage.getReferenceFromUrl(e.mBitmapURL);
+                        }
+                    }
+                });
+
+//        Log.w(TAG, "*** Bucket is: " + sr.getBucket());
 //        "gs://ql-magnushyttsten.appspot.com/backend/fundinfo-db-180220.bin.zip_MASTER_180216.zip";
         return null;
 
@@ -185,6 +222,7 @@ public class Misc {
             }
             @Override
             public void onCancelled(DatabaseError firebaseError) {
+                System.out.println("*** onCancelled");
             }
         });
     }

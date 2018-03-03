@@ -1,36 +1,26 @@
-<%@ page import="static com.googlecode.objectify.ObjectifyService.ofy" %>
-<%@ page import="com.googlecode.objectify.Key" %>
-<%@ page import="com.pf.fl.be.datamodel.FLA_FundInfo" %>
-<%@ page import="com.pf.fl.be.datamodel.FLA_FundIndex" %>
-<%@ page import="com.pf.fl.be.util.EE" %>
-<%@ page import="com.pf.shared.utils.MM" %>
 <%@ page import="com.pf.fl.be.jsphelper.JSP_Helper" %>
-<%@ page import="java.util.Iterator" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.net.URLDecoder" %>
 <%@ page import="java.util.ArrayList" %>
-<%@ page import="com.pf.fl.be.util.Constants" %>
-<!-- page import="com.google.gson.Gson" -->
-
-<% EE ee = EE.getEE(); %>
+<%@ page import="com.pf.fl.be.jsphelper.JSP_Constants" %>
+<%@ page import="com.pf.shared.datamodel.D_FundInfo" %>
+<%@ page import="com.pf.fl.be.extract.D_DB" %>
 
 <html>
 
 <head><title>Funds in an Index</title></head>
 <body>
   <%
-    String id = request.getParameter(Constants.ARG_ID);
+    String id = request.getParameter(JSP_Constants.ARG_ID);
     id = URLDecoder.decode(id, "UTF-8");
-    FLA_FundIndex fundIndex = ofy().load().type(FLA_FundIndex.class).id(id).now();
-    Key<FLA_FundIndex> idKey = Key.create(FLA_FundIndex.class, id);
-    List<FLA_FundInfo> fundInfoList = ofy().load().type(FLA_FundInfo.class).filter("mIndexCompare", idKey).list();
+    List<D_FundInfo> l = D_DB._fisByIndexHM.get(id);
   %>
-  <h1>Funds for Index: <%=id%> (<%=fundInfoList.size()%>)</h1>
+  <h1>Funds for Index: <%=id%> (<%=l.size()%>)</h1>
   <%
-    for (int i=0; i < fundInfoList.size(); i++) {
-        FLA_FundInfo fundInfo = fundInfoList.get(i);
+    for (int i=0; i < l.size(); i++) {
+        D_FundInfo fundInfo = l.get(i);
   %>
-  <%=fundInfo.mType%>.<%=fundInfo.mName%><br>
+  <%=fundInfo.getTypeAndName()%><br>
   <% } %>
 
 </body>

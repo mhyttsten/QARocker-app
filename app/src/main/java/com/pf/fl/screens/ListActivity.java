@@ -15,7 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.pf.mr.R;
-import com.pf.fl.datamodel.DM_Transform;
+import com.pf.fl.datamodel.FL_DB;
 
 public class ListActivity extends AppCompatActivity {
     private static final String TAG = ListActivity.class.getSimpleName();
@@ -34,7 +34,7 @@ public class ListActivity extends AppCompatActivity {
 
 
         // Get the content to display
-        mLI = DM_Transform.listContent;
+        mLI = FL_DB.listContent;
         setTitle(mLI.mTitle);
 
         setupRecyclerView();

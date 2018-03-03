@@ -5,12 +5,17 @@ import com.pf.fl.be.datamodel.FLA_Cache_FundDPWeek;
 import com.pf.fl.be.datamodel.FLA_Cache_FundInfo;
 import com.pf.fl.be.datamodel.FLA_FundIndex;
 import com.pf.fl.be.datamodel.FLA_FundPortfolio;
-import com.pf.fl.be.util.Constants;
+import com.pf.fl.be.extract.D_DB;
+import com.pf.fl.be.jsphelper.JSP_Constants;
 import com.pf.fl.be.util.EE;
+import com.pf.shared.datamodel.D_FundDPDay;
+import com.pf.shared.datamodel.D_FundInfo;
+import com.pf.shared.utils.IndentWriter;
 import com.pf.shared.utils.MM;
 import com.pf.shared.utils.OTuple2G;
 import com.pf.shared.utils.OTuple3G;
 
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,65 +30,22 @@ public class JSP_Helper {
     private static final Logger log = Logger.getLogger(JSP_Helper.class.getName());
     private static final String TAG = MM.getClassName(JSP_Helper.class.getName());
 
-    /**
-     *
-     */
-//    public static String createTrendReport(String title, List<FLA_Report_Element_Analysis> l) {
-//
-//        StringBuilder strb = new StringBuilder();
-//        strb.append("<h3>" + title + ". Number of entries: " + l.size() + "</h3>\n");
-//        strb.append("<table style=\"width:100%\">\n");
-//        strb.append("<tr>\n");
-//        strb.append("<th>Name</th>\n");
-//        strb.append("<th>T/D</th>\n");
-//        strb.append("<th>Dur</th>\n");
-//        strb.append("<th>Avg</th>\n");
-//        strb.append("<th>Med</th>\n");
-//        strb.append("<th>Sum</th>\n");
-//        strb.append("<th>SDev</th>\n");
-//        strb.append("<th>YVtl</th>\n");
-//        strb.append("<th>DPs</th>\n");
-//        strb.append("</tr>\n");
-//        for (FLA_Report_Element_Analysis rea : l) {
-//            String name = null;
-//            if (rea.mKeyFundIndex != null) {
-//                name = rea.mKeyFundIndex;
-//            } else {
-//                FLA_FundInfo fi = ofy().load().type(FLA_FundInfo.class).id(rea.mKeyFundInfo).now();
-//                name = fi.mType + "." + fi.mName;
-//            }
-//
-//            strb.append("<tr>\n");
-//            strb.append("<td>" + name + "</td>\n");
-//            strb.append("<td>" + rea.mCountTotal + "/" + rea.mCountDirty + "</td>\n");
-//            strb.append("<td>" + FLA_Report_Element_Analysis.getTrendDurationString(rea.mTrendDurationCategory) + "</td>\n");
-//            strb.append("<td>" + String.format("%.2f", rea.mR1WAvg) + "</td>\n");
-//            strb.append("<td>" + String.format("%.2f", rea.mR1WMed) + "</td>\n");
-//            strb.append("<td>" + String.format("%.2f", rea.mR1WSum) + "</td>\n");
-//            strb.append("<td>" + String.format("%.2f", rea.mR1WStdDev) + "</td>\n");
-//            strb.append("<td>" + String.format("%d", rea.mR1WVolatilityYear) + "</td>\n");
-//            strb.append("<td>" + rea.getDPsAsString() + "</td>\n");
-//            strb.append("</tr>\n");
-//        }
-//        strb.append("</table>\n");
-//        return strb.toString();
-//    }
-
-    /**
-     *
-     */
-    private static List<FLA_Cache_FundDPWeek> getDPWeeks(String fundName, List<String> dates, List<FLA_Cache_FundDPWeek> dpws) throws Exception {
+    private static List<D_FundDPDay> getDPWeeks(
+            String fundName,
+            List<String> dates,
+            List<D_FundDPDay> dpws) throws Exception {
+        
         EE ee = EE.getEE();
-        List<FLA_Cache_FundDPWeek> r = new ArrayList<>();
+
+        List<D_FundDPDay> r = new ArrayList<>();
         for (int i=0; i < dates.size(); i++) {
             String date = dates.get(i);
             boolean found = false;
             for (int j=0; j < dpws.size(); j++) {
-                FLA_Cache_FundDPWeek fdpw = dpws.get(j);
-                if (!MM.tgif_isFriday(fdpw.mDateYYMMDD)) {
-                    ee.dsevere(log, TAG, "For fund: " + fundName + ", dpw: " + fdpw.mDateYYMMDD + ", is not a friday");
-                }
-                if (fdpw != null && fdpw.mDateYYMMDD != null && date.trim().equals(fdpw.mDateYYMMDD.trim())) {
+                D_FundDPDay fdpw = dpws.get(j);
+                if (!MM.tgif_isFriday(fdpw._dateYYMMDD)) {
+                    ee.dsevere(log, TAG, "For fund: " + fundName + ", dpw: " + fdpw._dateYYMMDD + ", is not a friday");
+                } else if (date.equals(fdpw._dateYYMMDD)) {
                     r.add(fdpw);
                     found = true;
                 }
@@ -92,13 +54,11 @@ public class JSP_Helper {
                 r.add(null);
             }
         }
+
         return r;
     }
 
-    /**
-     *
-     */
-    private static List<String> generateDPWeekDates(int count, List<FLA_Cache_FundInfo> l) throws Exception {
+    private static List<String> generateDPWeekDates(int count, List<D_FundInfo> l) throws Exception {
         List<String> dates = new ArrayList<>();
         String fridayBefore = MM.tgif_getLastFridayTodayIncl(MM.getNowAs_YYMMDD(null));
         dates.add(fridayBefore);
@@ -107,40 +67,11 @@ public class JSP_Helper {
             dates.add(fridayBefore);
         }
         return dates;
-
-        /* Retired code
-        // Find first dpw entry that is a friday and the calculate back count fridays
-        String fridayLast = null;
-        for (FLA_Cache_FundInfo cfi: l) {
-            List<FLA_Cache_FundDPWeek> dpws = cfi.getDPWeeks();
-            if (dpws != null && dpws.size() > 0) {
-                FLA_Cache_FundDPWeek dpw = dpws.get(0);
-                if (dpw != null && MM.tgif_isFriday(dpw.mDateYYMMDD)) {
-                    if (fridayLast != null && fridayLast.compareTo)
-                    fridayLast = dpw.mDateYYMMDD;
-                    break;
-                }
-            }
-        }
-        List<String> dates = new ArrayList<>();
-        dates.add(fridayLast);
-        for (int i=1; i < count; i++) {
-            fridayLast = MM.tgif_getLastFridayTodayExcl(fridayLast);
-            dates.add(fridayLast);
-        }
-        return dates;
-        */
     }
 
-    /**
-     *
-     */
     public static final String WT_FILTER_TYPE = "TYPE";
     public static final String WT_FILTER_INDEX = "INDEX";
     public static final String WT_FILTER_FUND = "FUND";
-    public static final String WT_FILTER_PORTFOLIO = "PORTFOLIO";
-    public static final String WT_FILTER_PORTFOLIO_MATCH_SEB = "PORTFOLIO_MATCH_SEB";
-    public static final String WT_FILTER_REPORT_OPPORTUNITY = "REPORT_OPPORTUNITY";
     public static String fundReport_WeeklyTable(
             HttpServletRequest request,
             HttpServletResponse response) throws Exception {
@@ -149,45 +80,32 @@ public class JSP_Helper {
         response.setContentType("text/html");
         response.setCharacterEncoding("UTF-8");
 
-        String paramType = request.getParameter(Constants.PARAM_TYPE);
-        String paramId = request.getParameter(Constants.PARAM_ID);
+        String paramType = request.getParameter(JSP_Constants.PARAM_TYPE);
+        String paramId = request.getParameter(JSP_Constants.PARAM_ID);
         if (paramType == null || paramType.trim().length() == 0) {
-            throw new Exception(Constants.PARAM_TYPE + " not set");
+            throw new Exception(JSP_Constants.PARAM_TYPE + " not set");
         }
         paramType = paramType.trim();
         if (paramId == null || paramId.trim().length() == 0) {
-            throw new Exception(Constants.PARAM_ID + " not set");
+            throw new Exception(JSP_Constants.PARAM_ID + " not set");
         }
         paramId = paramId.trim();
 
-        List<FLA_Cache_FundInfo> list = new ArrayList<>();
+        List<D_FundInfo> list = new ArrayList<>();
         String[] column1 = null;
         List<String> dates = null;
         if (paramType.equals(WT_FILTER_TYPE)) {
-            list = FLA_Cache.cacheFundInfosByTypeOrNull(paramId);
-            ee.dinfo(log, TAG, "paramId_1: " + paramId + ", size: " + list.size());
-            dates = generateDPWeekDates(FLA_Cache_FundInfo.CACHED_DPS, list);
+            log.info("Getting funds of type: " + paramId);
+            list = D_DB.getFundsByType(paramId);
+            log.info("Number of funds: " + list.size());
+            dates = generateDPWeekDates(JSP_Constants.CACHED_DPS, list);
         } else if (paramType.equals(WT_FILTER_INDEX)) {
-            list = FLA_Cache.cacheFundInfosByIndex(paramId);
-            dates = generateDPWeekDates(FLA_Cache_FundInfo.CACHED_DPS, list);
+            list = D_DB._fisByIndexHM.get(paramId);
+            dates = generateDPWeekDates(JSP_Constants.CACHED_DPS, list);
         } else if (paramType.equals(WT_FILTER_FUND)) {
-            list = FLA_Cache.cacheFundInfoById(paramId);
-            dates = generateDPWeekDates(FLA_Cache_FundInfo.CACHED_DPS, list);
-        } else if (paramType.equals(WT_FILTER_PORTFOLIO)) {
-            Long id = Long.parseLong(paramId);
-            FLA_FundPortfolio fp = ofy().load().type(FLA_FundPortfolio.class).id(id).now();
-            list = FLA_Cache.getCacheVersions(fp.mFunds);
-            dates = generateDPWeekDates(FLA_Cache_FundInfo.CACHED_DPS, list);
-        } else if (paramType.equals(WT_FILTER_PORTFOLIO_MATCH_SEB)) {
-            Long id = Long.parseLong(paramId);
-            FLA_FundPortfolio fp = ofy().load().type(FLA_FundPortfolio.class).id(id).now();
-            list = FLA_Cache.getCacheVersions(fp.mFunds);
-            dates = generateDPWeekDates(FLA_Cache_FundInfo.CACHED_DPS, list);
-            list = JSP_Helper_DataSorter.getSEBMatches(dates, list);
-        } else if (paramType.equals(WT_FILTER_REPORT_OPPORTUNITY)) {
-            list = FLA_Cache.cacheFundInfosByTypeOrNull(paramId);
-            ee.dinfo(log, TAG, "paramId_2: " + paramId + ", size: " + list.size());
-            dates = JSP_Helper_DataSorter.getDateSequence(0, FLA_Cache_FundInfo.CACHED_DPS); // Number of fridays ago, Count
+            throw new IOException("Not Converted to new code");
+//            list = FLA_Cache.cacheFundInfoById(paramId);
+//            dates = generateDPWeekDates(FLA_Cache_FundInfo.CACHED_DPS, list);
         }
 
         StringBuilder s = new StringBuilder();
@@ -197,38 +115,33 @@ public class JSP_Helper {
 
         s.append("<div class=\"selectList3\">");
         s.append("<table>"); // width=\"1200\">");
-        if (!paramType.equals(WT_FILTER_REPORT_OPPORTUNITY)) {
-            fundReport_WeeklyTable_Headers(s, dates);
-            fundReport_WeeklyTable_Rows(s, null, column1, dates, list);
-        } else {
-            fundReport_WeeklyTable_Headers(s, dates);
-            List<OTuple3G<FLA_Cache_FundInfo, List<Double>, String>> rfull = new ArrayList<>();
-            List<OTuple3G<FLA_Cache_FundInfo, List<Double>, String>> rfullTmp = new ArrayList<>();
-            OTuple2G<String[], List<FLA_Cache_FundInfo>> rarg = null;
-            JSP_Helper_DataSorter.getCachedFundInfoWithinDates(
-                    dates,
-                    list,
-                    null,
-                    rfull);
-            // Best 10 funds by last week
-            ee.dinfo(log, TAG, "Target1 for report is: " + rfull.size() + " number of elements");
-            rfullTmp = JSP_Helper_DataSorter.dataSort_GetBestLastXWeeks(10, 1, rfull);
-            ee.dinfo(log, TAG, "Target2 for report is: " + rfullTmp.size() + " number of elements");
-            rarg = JSP_Helper_DataSorter.convertToTableRows(rfullTmp);
-            ee.dinfo(log, TAG, "Converting them gave: " + rarg._o2.size());
-            ee.dinfo(log, TAG, "And colcount: " + rarg._o1.length);
-            fundReport_WeeklyTable_Rows(s, "Top This Week", rarg._o1, dates, rarg._o2);
 
-            // Best 10 funds last 2 weeks
-            rfullTmp = JSP_Helper_DataSorter.dataSort_GetBestLastXWeeks(10, 2, rfull);
-            rarg = JSP_Helper_DataSorter.convertToTableRows(rfullTmp);
-            fundReport_WeeklyTable_Rows(s, "Top Last 2 Weeks", rarg._o1, dates, rarg._o2);
+        fundReport_WeeklyTable_Headers(s, dates);
 
-            // Best 10 funds by last 2 weeks position
-            rfullTmp = JSP_Helper_DataSorter.dataSort_GetBestScoreLast2Weeks(10, rfull);
-            rarg = JSP_Helper_DataSorter.convertToTableRows(rfullTmp);
-            fundReport_WeeklyTable_Rows(s, "Top Score Last 2 Weeks", rarg._o1, dates, rarg._o2);
-        }
+        log.info("Date count: " + dates.size());
+//        List<OTuple2G<D_FundInfo, List<Double>>> rfull =
+//                JSP_Helper_DataSorter.getCachedFundInfoWithinDates(
+//                        dates,
+//                        list);
+//        log.info("Full data set: " + rfull.size());
+//        rarg = JSP_Helper_DataSorter.convertToTableRows(rfull);
+
+        fundReport_WeeklyTable_Rows(s, "All funds",null, dates, list);
+
+//        // Best 10 funds by last week
+//        rfullTmp = JSP_Helper_DataSorter.dataSort_GetBestLastXWeeks(10, 1, rfull);
+//        rarg = JSP_Helper_DataSorter.convertToTableRows(rfullTmp);
+//        fundReport_WeeklyTable_Rows(s, "Top This Week", rarg._o1, dates, rarg._o2);
+//
+//        // Best 10 funds last 2 weeks
+//        rfullTmp = JSP_Helper_DataSorter.dataSort_GetBestLastXWeeks(10, 2, rfull);
+//        rarg = JSP_Helper_DataSorter.convertToTableRows(rfullTmp);
+//        fundReport_WeeklyTable_Rows(s, "Top Last 2 Weeks", rarg._o1, dates, rarg._o2);
+//
+//        // Best 10 funds by last 2 weeks position
+//        rfullTmp = JSP_Helper_DataSorter.dataSort_GetBestScoreLast2Weeks(10, rfull);
+//        rarg = JSP_Helper_DataSorter.convertToTableRows(rfullTmp);
+//        fundReport_WeeklyTable_Rows(s, "Top Score Last 2 Weeks", rarg._o1, dates, rarg._o2);
 
         s.append("</table>");
         s.append("</div>");
@@ -260,7 +173,7 @@ public class JSP_Helper {
             String titleRow,
             String[] column1,
             List<String> dates,
-            List<FLA_Cache_FundInfo> cfis) throws Exception {
+            List<D_FundInfo> cfis) throws Exception {
         EE ee = EE.getEE();
 
         if (titleRow != null) {
@@ -271,42 +184,40 @@ public class JSP_Helper {
             s.append("</tr>");
         }
 
+        log.info("fundReport_WeeklyTable_Rows, dates: " + dates.size() + ", fis: " + cfis.size());
         for (int i = 0; i < cfis.size(); i++) {
             s.append("<tr>");
-            FLA_Cache_FundInfo cfi = cfis.get(i);
+            D_FundInfo cfi = cfis.get(i);
 
             // Type, name and index
             s.append("<td align=\"left\">");
-            if (cfi != null) {
-                s.append("<a href=\"" + cfi.mURL + "\" target=\"_blank\">" + cfi.mType + ":</a>&nbsp;" + cfi.mName);
-                if (cfi.mPPMNumber > 0) {
-                    s.append("&nbsp;(" + String.valueOf(cfi.mPPMNumber) + ")");
-                }
-                String indexName = "-";
-                if (cfi.mIndexCompare == null) {
-                    ee.dinfo(log, TAG, cfi.mType + "." + cfi.mName + ": Had null as index");
+            s.append("<a href=\"" + cfi._url + "\" target=\"_blank\">" + cfi._type + ":</a>&nbsp;" + cfi._nameMS);
+            if (cfi._ppmNumber != null && cfi._ppmNumber.trim().length() > 0) {
+                s.append("&nbsp;(" + String.valueOf(cfi._ppmNumber) + ")");
+            }
+            String indexName = "-";
+            if (cfi._indexName == null) {
+                ee.dinfo(log, TAG, cfi._type + "." + cfi._nameMS + ": Had null as index");
+                s.append("&nbsp;(-)");
+            } else {
+                indexName = cfi._indexName;
+                if (indexName == null || indexName.trim().equals("-")) {
                     s.append("&nbsp;(-)");
                 } else {
-                    FLA_FundIndex fundIndex = cfi.mIndexCompare.get();
-                    indexName = fundIndex.mKey_IndexName;
-                    if (indexName == null || indexName.trim().equals("-")) {
-                        s.append("&nbsp;(-)");
-                    } else {
-                        String fundIndexEnc = URLEncoder.encode(indexName, "UTF-8");
-                        String url = "JSP_Report02_Weekly_Display.jsp"
-                                + "?" + Constants.PARAM_TYPE + "=" + WT_FILTER_INDEX
-                                + "&" + Constants.PARAM_ID + "=" + fundIndexEnc;
-                        s.append("&nbsp;(" + "<a href=\"" + url + "\" target=\"_blank\">index</a>)");
-                    }
+                    String fundIndexEnc = URLEncoder.encode(indexName, "UTF-8");
+                    String url = "JSP_Report02_Weekly_Display.jsp"
+                            + "?" + JSP_Constants.PARAM_TYPE + "=" + WT_FILTER_INDEX
+                            + "&" + JSP_Constants.PARAM_ID + "=" + fundIndexEnc;
+                    s.append("&nbsp;(" + "<a href=\"" + url + "\" target=\"_blank\">index</a>)");
                 }
             }
             s.append("</td>");
 
             // Get the weeks
-            List<FLA_Cache_FundDPWeek> dpws = null;
+            List<D_FundDPDay> dpws = null;
             if (cfi != null) {
-                dpws = cfi.getDPWeeks();
-                dpws = getDPWeeks(cfi.mType + "." + cfi.mName, dates, dpws);
+                dpws = cfi._dpDays;
+                dpws = getDPWeeks(cfi._type + "." + cfi._nameMS, dates, dpws);
             }
 
             // Monthlys
@@ -315,7 +226,19 @@ public class JSP_Helper {
                 while (index + 4 <= dpws.size()) {
                     String r1m = "-";
                     if (dpws.get(index) != null && dpws.get(index + 1) != null && dpws.get(index + 2) != null && dpws.get(index + 3) != null) {
-                        Double[] ds = new Double[]{dpws.get(index).mR1w, dpws.get(index + 1).mR1w, dpws.get(index + 2).mR1w, dpws.get(index + 3).mR1w};
+                        Double[] ds = {null, null, null, null};
+                        if (dpws.get(index)._r1w != D_FundDPDay.FLOAT_NULL) {
+                            ds[0] = new Double(dpws.get(index)._r1w);
+                        }
+                        if (dpws.get(index+1)._r1w != D_FundDPDay.FLOAT_NULL) {
+                            ds[1] = new Double(dpws.get(index+1)._r1w);
+                        }
+                        if (dpws.get(index+2)._r1w != D_FundDPDay.FLOAT_NULL) {
+                            ds[2] = new Double(dpws.get(index+2)._r1w);
+                        }
+                        if (dpws.get(index+3)._r1w != D_FundDPDay.FLOAT_NULL) {
+                            ds[3] = new Double(dpws.get(index+3)._r1w);
+                        }
                         r1m = getR1M(ds);
                     }
                     index += 4;
@@ -330,26 +253,14 @@ public class JSP_Helper {
             // Weeklys
             s.append("<tr>");
 
-            // First column, if given
-            if (column1 != null
-                    && column1.length > 0
-                    && column1[i] != null) {
-                s.append("<td align=\"left\">");
-                // s.append("[34325, 5664, 34252, 3331]");
-                s.append(column1[i]);
-                s.append("</td>");
-            } else {
-                s.append("<td></td>"); // This is a new row so name cell is empty
-            }
 
             // Then the weekly columns
+            s.append("<td align=\"right\"></td>");  // The magic 1st column which is not used anymore
             if (dpws != null) {
                 for (int j = 0; j < dpws.size(); j++) {
-                    FLA_Cache_FundDPWeek cfw = dpws.get(j);
-                    if (cfw != null && cfw.mR1w != null) {
-                        s.append("<td align=\"right\">" + cfw.mR1w + "</td>");
-                    } else if (j == 0) {
-                        s.append("<td align=\"right\">?</td>");
+                    D_FundDPDay cfw = dpws.get(j);
+                    if (cfw != null && cfw._r1w != D_FundDPDay.FLOAT_NULL) {
+                        s.append("<td align=\"right\">" + cfw._r1w + "</td>");
                     } else {
                         s.append("<td align=\"right\">-</td>");
                     }
