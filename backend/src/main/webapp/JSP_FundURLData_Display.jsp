@@ -1,10 +1,12 @@
 <%@ page import="java.util.logging.Logger" %>
 <%@ page import="com.pf.fl.be.jsphelper.JSP_Helper_fundURLData" %>
 <%@ page import="com.pf.fl.be.jsphelper.JSP_Constants" %>
+<%@ page import="com.pf.fl.be.jsphelper.JSP_Helper" %>
 <%@ page import="com.pf.shared.utils.MM" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.ArrayList" %>
-<%@ page import="com.pf.fl.be.extract.D_DB" %>
+<%@ page import="com.pf.fl.be.extract.GCSWrapper" %>
+<%@ page import="com.pf.shared.datamodel.DB_FundInfo" %>
 <%@ page import="com.pf.shared.datamodel.D_FundInfo" %>
 
 <!-- PARAM_TYPE is null, INVALID, or fund Type -->
@@ -24,6 +26,7 @@
 
     response.setContentType("text/html");
     response.setCharacterEncoding("UTF-8");
+    JSP_Helper.initialize();
 
     String argOperation = request.getParameter(JSP_Constants.ARG_OPERATION);
 
@@ -33,7 +36,7 @@
     }
     log.info("typeStr is: " + typeStr);
 
-    List<D_FundInfo> list = D_DB.getFundsByType(typeStr);
+    List<D_FundInfo> list = DB_FundInfo.getFundInfosByType(typeStr);
 
 // COMMIT
 if (argOperation != null && argOperation.equals(JSP_Constants.OP_COMMIT)) {

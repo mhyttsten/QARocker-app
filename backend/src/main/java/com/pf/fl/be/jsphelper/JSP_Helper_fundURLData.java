@@ -1,7 +1,7 @@
 package com.pf.fl.be.jsphelper;
 
-import com.pf.fl.be.extract.D_DB;
-import com.pf.fl.be.jsphelper.JSP_Constants;
+import com.pf.shared.datamodel.DB_FundInfo;
+import com.pf.fl.be.extract.GCSWrapper;
 import com.pf.shared.Constants;
 import com.pf.shared.utils.IndentWriter;
 import com.pf.shared.utils.MM;
@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
-
-import static com.googlecode.objectify.ObjectifyService.ofy;
 
 /**
  * Created by magnushyttsten on 11/8/14.
@@ -53,7 +51,7 @@ public class JSP_Helper_fundURLData {
      */
     public static String urlControl_VerifyOrExecute(boolean isVerify, HttpServletRequest r) throws Exception {
         StringBuilder strb = new StringBuilder();
-        List<D_FundInfo> allFunds = D_DB._fis;
+        List<D_FundInfo> allFunds = DB_FundInfo.getAllFundInfos();
 
         int count = 0;
         int i = -1;
@@ -129,8 +127,8 @@ public class JSP_Helper_fundURLData {
 
             if (v_id == null) {
                 if (isVerify) {
-                    D_FundInfo fiDB1 = D_DB.getFundInfoByTypeAndName(fi._o2._type, fi._o2._nameMS);
-                    D_FundInfo fiDB2 = D_DB.getFundInfoByTypeAndURL(fi._o2._type, fi._o2._url);
+                    D_FundInfo fiDB1 = DB_FundInfo.getFundInfosByTypeAndName(fi._o2._type, fi._o2._nameMS);
+                    D_FundInfo fiDB2 = DB_FundInfo.getFundInfosByTypeAndURL(fi._o2._type, fi._o2._url);
                     if (fiDB1 != null || fiDB2 != null) {
                         String text = "";
                         if (fiDB1 != null) {
@@ -147,7 +145,8 @@ public class JSP_Helper_fundURLData {
                     }
                 } else {
                     log.info("Will now save new entity: " + fi._o1 + "." + fi._o2);
-                    D_DB.addAndSaveFundInfo(fi._o1);
+                    byte[] data = DB_FundInfo.addFundInfo(fi._o1);
+                    GCSWrapper.gcsWriteFile(Constants.FUNDINFO_DB_MASTER_BIN, data);
                 }
 
             } else {
@@ -172,16 +171,16 @@ public class JSP_Helper_fundURLData {
                 } else {
                     if (isDelete) {
                         log.warning("Will now delete entity: " + fi._o1._type + "." + fi._o1._nameMS);
-                        D_DB.deleteFundInfo(fi._o1);
+                        DB_FundInfo.deleteFundInfo(fi._o1);
                         log.warning("...delete performed");
                     } else if (isValid) {
                         fi._o1._isValid = true;
                         fi._o1._errorCode = D_FundInfo.IC_NO_ERROR;
                         log.info("Will now set entity to valid: " + fi._o1._type + "." + fi._o1._nameMS);
-                        D_DB.saveFundInfo();
+                        GCSWrapper.gcsWriteBlob(Constants.FUNDINFO_DB_MASTER_BIN, DB_FundInfo.getFundInfosData());
                     } else {
                         log.info("Will update entity: " + fi._o1._type + "." + fi._o1._nameMS + ", url: " + fi._o1._url);
-                        D_DB.saveFundInfo();
+                        GCSWrapper.gcsWriteBlob(Constants.FUNDINFO_DB_MASTER_BIN, DB_FundInfo.getFundInfosData());
                     }
                 }
             }
@@ -329,7 +328,7 @@ public class JSP_Helper_fundURLData {
 
 
         D_FundInfo fi = null;
-        for (D_FundInfo fitmp: D_DB._fis) {
+        for (D_FundInfo fitmp: DB_FundInfo.getAllFundInfos()) {
             if (v_type.equals(fitmp._type) && v_name.equals(fitmp._nameMS) && v_url.equals(fitmp._url)) {
                 fi = fitmp;
             }

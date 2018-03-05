@@ -42,8 +42,9 @@ public class D_FundInfo {
     public static final String TYPE_VANGUARD = "VGD";
     public static final String TYPE_ALL = "ALL";
     public static final String TYPE_INVALID = "INVALID";
-    public static final String[] TYPES = new String[] { TYPE_PPM, TYPE_SEB, TYPE_SPP, TYPE_VANGUARD };
+    public static final String[] TYPES = new String[] { TYPE_SEB, TYPE_SPP, TYPE_VANGUARD, TYPE_PPM };
 
+    public boolean _isUpdated;
     public String _url = "";
     public boolean _isValid = true;
     public int _errorCode;

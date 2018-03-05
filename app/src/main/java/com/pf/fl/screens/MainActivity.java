@@ -1,6 +1,7 @@
 package com.pf.fl.screens;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -28,6 +29,7 @@ import com.pf.fl.analysis.DPSequenceAnalyzer;
 import com.pf.fl.datamodel.FL_DB;
 import com.pf.fl.datamodel.FL_DBCallback;
 import com.pf.mr.R;
+import com.pf.mr.utils.TestYourBatchStuff;
 import com.pf.shared.Constants;
 import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.datamodel.D_Portfolio;
@@ -152,11 +154,23 @@ public class MainActivity extends AppCompatActivity {
             _initSequenceCount--;
         }
         Log.e(TAG, "*** initSequenceCount down to: " + _initSequenceCount);
-        if (_initSequenceCount == 0) {
-            Log.e(TAG, "*** initSequenceCount final, calling setupRecyclerView()");
-            FL_DB._initialized = true;
-            setupRecyclerView();
+        if (_initSequenceCount > 0) {
+            return;
         }
+
+
+        AsyncTask<Void, Void, Void> at = new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                TestYourBatchStuff.testYourBatchStuff();
+                return null;
+            }
+        };
+
+
+        Log.e(TAG, "*** initSequenceCount final, calling setupRecyclerView()");
+        FL_DB._initialized = true;
+        setupRecyclerView();
     }
 
     // **********

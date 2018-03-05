@@ -1,5 +1,6 @@
 <%@ page import="static com.googlecode.objectify.ObjectifyService.ofy" %>
-<%@ page import="com.pf.fl.be.extract.D_DB" %>
+<%@ page import="com.pf.fl.be.extract.GCSWrapper" %>
+<%@ page import="com.pf.shared.datamodel.DB_FundInfo" %>
 <%@ page import="com.pf.fl.be.jsphelper.JSP_Helper" %>
 <%@ page import="com.pf.fl.be.jsphelper.JSP_Constants" %>
 <%@ page import="com.pf.shared.datamodel.D_FundInfo" %>
@@ -41,11 +42,11 @@
   <%
     String reinit = request.getParameter("reinitialize");
     if (reinit != null && reinit.trim().equals("true")) {
-       D_DB._isInitialized = false;
+       JSP_Helper._isInitialized = false;
     }
-    D_DB.initialize();
+    JSP_Helper.initialize();
   %>
-  Is initialized: <%=D_DB._isInitialized%>
+  Is initialized: <%=JSP_Helper._isInitialized%>
 
   <h1>These are the available alternatives</h1>
   <a href="JSP_Main.jsp?reinitialize=true">Reinitialize DB</a><br>

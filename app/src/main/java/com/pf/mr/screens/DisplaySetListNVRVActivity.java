@@ -40,6 +40,7 @@ import com.pf.mr.screens.settings.SettingsActivity;
 import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.utils.Constants;
 import com.pf.mr.utils.Misc;
+import com.pf.mr.utils.TestYourBatchStuff;
 import com.pf.shared.extract.ExtractFromHTML_Helper;
 import com.pf.shared.utils.MM;
 
@@ -67,33 +68,7 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         Log.i(TAG, "onCreate");
-        AsyncTask<Void, Void, Void> at = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... voids) {
-                ExtractFromHTML_Helper.extractFund();
-                return null;
-            }
-        };
-        at.execute();
-
-//        MM.testLog();
-//        Log.w(TAG, MM.stripHTMLComments("hello  <!--how are you-->This is not <!--complicated--> at all"));
-//        Log.w(TAG, MM.stripHTMLComments("hello  <!--how are you-->This is not<!--complicated-->" + "]"));
-//        Misc.getFirebaseStorageFile();
-//        Misc.extractFundInfo();
-
-//        Log.e(TAG, "Will now try GCS API");
-//        try {
-//            List<Blob> bs = D_BEDB.gcsGetBlobsInAscendingOrder(com.pf.shared.Constants.PREFIX_FUNDINFO_DB);
-//            for (Blob b: bs) {
-//                Log.e(TAG, "Found blob: " + b.getBucket() + "." + b.getName());
-//            }
-//        } catch (IOException exc) {
-//            Log.e(TAG, "Caught exception: " + exc.getLocalizedMessage());
-//        }
-
 
         FirebaseCrash.log(this.getClass().getSimpleName() + ".onCreate");
         Log.e(TAG, "DisplaySetListNVRVActivity.onCreate");

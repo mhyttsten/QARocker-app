@@ -1,6 +1,8 @@
 <%@ page import="java.util.logging.Logger" %>
 <%@ page import="com.pf.fl.be.jsphelper.JSP_Constants" %>
-<%@ page import="com.pf.fl.be.extract.D_DB" %>
+<%@ page import="com.pf.fl.be.jsphelper.JSP_Helper" %>
+<%@ page import="com.pf.fl.be.extract.GCSWrapper" %>
+<%@ page import="com.pf.shared.datamodel.DB_FundInfo" %>
 <%@ page import="com.pf.shared.datamodel.D_FundInfo" %>
 <%@ page import="com.pf.shared.utils.MM" %>
 <%@ page import="com.pf.shared.Constants" %>
@@ -27,9 +29,11 @@
     response.setContentType("text/html");
     response.setCharacterEncoding("UTF-8");
 
+    JSP_Helper.initialize();
+
     String argOperation = request.getParameter(JSP_Constants.ARG_OPERATION);
 
-    List<D_FundInfo> list = D_DB.getFundsByType(D_FundInfo.TYPE_VANGUARD);
+    List<D_FundInfo> list = DB_FundInfo.getFundInfosByType(D_FundInfo.TYPE_VANGUARD);
     Map<String, Void> hm = new HashMap<>();
     StringBuffer strb = new StringBuffer();
     for (D_FundInfo fi: list) {
@@ -67,7 +71,7 @@ for (String s: funds) {
 
     fi._dateYYMMDD_Updated = lfriday;
     fi._dateYYMMDD_Update_Attempted = lfriday;
-    D_DB.addAndSaveFundInfo(fi);
+    JSP_Helper.writeFundInfo(DB_FundInfo.addFundInfo(fi));
 
     hm.put(s, null);
     fundsSaved.add(s);

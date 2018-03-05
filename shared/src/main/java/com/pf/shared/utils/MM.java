@@ -45,6 +45,19 @@ public class MM {
 		log.warning("*** THIS IS MY WARNING LOG message ***");
 	}
 
+	private static long _timeStart;
+	public static void timerStart() {
+		_timeStart = System.currentTimeMillis();
+	}
+	public static boolean timerContinue(long numberOfSeconds) {
+		long timeNow = System.currentTimeMillis();
+		long diff = (timeNow - _timeStart) / 1000;
+		if (diff > numberOfSeconds) {
+			return true;
+		}
+		return false;
+	}
+
 	//------------------------------------------------------------------------
 	public static String strArray2CSV(String[] ss) {
 		StringBuffer strb = new StringBuffer();

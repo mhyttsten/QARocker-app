@@ -1,19 +1,11 @@
 package com.pf.fl.be.jsphelper;
 
-import com.pf.fl.be.datamodel.FLA_Cache;
-import com.pf.fl.be.datamodel.FLA_Cache_FundDPWeek;
-import com.pf.fl.be.datamodel.FLA_Cache_FundInfo;
-import com.pf.fl.be.datamodel.FLA_FundIndex;
-import com.pf.fl.be.datamodel.FLA_FundPortfolio;
-import com.pf.fl.be.extract.D_DB;
-import com.pf.fl.be.jsphelper.JSP_Constants;
-import com.pf.fl.be.util.EE;
+import com.pf.fl.be.extract.GCSWrapper;
+import com.pf.shared.Constants;
+import com.pf.shared.datamodel.DB_FundInfo;
 import com.pf.shared.datamodel.D_FundDPDay;
 import com.pf.shared.datamodel.D_FundInfo;
-import com.pf.shared.utils.IndentWriter;
 import com.pf.shared.utils.MM;
-import com.pf.shared.utils.OTuple2G;
-import com.pf.shared.utils.OTuple3G;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -24,19 +16,61 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import static com.googlecode.objectify.ObjectifyService.ofy;
-
 public class JSP_Helper {
     private static final Logger log = Logger.getLogger(JSP_Helper.class.getName());
     private static final String TAG = MM.getClassName(JSP_Helper.class.getName());
+
+    public static boolean _isInitialized;
+    public static void initialize() throws IOException {
+        log.info("JSP_Helper.initialize");
+        if (_isInitialized) {
+            log.info("...we are already initialized, returning");
+            return;
+        }
+        byte[] data = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
+        log.info("...reading data: " + data.length + " bytes");
+        DB_FundInfo._isInitialized = false;
+        DB_FundInfo.initialize(data);
+        _isInitialized = true;
+    }
+
+    public static void writeFundInfo(byte[] data) throws IOException {
+        GCSWrapper.gcsWriteFile(Constants.FUNDINFO_DB_MASTER_BIN, data);
+    }
+
+    public static String fundsDisplayAll() {
+        List<D_FundInfo> fisSEB = DB_FundInfo.getFundInfosByType(D_FundInfo.TYPE_SEB);
+        List<D_FundInfo> fisSPP = DB_FundInfo.getFundInfosByType(D_FundInfo.TYPE_SPP);
+        List<D_FundInfo> fisVGD = DB_FundInfo.getFundInfosByType(D_FundInfo.TYPE_VANGUARD);
+        List<D_FundInfo> fisPPM = DB_FundInfo.getFundInfosByType(D_FundInfo.TYPE_PPM);
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("<h2>Total SEB: " + fisSEB.size() + "</h2><br>");
+        sb.append("<h2>Total SPP: " + fisSPP.size() + "</h2><br>");
+        sb.append("<h2>Total VGD: " + fisVGD.size() + "</h2><br>");
+        sb.append("<h2>Total PPM: " + fisPPM.size() + "</h2><br>");
+
+        sb.append("<h2>Fund list for SEB</h2><br>");
+        printFundType(sb, fisSEB);
+        sb.append("<h2>Fund list for SPP</h2><br>");
+        printFundType(sb, fisSPP);
+        sb.append("<h2>Fund list for VGD</h2><br>");
+        printFundType(sb, fisVGD);
+        sb.append("<h2>Fund list for PPM</h2><br>");
+        printFundType(sb, fisPPM);
+        return sb.toString();
+    }
+    private static void printFundType(StringBuffer sb, List<D_FundInfo> l) {
+        for (D_FundInfo fi: l) {
+            sb.append(fi._nameMS + ", " + fi._nameOrig + ", " + fi._isUpdated + ", " + fi._url + "<br>");
+        }
+    }
 
     private static List<D_FundDPDay> getDPWeeks(
             String fundName,
             List<String> dates,
             List<D_FundDPDay> dpws) throws Exception {
         
-        EE ee = EE.getEE();
-
         List<D_FundDPDay> r = new ArrayList<>();
         for (int i=0; i < dates.size(); i++) {
             String date = dates.get(i);
@@ -44,7 +78,7 @@ public class JSP_Helper {
             for (int j=0; j < dpws.size(); j++) {
                 D_FundDPDay fdpw = dpws.get(j);
                 if (!MM.tgif_isFriday(fdpw._dateYYMMDD)) {
-                    ee.dsevere(log, TAG, "For fund: " + fundName + ", dpw: " + fdpw._dateYYMMDD + ", is not a friday");
+                    log.severe("For fund: " + fundName + ", dpw: " + fdpw._dateYYMMDD + ", is not a friday");
                 } else if (date.equals(fdpw._dateYYMMDD)) {
                     r.add(fdpw);
                     found = true;
@@ -75,7 +109,6 @@ public class JSP_Helper {
     public static String fundReport_WeeklyTable(
             HttpServletRequest request,
             HttpServletResponse response) throws Exception {
-        EE ee = EE.getEE();
 
         response.setContentType("text/html");
         response.setCharacterEncoding("UTF-8");
@@ -96,11 +129,11 @@ public class JSP_Helper {
         List<String> dates = null;
         if (paramType.equals(WT_FILTER_TYPE)) {
             log.info("Getting funds of type: " + paramId);
-            list = D_DB.getFundsByType(paramId);
+            list = DB_FundInfo.getFundInfosByType(paramId);
             log.info("Number of funds: " + list.size());
             dates = generateDPWeekDates(JSP_Constants.CACHED_DPS, list);
         } else if (paramType.equals(WT_FILTER_INDEX)) {
-            list = D_DB._fisByIndexHM.get(paramId);
+            list = DB_FundInfo.getFundInfosByIndex(paramId);
             dates = generateDPWeekDates(JSP_Constants.CACHED_DPS, list);
         } else if (paramType.equals(WT_FILTER_FUND)) {
             throw new IOException("Not Converted to new code");
@@ -174,8 +207,6 @@ public class JSP_Helper {
             String[] column1,
             List<String> dates,
             List<D_FundInfo> cfis) throws Exception {
-        EE ee = EE.getEE();
-
         if (titleRow != null) {
             s.append("<tr>");
             s.append("<td align=\"left\" colspan=\"2\">");
@@ -197,7 +228,7 @@ public class JSP_Helper {
             }
             String indexName = "-";
             if (cfi._indexName == null) {
-                ee.dinfo(log, TAG, cfi._type + "." + cfi._nameMS + ": Had null as index");
+                log.info(cfi._type + "." + cfi._nameMS + ": Had null as index");
                 s.append("&nbsp;(-)");
             } else {
                 indexName = cfi._indexName;

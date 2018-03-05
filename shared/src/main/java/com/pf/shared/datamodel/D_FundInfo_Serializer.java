@@ -1,15 +1,50 @@
 package com.pf.shared.datamodel;
 
+import com.pf.shared.utils.Compresser;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class D_FundInfo_Serializer {
     private static final Logger log = Logger.getLogger(D_FundInfo_Serializer.class.getName());
 
+    //------------------------------------------------------------------------
+    public static byte[] crunchFundList(List<D_FundInfo> l) throws IOException {
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        DataOutputStream dout = new DataOutputStream(bout);
+
+        for (D_FundInfo fi : l) {
+            D_FundInfo_Serializer.crunch_D_FundInfo(dout, fi);
+        }
+
+        dout.flush();
+        byte[] data = bout.toByteArray();
+        data = Compresser.dataCompress("FundList", data);
+        return data;
+    }
+
+    //------------------------------------------------------------------------
+    public static List<D_FundInfo> decrunchFundList(byte[] data) throws IOException {
+        data = Compresser.dataUncompress(data);
+        ByteArrayInputStream bin = new ByteArrayInputStream(data);
+        DataInputStream din = new DataInputStream(bin);
+        List<D_FundInfo> l = new ArrayList<>();
+        while (din.available() > 0) {
+            D_FundInfo fi = D_FundInfo_Serializer.decrunch_D_FundInfo(din);
+            l.add(fi);
+        }
+        return l;
+    }
+
+    //************************************************************************
+
+    //------------------------------------------------------------------------
     public static final String TAG_POR_START = "DPORS";
     public static D_Portfolio decrunch_D_Portfolio(DataInputStream din) throws IOException {
         if (din.available() <= 0) {
@@ -28,6 +63,8 @@ public class D_FundInfo_Serializer {
         }
         return p;
     }
+
+    //------------------------------------------------------------------------
     public static void crunch_D_Portfolio(DataOutputStream dout, D_Portfolio p) throws IOException {
         dout.writeUTF(TAG_POR_START);
         dout.writeUTF(p._name);
@@ -37,6 +74,10 @@ public class D_FundInfo_Serializer {
         }
     }
 
+    //************************************************************************
+
+
+    //------------------------------------------------------------------------
     public static final String TAG_FI_START = "DFIS";
     public static final String TAG_DPD_START = "DPDS";
     public static final String TAG_FI_END = "DFIE";
@@ -44,6 +85,7 @@ public class D_FundInfo_Serializer {
     public static void crunch_D_FundInfo(DataOutputStream dout_output, D_FundInfo fi) throws IOException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         DataOutputStream dout = new DataOutputStream(bout);
+        dout.writeBoolean(fi._isUpdated);
         dout.writeUTF(fi._url);
         dout.writeBoolean(fi._isValid);
         dout.writeInt(fi._errorCode);
@@ -93,6 +135,7 @@ public class D_FundInfo_Serializer {
         dout_output.write(data);
     }
 
+    //------------------------------------------------------------------------
     public static D_FundInfo decrunch_D_FundInfo(DataInputStream din_input) throws IOException {
         D_FundInfo fi = new D_FundInfo();
 
@@ -107,6 +150,7 @@ public class D_FundInfo_Serializer {
         ByteArrayInputStream bin = new ByteArrayInputStream(record);
         DataInputStream din = new DataInputStream(bin);
 
+        fi._isUpdated = din.readBoolean();
         fi._url = din.readUTF();
         fi._isValid = din.readBoolean();
         fi._errorCode = din.readInt();
@@ -163,6 +207,8 @@ public class D_FundInfo_Serializer {
         assert din.available() == 0: "Did not end with 0 bytes left";
         return fi;
     }
+
+    //************************************************************************
 
     private static float D2f(Double d) {
         if (d == null) {

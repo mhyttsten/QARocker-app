@@ -6,6 +6,8 @@ package com.pf.shared;
 
 public class Constants {
 
+    public static final long TIMEINS_BEFORE_DEADLINE = 8*60;
+
     public static final String TIMEZONE_STOCKHOLM = "Europe/Stockholm";
     public static final String TIMEZONE_NEW_YORK  = "America/New_York";
 

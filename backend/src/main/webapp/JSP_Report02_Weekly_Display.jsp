@@ -16,6 +16,7 @@
 <%
     final Logger log = Logger.getLogger("JSP_Report02_Weekly_Display");
     final String TAG = MM.getClassName("JSP_Report02_Weekly_Display");
+    JSP_Helper.initialize();
 
     String s = JSP_Helper.fundReport_WeeklyTable(request, response);
 %>

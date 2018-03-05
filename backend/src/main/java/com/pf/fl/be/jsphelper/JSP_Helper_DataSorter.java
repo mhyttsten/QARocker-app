@@ -1,12 +1,5 @@
 package com.pf.fl.be.jsphelper;
 
-import com.pf.fl.be.datamodel.FLA_Cache;
-import com.pf.fl.be.datamodel.FLA_Cache_FundDPWeek;
-import com.pf.fl.be.datamodel.FLA_Cache_FundInfo;
-import com.pf.fl.be.datamodel.FLA_FundIndex;
-import com.pf.fl.be.datamodel.FLA_FundInfo;
-import com.pf.fl.be.extract.D_DB;
-import com.pf.fl.be.util.EE;
 import com.pf.shared.datamodel.D_FundDPDay;
 import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.utils.MM;
@@ -52,7 +45,7 @@ public class JSP_Helper_DataSorter {
 //                    ee.dinfo(log, TAG, "...type: " + t);
 //                    // Find matching alternative
 //                    if (t.equals(D_FundInfo.TYPE_PPM)) {
-//                        D_FundInfo cfiPPM = D_DB.getFundByPPMNumber(cfi.mPPMNumber);
+//                        D_FundInfo cfiPPM = DB_FundInfo.getFundByPPMNumber(cfi.mPPMNumber);
 //                        if (cfiPPM == null) {
 //                            cfiPPM.mType = FLA_FundInfo.TYPE_PPM;
 //                            cfiPPM.mName = "ERR:#NotFound:" + cfi.mPPMNumber + " " + cfiPPM.mName;
@@ -70,7 +63,7 @@ public class JSP_Helper_DataSorter {
 //                            rlCFIs.add(null);
 //                        } else {
 //                            // Sort by best results last two weeks added together
-//                            List<D_FundInfo> cfiIndexes = D_DB.getByTypeAndIndex(t, fundIndex);
+//                            List<D_FundInfo> cfiIndexes = DB_FundInfo.getByTypeAndIndex(t, fundIndex);
 //                            List<OTuple3G<FLA_Cache_FundInfo, List<Double>, String>> rfull = new ArrayList<>();
 //                            getCachedFundInfoWithinDates(
 //                                    dates,
@@ -147,7 +140,7 @@ public class JSP_Helper_DataSorter {
         for (String d : dates) {
             strb.append(d + ",");
         }
-        EE.getEE().dinfo(log, TAG, "Dates: " + strb.toString());
+        log.info("Dates: " + strb.toString());
 
         return dates;
     }
