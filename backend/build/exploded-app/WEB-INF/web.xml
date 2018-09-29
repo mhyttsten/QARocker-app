@@ -5,24 +5,6 @@
         <welcome-file>JSP_Main.jsp</welcome-file>
     </welcome-file-list>
 
-    <!--<filter>-->
-        <!--<filter-name>ObjectifyFilter</filter-name>-->
-        <!--<filter-class>com.googlecode.objectify.ObjectifyFilter</filter-class>-->
-    <!--</filter>-->
-    <!--<filter-mapping>-->
-        <!--<filter-name>ObjectifyFilter</filter-name>-->
-        <!--<url-pattern>/*</url-pattern>-->
-    <!--</filter-mapping>-->
-
-    <!--<servlet>-->
-        <!--<servlet-name>cronWorkServlet</servlet-name>-->
-        <!--<servlet-class>com.pf.mr.be.CronWorkServlet</servlet-class>-->
-    <!--</servlet>-->
-    <!--<servlet-mapping>-->
-        <!--<servlet-name>cronWorkServlet</servlet-name>-->
-        <!--<url-pattern>/cronWork</url-pattern>-->
-    <!--</servlet-mapping>-->
-
     <!--<servlet>-->
         <!--<servlet-name>GetQuizletAccessToken</servlet-name>-->
         <!--<servlet-class>com.pf.mr.be.GetQuizletAccessToken</servlet-class>-->
@@ -43,34 +25,6 @@
         <url-pattern>/cronExtractNew</url-pattern>
     </servlet-mapping>
 
-    <!--<servlet>-->
-        <!--<servlet-name>cronExtractServlet</servlet-name>-->
-        <!--<servlet-class>com.pf.fl.be.servlet.CronExtractServlet</servlet-class>-->
-    <!--</servlet>-->
-    <!--<servlet-mapping>-->
-        <!--<servlet-name>cronExtractServlet</servlet-name>-->
-        <!--<url-pattern>/cronExtract</url-pattern>-->
-    <!--</servlet-mapping>-->
-
-
-    <!--<servlet>-->
-        <!--<servlet-name>cronMaintenanceServlet</servlet-name>-->
-        <!--<servlet-class>com.pf.fl.be.servlet.CronMaintenanceServlet</servlet-class>-->
-    <!--</servlet>-->
-    <!--<servlet-mapping>-->
-        <!--<servlet-name>cronMaintenanceServlet</servlet-name>-->
-        <!--<url-pattern>/cronMaintenance</url-pattern>-->
-    <!--</servlet-mapping>-->
-
-    <!--<servlet>-->
-        <!--<servlet-name>cronStoreInFirebaseServlet</servlet-name>-->
-        <!--<servlet-class>com.pf.fl.be.servlet.CronStoreInFirebaseServlet</servlet-class>-->
-    <!--</servlet>-->
-    <!--<servlet-mapping>-->
-        <!--<servlet-name>cronStoreInFirebaseServlet</servlet-name>-->
-        <!--<url-pattern>/cronStoreInFirebaseServlet</url-pattern>-->
-    <!--</servlet-mapping>-->
-
     <servlet>
         <servlet-name>servletTest</servlet-name>
         <servlet-class>com.pf.fl.be.servlet.ServletTest</servlet-class>
@@ -78,6 +32,15 @@
     <servlet-mapping>
         <servlet-name>servletTest</servlet-name>
         <url-pattern>/servletTest</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>cronWorkServlet</servlet-name>
+        <servlet-class>com.pf.mr.be.CronWorkServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>cronWorkServlet</servlet-name>
+        <url-pattern>/cronWork</url-pattern>
     </servlet-mapping>
 
 </web-app>

@@ -1,13 +1,21 @@
 package com.pf.fl.be.jsphelper;
 
+import com.pf.fl.be.extract.FLOps1_Ext1_Extract_New;
 import com.pf.fl.be.extract.GCSWrapper;
 import com.pf.shared.Constants;
 import com.pf.shared.datamodel.DB_FundInfo;
 import com.pf.shared.datamodel.D_FundDPDay;
 import com.pf.shared.datamodel.D_FundInfo;
+import com.pf.shared.extract.ExtractStatistics;
+import com.pf.shared.utils.FundList_Validator;
+import com.pf.shared.utils.IndentWriter;
 import com.pf.shared.utils.MM;
+import com.pf.shared.utils.OTuple2G;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +40,195 @@ public class JSP_Helper {
         DB_FundInfo._isInitialized = false;
         DB_FundInfo.initialize(data);
         _isInitialized = true;
+    }
+
+    //-----------------------------------------------------------------------
+    public static String jsp_displayFundDB(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        String s = jsp_displayFundDBImpl(req, resp);
+        return s = s.replace("&", "&amp;");
+    }
+    private static String jsp_displayFundDBImpl(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        IndentWriter iwd = new IndentWriter();
+        iwd.setNewline("<br>");
+        iwd.setIndentChar('.');
+        iwd.println("Fund information from DB");
+
+        String fundTypeAndName = req.getParameter(JSP_Constants.PARAM2_TYPEDOTNAME_);
+        if (fundTypeAndName != null) {
+            fundTypeAndName = URLDecoder.decode(fundTypeAndName, Constants.ENCODING_FILE_READ);
+        }
+
+        byte[] fundInfoBA = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
+        DB_FundInfo.initialize(fundInfoBA);
+        List<D_FundInfo> fis = new ArrayList<>();
+        if (fundTypeAndName != null && fundTypeAndName.trim().length() > 0) {
+            D_FundInfo fi = DB_FundInfo.getFundInfosByTypeDotName(fundTypeAndName);
+            if (fi != null) {
+                fis.add(fi);
+            }
+        } else {
+            fis = DB_FundInfo.getAllFundInfos();
+        }
+        int count = 0;
+        for (D_FundInfo fi: fis) {
+            count++;
+            if ((count % 50) == 0) {
+                log.info("Have printed: " + count + " funds");
+            }
+            fi.dumpInfo(iwd);
+            iwd.println("\n");
+        }
+
+        return iwd.getString();
+    }
+
+    //-----------------------------------------------------------------------
+    public static String jsp_extractDebugger(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        String s = jsp_extractDebuggerImpl(req, resp);
+        return s = s.replace("&", "&amp;");
+    }
+    private static String jsp_extractDebuggerImpl(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        IndentWriter iwd = new IndentWriter();
+        iwd.setNewline("<br>");
+        iwd.setIndentChar('.');
+        iwd.println("Starting extraction debugger");
+
+        String fundTypeAndName = req.getParameter(JSP_Constants.PARAM2_TYPEDOTNAME_);
+        if (fundTypeAndName == null || fundTypeAndName.trim().length() == 0) {
+            iwd.println("Error, missing parameter: " + JSP_Constants.PARAM2_TYPEDOTNAME_);
+            return iwd.getString();
+        }
+
+        fundTypeAndName = URLDecoder.decode(fundTypeAndName, Constants.ENCODING_FILE_READ);
+        iwd.println("Fund to extract: " + fundTypeAndName);
+
+        iwd.println("Now reading DB");
+        byte[] fundInfoBA = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
+        DB_FundInfo.initialize(fundInfoBA);
+        D_FundInfo fi = DB_FundInfo.getFundInfosByTypeDotName(fundTypeAndName);
+        if(fi == null) {
+            iwd.println("Could not find the fund in DB: " + fundTypeAndName);
+            return iwd.getString();
+        }
+        iwd.println("Funds read from DB, printing it");
+        iwd.push();
+        fi.dumpInfo(iwd);
+        iwd.pop();
+
+        List<D_FundInfo> fiToExtract = new ArrayList<>();
+        fiToExtract.add(fi);
+        iwd.println("Now initiating extraction");
+        FLOps1_Ext1_Extract_New extract = new FLOps1_Ext1_Extract_New(
+                fiToExtract,
+                true,
+                false,
+                iwd,
+                true);
+        extract.doIt();
+        return iwd.getString();
+    }
+
+    //------------------------------------------------------------------------
+    public static String jsp_Report_LastFriday(HttpServletResponse resp) throws Exception {
+//        OutputStream out = resp.getOutputStream();
+        String now = MM.getNowAs_YYMMDD(null);
+        String fridayLast = MM.tgif_getLastFridayTodayExcl(now);
+        List<D_FundInfo> fis = DB_FundInfo.getAllFundInfos();
+        IndentWriter iw = new IndentWriter();
+        iw.setNewline("<br>");
+        String debug = ExtractStatistics.getExtractSummary(
+                iw,
+                true,
+                fridayLast,
+                fis);
+        return iw.getString().replace("&", "&amp;");
+    }
+
+    public static String validateFunds(String type) throws IOException {
+        initialize();
+        List<D_FundInfo> fis = null;
+
+        log.info("Now in validateFunds");
+        FundList_Validator v = null;
+        if (type.equals(D_FundInfo.TYPE_SEB)) {
+            log.info("...it's SEB");
+            byte[] data = GCSWrapper.gcsReadFile(Constants.FUNDLIST_SEB);
+            String fundListFile = new String(data, Constants.ENCODING_FILE_READ);
+            v = new FundList_Validator(fundListFile, DB_FundInfo.getFundInfosByType(D_FundInfo.TYPE_SEB));
+            v.process_SEB();
+        }
+        else if (type.equals(D_FundInfo.TYPE_PPM)) {
+            log.info("...it's PPM");
+            byte[] data = GCSWrapper.gcsReadFile(Constants.FUNDLIST_PPM);
+            String fundListFile = new String(data, Constants.ENCODING_FILE_READ);
+            v = new FundList_Validator(fundListFile, DB_FundInfo.getFundInfosByType(D_FundInfo.TYPE_PPM));
+            v.process_PPM();
+        }
+        else if (type.equals(D_FundInfo.TYPE_VANGUARD)) {
+            throw new IOException("Validating: " + type + ", is not supported yet");
+        }
+        else if (type.equals(D_FundInfo.TYPE_SPP)) {
+            throw new IOException("Validating: " + type + ", is not supported yet");
+        }
+        else {
+            throw new IOException("Unknown fund type: " + type);
+        }
+
+        IndentWriter iw = new IndentWriter();
+
+        iw.println("<br>");
+        iw.println("In List but not in DB<br>");
+        for (int i=0; i < v._fiInListButNotDB.size(); i++) {
+            OTuple2G<String, String> e = v._fiInListButNotDB.get(i);
+            iw.println("\"" + e._o1 + "\",\"" + e._o2 + "\",<br>");
+        }
+        iw.println("...Total of: " + v._fiInListButNotDB.size()+ "<br>");
+
+        iw.println("<br>");
+        iw.println("In DB but not in List<br>");
+        for (int i=0; i < v._fiInDBButNotList.size(); i++) {
+            iw.println("\"" + v._fiInDBButNotList.get(i)._nameOrig
+                    + "\",\"" + v._fiInDBButNotList.get(i)._url
+                    + "\",<br>");
+        }
+        iw.println("...Total of: " + v._fiInDBButNotList.size() + "<br>");
+
+        iw.println("<br>");
+        iw.println("*** Error: Name match, URL mismatch<br>");
+        for (int i=0; i < v._fiNameMatchURLMismatch.size(); i++) {
+            OTuple2G<String, String> e = v._fiNameMatchURLMismatch.get(i);
+            iw.println("[" + i + "] List name: " + e._o1 + ", url: " + e._o2 + "<br>");
+            D_FundInfo fi = DB_FundInfo.getFundInfosByTypeAndName(type, e._o1, false);
+            iw.println("...DB name: " + fi._nameOrig + ", url: " + fi._url + "<br>");
+        }
+
+        iw.println("<br>");
+        iw.println("*** Error: URL match, Name mismatch<br>");
+        for (int i=0; i < v._fiURLMatchNameMismatch.size(); i++) {
+            OTuple2G<String, String> e = v._fiURLMatchNameMismatch.get(i);
+            iw.println("[" + i + "] List name: " + e._o1 + ", url: " + e._o2 + "<br>");
+            D_FundInfo fi = DB_FundInfo.getFundInfosByTypeAndURL(type, e._o2);
+            iw.println("...DB name: " + fi._nameOrig + ", url: " + fi._url + "<br>");
+        }
+
+        iw.println("<br>");
+        iw.println("All Lists<br>");
+        for (int i=0; i < v._nameAndURLList.size(); i++) {
+            OTuple2G<String, String> e = v._nameAndURLList.get(i);
+            iw.println("[" + i + "] List name: " + e._o1 + ", url: " + e._o2 + "<br>");
+        }
+
+        iw.println("<br>");
+        iw.println("All FIS<br>");
+        for (int i=0; i < v._fis.size(); i++) {
+            iw.println("[" + i + "] DB name: "
+                    + v._fis.get(i)._nameOrig
+                    + ", ms: " + v._fis.get(i)._nameMS
+                    + ", url: " + v._fis.get(i)._url
+                    + "<br>");
+        }
+
+        return iw.getString();
     }
 
     public static void writeFundInfo(byte[] data) throws IOException {
@@ -62,7 +259,12 @@ public class JSP_Helper {
     }
     private static void printFundType(StringBuffer sb, List<D_FundInfo> l) {
         for (D_FundInfo fi: l) {
-            sb.append(fi._nameMS + ", " + fi._nameOrig + ", " + fi._isUpdated + ", " + fi._url + "<br>");
+            String dpdStr = "-";
+            if (fi._dpDays.size() > 0) {
+                D_FundDPDay dpd = fi._dpDays.get(0);
+                dpdStr = dpd.toString();
+            }
+            sb.append(fi._nameMS + ", " + fi._nameOrig + ", " + fi._url + ", " + dpdStr + "<br>");
         }
     }
 
@@ -161,21 +363,6 @@ public class JSP_Helper {
 
         fundReport_WeeklyTable_Rows(s, "All funds",null, dates, list);
 
-//        // Best 10 funds by last week
-//        rfullTmp = JSP_Helper_DataSorter.dataSort_GetBestLastXWeeks(10, 1, rfull);
-//        rarg = JSP_Helper_DataSorter.convertToTableRows(rfullTmp);
-//        fundReport_WeeklyTable_Rows(s, "Top This Week", rarg._o1, dates, rarg._o2);
-//
-//        // Best 10 funds last 2 weeks
-//        rfullTmp = JSP_Helper_DataSorter.dataSort_GetBestLastXWeeks(10, 2, rfull);
-//        rarg = JSP_Helper_DataSorter.convertToTableRows(rfullTmp);
-//        fundReport_WeeklyTable_Rows(s, "Top Last 2 Weeks", rarg._o1, dates, rarg._o2);
-//
-//        // Best 10 funds by last 2 weeks position
-//        rfullTmp = JSP_Helper_DataSorter.dataSort_GetBestScoreLast2Weeks(10, rfull);
-//        rarg = JSP_Helper_DataSorter.convertToTableRows(rfullTmp);
-//        fundReport_WeeklyTable_Rows(s, "Top Score Last 2 Weeks", rarg._o1, dates, rarg._o2);
-
         s.append("</table>");
         s.append("</div>");
         return s.toString();
@@ -221,8 +408,15 @@ public class JSP_Helper {
             D_FundInfo cfi = cfis.get(i);
 
             // Type, name and index
+            String nameMSURL = "JSP_DisplayFundDB.jsp?" + JSP_Constants.PARAM2_TYPEDOTNAME_ + "=" + URLEncoder.encode(cfi.getTypeAndName(), "UTF-8");
             s.append("<td align=\"left\">");
-            s.append("<a href=\"" + cfi._url + "\" target=\"_blank\">" + cfi._type + ":</a>&nbsp;" + cfi._nameMS);
+//            s.append("<a href=\"" + cfi._url + "\" target=\"_blank\">" + cfi._type + ":</a>"
+//                    + "&nbsp;"
+//                    + "<a href=\"" + nameMSURL + "\" target=\"_blank\">" + cfi._nameMS + "</a>");
+            s.append("<a href=\"" + nameMSURL + "\" target=\"_blank\">"
+                    + cfi._type
+                    + ":&nbsp;"
+                    + cfi._nameMS + "</a>");
             if (cfi._ppmNumber != null && cfi._ppmNumber.trim().length() > 0) {
                 s.append("&nbsp;(" + String.valueOf(cfi._ppmNumber) + ")");
             }

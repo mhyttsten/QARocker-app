@@ -18,53 +18,25 @@ public class ExtractFromHTML_Helper {
 
     public static final int RC_SUCCESS = 0;
     public static final int RC_SUCCESS_BUT_DATA_WAS_UPDATED = 1;
-    public static final int RC_ERROR_REMOVE_FUND = 3;
-    public static final int RC_ERROR_KEEP_FUND = 4;
+    public static final int RC_ERROR_INVALID_FUND = 3;
+//    public static final int RC_ERROR_KEEP_FUND = 4;
     public static final int RC_WARNING_NO_DPDAY_FOUND = 5;
 
-    private IndentWriter _iw = new IndentWriter();
-    private IndentWriter _iwdb = new IndentWriter();
+    private IndentWriter _iwd = new IndentWriter();
 
     public String _htmlPageContent = "";
 
     public String _dateNow_YYMMDD;
     public String _dateLastFriday_YYMMDD;
 
-    public static void extractFund() {
-        try {
-            D_FundInfo fi = new D_FundInfo();
-
-//            fi._type = "VGD";
-//            fi._nameMS = "Vanguard High Dividend Yield Index Fund ETF Shares (VYM)";
-//            fi._url = "http://performance.morningstar.com/perform/Performance/etf/trailing-total-returns.action?&t=VYM&region=usa&culture=en-US&cur=&ops=clear&s=0P00001MJB&ndec=2&ep=true&align=d&annlz=true&comparisonRemove=false&loccat=&taxadj=&benchmarkSecId=&benchmarktype=";
-
-//            fi._type = "VGD";
-//            fi._nameMS = "Royce Special Equity Fund Service Class (RSEFX)";
-//            fi._url = "https://performance.morningstar.com/perform/Performance/fund/trailing-total-returns.action?&t=XNAS:RSEFX&region=usa&culture=en-US&cur=&ops=clear&s=0P00001MJB&ndec=2&ep=true&align=d&annlz=true&comparisonRemove=false&loccat=&taxadj=&benchmarkSecId=&benchmarktype=";
-
-            fi._url = "http://www.morningstar.se/Funds/Quicktake/Overview.aspx?perfid=0P0000PRDQ&programid=0000000000";
-
-            ExtractFromHTML_Helper eh = new ExtractFromHTML_Helper();
-            log.warning("**** Will now extract fund: " + fi._url);
-            OTuple2G<Integer, String> rc = eh.extractFundDetails(fi);
-
-            if (rc._o1 == ExtractFromHTML_Helper.RC_SUCCESS) {
-                log.warning("*** Success extracting fund");
-            } else {
-                log.info("*** Error");
-            }
-            log.warning("*** Returned message: " + rc._o2);
-            log.warning("*** Fund information: " + fi.toString());
-        } catch (Exception exc) {
-            log.severe("Encountered exception while extracting fund");
-            log.severe(exc.toString());
-            log.severe(MM.getStackTraceString(exc));
+    public int extractFundDetails(
+            D_FundInfo fi,
+            IndentWriter iwd) throws IOException {
+        if (iwd != null) {
+            _iwd = iwd;
         }
-    }
 
-    public OTuple2G<Integer, String> extractFundDetails(D_FundInfo fi) throws IOException {
         int rv = RC_SUCCESS;
-
         try {
             rv = extractFundDetailsImpl(fi);
         } catch(Exception exc) {
@@ -73,86 +45,128 @@ public class ExtractFromHTML_Helper {
             strb.append("*** EXCEPTION CAUGHT WHEN extractFund\n");
             strb.append("...exception: " + exc.getMessage() + "\n");
             strb.append(MM.getStackTraceString(exc) + "\n");
-            return new OTuple2G<>(RC_ERROR_KEEP_FUND, strb.toString());
+            _iwd.println(strb.toString());
+            return RC_ERROR_INVALID_FUND;
         }
 
         if (rv != RC_SUCCESS) {
-            IndentWriter iwr = new IndentWriter();
-            iwr.setIndentChar('.');
-            iwr.println("Error for: " + fi.getTypeAndName() + ", ec: " + rv);
-            iwr.push();
-            iwr.println(_iw.getString());
-            iwr.pop();
-            iwr.println("Debug information");
-            iwr.push();
-            iwr.println(_iwdb.getString());
-            iwr.pop();
-            return new OTuple2G<>(rv, iwr.getString());
+            String s = "Error for: " + fi.getTypeAndName() + ", ec: " + rv + " (" + fi.error2str() + ")";
+            _iwd.println(s);
+            return rv;
         }
 
-        return new OTuple2G<>(RC_SUCCESS, null);
+        return RC_SUCCESS;
     }
 
     private int extractFundDetailsImpl(D_FundInfo fi) throws Exception {
-
         _dateNow_YYMMDD = MM.getNowAs_YYMMDD(Constants.TIMEZONE_STOCKHOLM);
         _dateLastFriday_YYMMDD = MM.tgif_getLastFridayTodayExcl(_dateNow_YYMMDD);
         fi._dateYYMMDD_Update_Attempted = _dateNow_YYMMDD;
 
+        // Check the DPDay we might already have
+        D_FundDPDay dpd1 = null;
+        if (fi._dpDays != null && fi._dpDays.size() > 0) {
+            dpd1 = fi._dpDays.get(0);
+            if (dpd1._dateYYMMDD.equals(_dateLastFriday_YYMMDD)) {
+                _iwd.println("Found dpd matching last friday: " + _dateLastFriday_YYMMDD);
+                // Are we already done?
+                if (dpd1._r1w != D_FundDPDay.FLOAT_NULL) {
+                    _iwd.println("...it was not null, so extraction has already been done");
+                    return ExtractFromHTML_Helper.RC_SUCCESS;
+                } else {
+                    _iwd.println("...it was null, so removing it to retry extraction");
+                    dpd1 = fi._dpDays.remove(0);
+                }
+            } else {
+                dpd1 = null;
+            }
+        } else {
+            _iwd.println("_dpDays was null or had no entries");
+        }
+
         // Get the raw HTML data
-        IndentWriter iw_html_debug = new IndentWriter();
+        _iwd.println("Now performing HTTP GET");
+        _iwd.push();
         byte[] htmlDataRaw = HtmlRetriever.htmlGet(
-                iw_html_debug,
+                _iwd,
                 fi._url,
                 5000,
-                6);
+                4);
+        _iwd.println("Done");
+        _iwd.pop();
 
         boolean error = false;
         if (htmlDataRaw == null || htmlDataRaw.length == 0) {
+            String s = "HTTP GET call returned null or 0 bytes";
+            _iwd.println(s);
             fi._errorCode = D_FundInfo.IC_COM_NO_URL_DATA;
             error = true;
         }
+        _iwd.println("Now decoding HTTP GET data");
         String htmlDataString = MM.newString(htmlDataRaw, Constants.ENCODING_FILE_READ);
         if (htmlDataString == null || htmlDataString.length() == 0) {
+            String s = "Data from HTTP GET could not be decoded with: " + Constants.ENCODING_FILE_READ;
+            _iwd.println(s);
             fi._errorCode = D_FundInfo.IC_COM_NO_DECODABLE_DATA;
             error = true;
         }
         if (error) {
-            _iw.println("No URL data for Fund, html debug information:\n" + iw_html_debug.getString());
-            return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            String s = "Exiting extraction with error";
+            _iwd.println(s);
+            fi._lastExtractInfo = "Now: " + MM.getNowAs_YYMMDD(Constants.TIMEZONE_STOCKHOLM)
+                    + ", trying to extract for: " + _dateLastFriday_YYMMDD
+                    + ". HTMLGet error. FundInfo error: " + fi._errorCode;
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
         }
 
+        _iwd.println("Now stripping HTML comments");
         _htmlPageContent = MM.stripHTMLComments(htmlDataString);
+        _iwd.println("...Done");
 
+        // Contract for extractFundDetails
+        // - RC_SUCCESS is returned only if all of parsing went well
+        // - In this case fi._dpDays.get(0) has been added and it's _dateYYMMDD_Actual has been set
         int errorCode = ExtractFromHTML_Helper.RC_SUCCESS;
         if (fi._type.equals(D_FundInfo.TYPE_VANGUARD)) {
-            errorCode = ExtractFromHTML_Vanguard.extractFundDetails(_iw, fi, _htmlPageContent);
+            _iwd.println("Extracting Vanguard");
+            errorCode = ExtractFromHTML_Vanguard.extractFundDetails(_iwd, fi, _htmlPageContent);
         } else {
-            errorCode = ExtractFromHTML_Morningstar.extractFundDetails(_iw, _iwdb, fi, _htmlPageContent);
+            _iwd.println("Extracting Morningstar");
+            errorCode = ExtractFromHTML_Morningstar.extractFundDetails(_iwd, fi, _htmlPageContent);
         }
         if (errorCode != ExtractFromHTML_Helper.RC_SUCCESS) {
+            _iwd.println("...Encountered error: " + errorCode);
+            fi._lastExtractInfo = "Now: " + MM.getNowAs_YYMMDD(Constants.TIMEZONE_STOCKHOLM)
+                    + ", trying to extract for: " + _dateLastFriday_YYMMDD
+                    + ". ExtractFromHTML_Helper error: " + errorCode + ". FundInfo error: " + fi._errorCode;
             return errorCode;
+        } else {
+            _iwd.println("...Successfully extracted fund");
         }
 
-        D_FundDPDay dpd = fi._dpDays.remove(0);  // Lets look at the things just added
+        D_FundDPDay dpd2 = fi._dpDays.remove(0);  // Lets look at the things just added
+
+        // If we arrive here, then dpd1 may be a valid dateFriday, but r1w == NULL
+        // See if we should keep dpd1?
+        if (dpd1 != null) {
+            // If there was any problem finding an actual date for the new, then keep old
+            if (dpd2._dateYYMMDD_Actual == null || dpd2._dateYYMMDD_Actual.length() != 6) {
+                _iwd.println("Keeping old DPD, new DPD had weird _dateYYMMDD_Actual: " + dpd2._dateYYMMDD_Actual);
+                fi._dpDays.add(0, dpd1);
+                return RC_SUCCESS;
+            }
+            if (dpd1._r1m != D_FundDPDay.FLOAT_NULL && dpd2._r1w == D_FundDPDay.FLOAT_NULL) {
+                _iwd.println("Keeping old DPD, new DPD had r1w == null");
+                fi._dpDays.add(0, dpd1);
+                return RC_SUCCESS;
+            }
+        }
 
         // A current DP was found
-        if (dpd._dateYYMMDD == null) {
-            _iw.println("Lastest DPDay had null for _dateYYMMDD");
+        if (dpd2._dateYYMMDD_Actual == null) {
+            _iwd.println("Lastest DPDay had null for _dateYYMMDD_Actual");
             fi._errorCode = D_FundInfo.IC_HTML_MS_DPDAY_NULLDATE;
-            return RC_WARNING_NO_DPDAY_FOUND;
-        }
-        if (dpd._dateYYMMDD_Actual == null) {
-            _iw.println("Lastest DPDay had null for _dateYYMMDD_Actual");
-            fi._errorCode = D_FundInfo.IC_HTML_MS_DPDAY_NULLDATE;
-            return RC_WARNING_NO_DPDAY_FOUND;
-        }
-
-        // Weekly was null
-        if (dpd._r1w == D_FundDPDay.FLOAT_NULL) {
-            _iw.println("No update. r1w was null for good _dateYYMMDD: " + dpd._dateYYMMDD
-                    + ", _dateYYMMDD_Actual: " + dpd._dateYYMMDD_Actual
-                    + ", for friday: " + _dateLastFriday_YYMMDD);
+            fi._lastExtractInfo = "Extract: " + dpd2._dateYYMMDD + ", actual: NULL";
             return RC_WARNING_NO_DPDAY_FOUND;
         }
 
@@ -165,34 +179,41 @@ public class ExtractFromHTML_Helper {
         String dateLastThursday_YYMMDD = MM.tgif_getPrevWeekday(dateLastFriday_YYMMDD, Calendar.THURSDAY);
 
         // We have a valid extraction if actual date is last Friday or Thursday, or Mon/Tue week after
-        if (dpd._dateYYMMDD_Actual.equals(dateLastFriday_YYMMDD)
-                || dpd._dateYYMMDD_Actual.equals(dateLastThursday_YYMMDD)
-                || dpd._dateYYMMDD_Actual.equals(dateLastSaturday_YYMMDD)
-                || dpd._dateYYMMDD_Actual.equals(dateLastSunday_YYMMDD)
-                || dpd._dateYYMMDD_Actual.equals(dateLastMonday_YYMMDD)
-                || dpd._dateYYMMDD_Actual.equals(dateLastTuesday_YYMMDD)) {
-            dpd._dateYYMMDD = dateLastFriday_YYMMDD;
-            fi._dpDays.add(0, dpd);
-        }
-        // Otherwise, we should wait until next data point
-        else {
-            _iw.println("Want to extract for friday: " + dateLastFriday_YYMMDD);
-            _iw.println("But found DP: " + dpd._dateYYMMDD_Actual);
-            _iw.println("Which is not in expected range: " + dateLastThursday_YYMMDD + "-" + dateLastTuesday_YYMMDD);
-
-            int daydiff = MM.tgif_dayCountDiff(dateLastFriday_YYMMDD, dpd._dateYYMMDD_Actual);
-            if (daydiff > 14) {
-                _iw.println("*** Setting fund invalid, number of days since last DPDay: " + daydiff);
-                fi._errorCode = D_FundInfo.IC_NO_RECENT_DPDAY;
-                fi._isValid = false;
-                return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
-            }
-
-            return ExtractFromHTML_Helper.RC_WARNING_NO_DPDAY_FOUND;
+        if (dpd2._dateYYMMDD_Actual.equals(dateLastFriday_YYMMDD)
+                || dpd2._dateYYMMDD_Actual.equals(dateLastThursday_YYMMDD)
+                || dpd2._dateYYMMDD_Actual.equals(dateLastSaturday_YYMMDD)
+                || dpd2._dateYYMMDD_Actual.equals(dateLastSunday_YYMMDD)
+                || dpd2._dateYYMMDD_Actual.equals(dateLastMonday_YYMMDD)
+                || dpd2._dateYYMMDD_Actual.equals(dateLastTuesday_YYMMDD)) {
+            _iwd.println("Success, lastest DPDay had valid _dateYYMMDD_Actual: " + dpd2._dateYYMMDD_Actual);
+            dpd2._dateYYMMDD = dateLastFriday_YYMMDD;
+            fi._dpDays.add(0, dpd2);
+            fi._dateYYMMDD_Updated = _dateLastFriday_YYMMDD;
+            fi._lastExtractInfo = "Extract: " + dpd2._dateYYMMDD + ", actual: " + dpd2._dateYYMMDD_Actual
+                    + "Success, r1w: " + dpd2._r1w;
+            return ExtractFromHTML_Helper.RC_SUCCESS;
         }
 
-        fi._dateYYMMDD_Updated = _dateLastFriday_YYMMDD;
-        return ExtractFromHTML_Helper.RC_SUCCESS;
+        // We don't have a valid DPDay, wait until next data point
+        _iwd.println("Wanted to extract for friday: " + dateLastFriday_YYMMDD);
+        _iwd.println("But found DP: " + dpd2._dateYYMMDD_Actual);
+        _iwd.println("Which is not in expected range: " + dateLastThursday_YYMMDD + "-" + dateLastTuesday_YYMMDD);
+
+        int daydiff = MM.tgif_dayCountDiff(dateLastFriday_YYMMDD, dpd2._dateYYMMDD_Actual);
+        _iwd.println("Day diff is: " + daydiff);
+
+        fi._lastExtractInfo = "Extract: " + dpd2._dateYYMMDD + ", actual: " + dpd2._dateYYMMDD_Actual
+                + "Error, actual date (date of dpday) is older than last friday";
+
+        if (daydiff > 62) {
+            _iwd.println("Setting fund invalid, number of days since last DPDay: " + daydiff);
+            fi._errorCode = D_FundInfo.IC_NO_RECENT_DPDAY;
+            fi._isValid = false;
+            log.warning("Big daydiff for fund: " + fi.getTypeAndName() + ", setting to invalid, dayiff: " + daydiff);
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
+        }
+
+        return ExtractFromHTML_Helper.RC_WARNING_NO_DPDAY_FOUND;
     }
 
     public static OTuple2G<Boolean, Float> validFloat(String s) {

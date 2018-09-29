@@ -13,7 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.pf.fl.datamodel.FL_DB;
+import com.pf.fl.datamodel.DB_FundInfo_UI;
 import com.pf.mr.R;
 import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.datamodel.D_Portfolio;
@@ -32,12 +32,12 @@ public class PortfolioViewerActivity extends AppCompatActivity {
         ab.setDisplayHomeAsUpEnabled(true);
 
         Intent i = getIntent();
-        String pname = i.getStringExtra(FL_DB.INTENT_EXTRA_PORTFOLIO_NAME);
+        String pname = i.getStringExtra(DB_FundInfo_UI.INTENT_EXTRA_PORTFOLIO_NAME);
 
         TextView tv = (TextView) findViewById(R.id.textView_fl);
         tv.setText(pname);
 
-        mPortfolio = FL_DB.portfoliosHM.get(pname);
+        mPortfolio = DB_FundInfo_UI.portfoliosHM.get(pname);
         setupRecyclerView();
     }
 
@@ -92,7 +92,7 @@ public class PortfolioViewerActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(MyRVViewHolder holder, int position) {
             String url = mPortfolio._urls.get(position);
-            D_FundInfo fund = FL_DB.fundsByURL.get(url);
+            D_FundInfo fund = DB_FundInfo_UI.fundsByURL.get(url);
             Log.i(TAG, "Now setting name for: " + position + ", " + fund._nameMS);
             holder.mTextView.setText(fund._nameMS);
         }

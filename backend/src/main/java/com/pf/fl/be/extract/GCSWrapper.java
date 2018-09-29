@@ -1,5 +1,6 @@
 package com.pf.fl.be.extract;
 
+import com.google.api.gax.paging.Page;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Bucket;
@@ -7,6 +8,10 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.pf.shared.Constants;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class GCSWrapper {
@@ -49,31 +54,42 @@ public class GCSWrapper {
     }
 
     //------------------------------------------------------------------------
-//    private static List<Blob> gcsGetBlobsInAscendingOrder(String prefix) throws IOException {
-//        Storage storage = null;
-//        storage = StorageOptions.getDefaultInstance().getService();
-//
-//        try {
-//            Bucket bucket = storage.get(Constants.BUCKET);
-//            Page<Blob> pblob = bucket.list();
-//            Iterable<Blob> iterator = pblob.iterateAll();
-//            List<Blob> blobs = new ArrayList<>();
-//            for (Blob blob : iterator) {
-//                String bname = blob.getName();
-//                if (bname != null && bname.startsWith(prefix)) {
-//                    blobs.add(blob);
-//                }
-//            }
-//
-//            Collections.sort(blobs, new Comparator<Blob>() {
-//                @Override
-//                public int compare(Blob o1, Blob o2) {
-//                    return -o1.getName().compareTo(o2.getName());
-//                }
-//            });
-//            return blobs;
-//        } catch(Exception exc) {
-//            throw new AssertionError(exc);
-//        }
-//    }
+    public static void gcsDeleteFiles(String startsWith, String doesNotContains) throws IOException {
+        List<Blob> bs = gcsGetBlobsInAscendingOrder(startsWith);
+        for (Blob b: bs) {
+            if (!b.getName().contains(doesNotContains)) {
+                b.delete();
+            }
+        }
+    }
+
+
+    //------------------------------------------------------------------------
+    private static List<Blob> gcsGetBlobsInAscendingOrder(String prefix) throws IOException {
+        Storage storage = null;
+        storage = StorageOptions.getDefaultInstance().getService();
+
+        try {
+            Bucket bucket = storage.get(Constants.BUCKET);
+            Page<Blob> pblob = bucket.list();
+            Iterable<Blob> iterator = pblob.iterateAll();
+            List<Blob> blobs = new ArrayList<>();
+            for (Blob blob : iterator) {
+                String bname = blob.getName();
+                if (bname != null && bname.startsWith(prefix)) {
+                    blobs.add(blob);
+                }
+            }
+
+            Collections.sort(blobs, new Comparator<Blob>() {
+                @Override
+                public int compare(Blob o1, Blob o2) {
+                    return -o1.getName().compareTo(o2.getName());
+                }
+            });
+            return blobs;
+        } catch(Exception exc) {
+            throw new AssertionError(exc);
+        }
+    }
 }

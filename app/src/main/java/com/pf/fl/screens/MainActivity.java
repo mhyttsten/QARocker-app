@@ -20,25 +20,16 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.pf.fl.analysis.DPSequenceAnalyzer;
 //import com.pf.fl.datamodel.DMA_ExtractInfo;
-import com.pf.fl.datamodel.FL_DB;
-import com.pf.fl.datamodel.FL_DBCallback;
+import com.pf.fl.datamodel.DB_FundInfo_UI;
+import com.pf.fl.datamodel.DB_FundInfo_UI_Callback;
 import com.pf.mr.R;
 import com.pf.mr.utils.TestYourBatchStuff;
 import com.pf.shared.Constants;
 import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.datamodel.D_Portfolio;
-import com.pf.shared.utils.Compresser;
-import com.pf.shared.base64.Base64;
-import com.pf.shared.utils.MMMob;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 // Main page
@@ -95,43 +86,43 @@ public class MainActivity extends AppCompatActivity {
         }
 //        navigationView.inflateMenu(R.menu.nv_menu_fl);
 
-        if (FL_DB._initialized) {
+        if (DB_FundInfo_UI._initialized) {
             processInitSequence(true);
             return;
         }
 
-        FL_DB.initializeDB(Constants.FUNDINFO_DB_MASTER_BIN, new FL_DBCallback() {
+        DB_FundInfo_UI.initializeDB(Constants.FUNDINFO_DB_MASTER_BIN, new DB_FundInfo_UI_Callback() {
             public void callback(boolean isError, String errorMessage, Object result) {
                 if (isError) {
                     Toast.makeText(MainActivity.this, "Error reading fundinfo DB: " + errorMessage, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 List<D_FundInfo> fis = (List<D_FundInfo>)result;
-                FL_DB.initialize1_Funds(fis);
+                DB_FundInfo_UI.initialize_Funds(fis);
                 processInitSequence(false);
             }
         });
 
-        FL_DB.initializeDB(Constants.PORTFOLIO_DB_MASTER_BIN, new FL_DBCallback() {
+        DB_FundInfo_UI.initializeDB(Constants.PORTFOLIO_DB_MASTER_BIN, new DB_FundInfo_UI_Callback() {
             public void callback(boolean isError, String errorMessage, Object result) {
                 if (isError) {
                     Toast.makeText(MainActivity.this, "Error reading portfolio DB: " + errorMessage, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 List<D_Portfolio> pos = (List<D_Portfolio>)result;
-                FL_DB.initialize2_Portfolios(pos);
+                DB_FundInfo_UI.initialize2_Portfolios(pos);
                 processInitSequence(false);
             }
         });
 
-        FL_DB.initializeDB(Constants.FUNDINFO_LOGS_EXTRACT_MASTER_TXT, new FL_DBCallback() {
+        DB_FundInfo_UI.initializeDB(Constants.FUNDINFO_LOGS_EXTRACT_MASTER_TXT, new DB_FundInfo_UI_Callback() {
             public void callback(boolean isError, String errorMessage, Object result) {
                 if (isError) {
                     Toast.makeText(MainActivity.this, "Error reading extract log: " + errorMessage, Toast.LENGTH_SHORT).show();
                     return;
                 }
                 String s = (String)result;
-                FL_DB.initialize3_ExtractStatistics(s);
+                DB_FundInfo_UI.initialize3_ExtractStatistics(s);
                 processInitSequence(false);
             }
         });
@@ -169,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         Log.e(TAG, "*** initSequenceCount final, calling setupRecyclerView()");
-        FL_DB._initialized = true;
+        DB_FundInfo_UI._initialized = true;
         setupRecyclerView();
     }
 
@@ -184,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
         mRVLayout = new LinearLayoutManager(this);
         mRV.setLayoutManager(mRVLayout);
         mRVAdapter = new MyRVAdapter(this);
-        mRVAdapter.mPortfolios = FL_DB.getPortfolios();
+        mRVAdapter.mPortfolios = DB_FundInfo_UI.getPortfolios();
         mRV.setAdapter(mRVAdapter);
         Log.e(TAG, "setupRecyclerView 3");
         mRVAdapter.notifyDataSetChanged();
@@ -223,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     String name = tv.getText().toString();
-                    FL_DB.listPopulatePortfolioView(name);
+                    DB_FundInfo_UI.listPopulatePortfolioView(name);
                     Intent i = new Intent(mParent, ListActivity.class);
                     mParent.startActivity(i);
                 }

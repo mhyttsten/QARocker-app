@@ -14,8 +14,8 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.pf.fl.datamodel.DB_FundInfo_UI;
 import com.pf.mr.R;
-import com.pf.fl.datamodel.FL_DB;
 
 public class ListActivity extends AppCompatActivity {
     private static final String TAG = ListActivity.class.getSimpleName();
@@ -34,7 +34,7 @@ public class ListActivity extends AppCompatActivity {
 
 
         // Get the content to display
-        mLI = FL_DB.listContent;
+        mLI = DB_FundInfo_UI.listContent;
         setTitle(mLI.mTitle);
 
         setupRecyclerView();

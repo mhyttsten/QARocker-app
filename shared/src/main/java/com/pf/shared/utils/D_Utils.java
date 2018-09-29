@@ -10,6 +10,23 @@ import java.util.List;
 public class D_Utils {
 
     //------------------------------------------------------------------------
+    public static String getOldestFriday(List<D_FundInfo> l) {
+        String friday = null;
+        for (D_FundInfo fi: l) {
+            for (D_FundDPDay dpd: fi._dpDays) {
+                if (friday == null) {
+                    friday = dpd._dateYYMMDD;
+                }
+                else if (friday.compareTo(dpd._dateYYMMDD) > 0) {
+                    friday = dpd._dateYYMMDD;
+                }
+            }
+        }
+        return friday;
+    }
+
+
+    //------------------------------------------------------------------------
     public static String getR1WsAsCSV(String[] fridays, D_FundInfo fi) {
         for (String friday: fridays) {
             System.out.println("friday: " + friday);

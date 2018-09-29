@@ -19,7 +19,7 @@ public class ExtractFromHTML_Vanguard {
     private static final String URL_ETF2 = "http://performance.morningstar.com/perform/Performance/etf/trailing-total-returns.action";
 
     public static int extractFundDetails(
-            IndentWriter iw,
+            IndentWriter iwd,
             D_FundInfo fi,
             String pageContent) throws Exception {
 
@@ -28,42 +28,48 @@ public class ExtractFromHTML_Vanguard {
         String searchFund = null;
         String searchDateString = null;
         if (fi._url.startsWith(URL_MUTUAL_FUND) || fi._url.startsWith(URL_MUTUAL_FUND2)) {
+            iwd.println("Mutual fund");
             isMutualFund = true;
-            searchFund = getVanguardTickerFromFundName(fi._nameMS);
+            searchFund = getVanguardTickerFromFundName(fi._nameMS, iwd);
             searchDateString = searchFund + "&nbsp;return as of &nbsp;";
         } else if (fi._url.startsWith(URL_ETF) || fi._url.startsWith(URL_ETF2)) {
+            iwd.println("ETF fund");
             isETF = true;
-            searchFund = getVanguardTickerFromFundName(fi._nameMS) + " (Price)";
+            searchFund = getVanguardTickerFromFundName(fi._nameMS, iwd) + " (Price)";
             searchDateString = searchFund + " return as of ";
         } else {
             fi._errorCode = D_FundInfo.IC_VG_NOT_MF_NOR_ETF;
-            iw.println("Vanguard fund was neither Mutual or ETF");
-            return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            iwd.println("Error, Vanguard fund was neither Mutual or ETF returning");
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
         }
 
         D_FundDPDay dpd = new D_FundDPDay();
 
         // First, make sure we have a good date
+        iwd.println("Searching for: " + searchDateString);
         int io = pageContent.indexOf(searchDateString);
         if (io == -1) {
             fi._errorCode = D_FundInfo.IC_HTML_VG_DATE_NOT_FOUND;
-            iw.println("Could not find date for Vanguard MF: " + isMutualFund + ", or ETF: " + isETF);
-            return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            iwd.println("Error, Could not find date for Vanguard MF: " + isMutualFund + ", or ETF: " + isETF);
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
         } else {
             int index = io + searchDateString.length();
             String dateMMSDDSYYYY = pageContent.substring(index, index + 10);
             String[] dateSplit = dateMMSDDSYYYY.split("/");
             String dateYYMMDD = dateSplit[2].substring(2) + dateSplit[0] + dateSplit[1];
+            iwd.println("Found date: " + dateYYMMDD);
             try {
                 java.util.Date d = MM.getDateFrom_YYMMDD(null, dateYYMMDD);
             } catch (Exception exc) {
                 fi._errorCode = D_FundInfo.IC_HTML_VG_DATE_NOT_FOUND;
-                iw.println("Date conversion threw exception: " + dateYYMMDD + " for Vanguard " + isMutualFund + ", or ETF: " + isETF);
-                return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+                iwd.println("Error, Date conversion threw exception: " + dateYYMMDD + " for Vanguard " + isMutualFund + ", or ETF: " + isETF);
+                return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
             }
+            iwd.println("Date valid, setting _dateYYMMDD_Actual to: " + dateYYMMDD);
             dpd._dateYYMMDD_Actual = dateYYMMDD;
         }
 
+        iwd.println("Setting currency to USD");
         fi._currencyName = "USD";
 
         OTuple2G<String, String> ot = null;
@@ -74,30 +80,34 @@ public class ExtractFromHTML_Vanguard {
 
         // Get returns
         findTagLoc = "Total Return";
+        iwd.println("Now finding: " + findTagLoc);
         io1 = ot._o2.indexOf(findTagLoc);
         if (io1 == -1) {
             fi._errorCode = D_FundInfo.IC_HTML_VG_TOTAL_RETURNS_NOT_FOUND;
-            iw.println("Could not find Total Returns for Vanguard fund");
-            return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            iwd.println("...Error, Could not find Total Returns for Vanguard fund");
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
         }
         ot._o2 = ot._o2.substring(io1 + findTagLoc.length());
 
         int rc = ExtractFromHTML_Helper.RC_SUCCESS;
 
         // DPDay for our fund
+        iwd.println("Now finding the returns");
         String nextTR = MM.assignAndReturnNextTagValue(ot, "<tr");
-        rc = parseTR(iw, fi, nextTR);
+        rc = parseTR(iwd, fi, nextTR);
         if (rc != ExtractFromHTML_Helper.RC_SUCCESS) {
+            iwd.println("Error was encountered while parsingTFs, returning: " + rc);
             return rc;
         }
         if (!tr_ticker.equals(searchFund)) {
-            iw.println("Vanguard ticker mismatch"
-                    + "\nTicker from HTML: " + tr_ticker
-                    + "\nTicker from name: " + searchFund
-                    + "\nFund name: " + fi._nameMS);
+            iwd.println("Error, Vanguard ticker mismatch"
+                    + ", ticker from HTML: " + tr_ticker
+                    + ", Ticker from name: " + searchFund
+                    + ", Fund name: " + fi._nameMS);
             fi._errorCode = D_FundInfo.IC_HTML_VG_DATA_TICKER_MISMATCH;
-            return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
         }
+        iwd.println("Assigning results: " + tr_dps[0] + ", " + tr_dps[1] + ", " + tr_dps[2] + ", " + tr_dps[3] + ", " + tr_dps[4] + ", " + tr_dps[5] + ", " + tr_dps[6] + ", " + tr_dps[7]);
         dpd._r1d = tr_dps[0];
         dpd._r1w = tr_dps[1];
         dpd._r1m = tr_dps[2];
@@ -110,16 +120,17 @@ public class ExtractFromHTML_Vanguard {
         // And we expect 5 more rows, one of them which is the index!
         String indexName = "";
         boolean error = false;
+        iwd.println("Now finding the index");
         for (int i=0; i <= 4; i++) {
             error = false;
             nextTR = MM.assignAndReturnNextTagValue(ot, "<tr");
             if (nextTR == null) {
                 error = true;
             } else {
-                rc = parseTR(iw, fi, nextTR);
+                rc = parseTR(iwd, fi, nextTR);
             }
             if (rc != ExtractFromHTML_Helper.RC_SUCCESS || error) {
-                iw.println("Vanguard Error Parsing DP Rows Table");
+                iwd.println("Error, Parsing DP Rows Table");
                 fi._errorCode = D_FundInfo.IC_HTML_VG_DP_ROWS_INCONSISTENCY;
                 if (!error) return rc;
                 else return rc;
@@ -128,16 +139,19 @@ public class ExtractFromHTML_Vanguard {
             if (isETF && i == 1) {
                 indexName = tr_ticker;
                 if (!indexName.endsWith(" (Price)")) {
-                    iw.println("Vanguard Index name for ETF did not end with (Price)");
+                    iwd.println("Error, Vanguard Index name for ETF did not end with (Price)");
                     fi._errorCode = D_FundInfo.IC_HTML_VG_DP_ROWS_INCONSISTENCY;
-                    return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+                    return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
                 }
                 indexName = indexName.substring(0, indexName.length()-8);
+                iwd.println("ETF indexName assigned to: " + indexName);
             } else if(isMutualFund && i == 0) {
+                iwd.println("Mutual fund indexName assigned to: " + indexName);
                 indexName = tr_ticker;
             }
         }
 
+        iwd.println("Returning successfully");
         fi._indexName = indexName;
         fi._dpDays.add(0, dpd);
         return ExtractFromHTML_Helper.RC_SUCCESS;
@@ -145,7 +159,14 @@ public class ExtractFromHTML_Vanguard {
 
     private static String tr_ticker;
     private static float[] tr_dps;
-    private static int parseTR(IndentWriter iw, D_FundInfo fi, String nextTR) {
+    private static int parseTR(IndentWriter iwd, D_FundInfo fi, String nextTR) {
+        iwd.println("parseTR");
+        iwd.push();
+        int rc = parseTRImpl(iwd, fi, nextTR);
+        iwd.pop();
+        return rc;
+    }
+    private static int parseTRImpl(IndentWriter iwd, D_FundInfo fi, String nextTR) {
         tr_ticker = null;
         tr_dps = new float[8];
 
@@ -155,9 +176,9 @@ public class ExtractFromHTML_Vanguard {
 		OTuple2G<Boolean, Float> rv = null;
     	rv = ExtractFromHTML_Helper.validFloat(MM.assignAndReturnNextTagValue(ot, "<td"));
 		if (!rv._o1) {
-            iw.println("Vanguard, r1d ExtractFromHTML_Helper.error");
+            iwd.println("Vanguard, r1d ExtractFromHTML_Helper.error");
             fi._errorCode = D_FundInfo.IC_HTML_VG_DP_PARSING;
-            return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
         } else {
 		    float r = rv._o2 == null ? D_FundDPDay.FLOAT_NULL : rv._o2.floatValue();
 		    tr_dps[0] = r;
@@ -165,9 +186,9 @@ public class ExtractFromHTML_Vanguard {
 
         rv = ExtractFromHTML_Helper.validFloat(MM.assignAndReturnNextTagValue(ot, "<td"));
         if (!rv._o1) {
-            iw.println("Vanguard, r1w ExtractFromHTML_Helper.error");
+            iwd.println("Vanguard, r1w ExtractFromHTML_Helper.error");
             fi._errorCode = D_FundInfo.IC_HTML_VG_DP_PARSING;
-            return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
         } else {
             float r = rv._o2 == null ? D_FundDPDay.FLOAT_NULL : rv._o2.floatValue();
             tr_dps[1] = r;
@@ -175,9 +196,9 @@ public class ExtractFromHTML_Vanguard {
 
         rv = ExtractFromHTML_Helper.validFloat(MM.assignAndReturnNextTagValue(ot, "<td"));
         if (!rv._o1) {
-            iw.println("Vanguard, r1m ExtractFromHTML_Helper.error");
+            iwd.println("Vanguard, r1m ExtractFromHTML_Helper.error");
             fi._errorCode = D_FundInfo.IC_HTML_VG_DP_PARSING;
-            return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
         } else {
             float r = rv._o2 == null ? D_FundDPDay.FLOAT_NULL : rv._o2.floatValue();
             tr_dps[2] = r;
@@ -185,9 +206,9 @@ public class ExtractFromHTML_Vanguard {
 
         rv = ExtractFromHTML_Helper.validFloat(MM.assignAndReturnNextTagValue(ot, "<td"));
         if (!rv._o1) {
-            iw.println("Vanguard, r3m ExtractFromHTML_Helper.error");
+            iwd.println("Vanguard, r3m ExtractFromHTML_Helper.error");
             fi._errorCode = D_FundInfo.IC_HTML_VG_DP_PARSING;
-            return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
         } else {
             float r = rv._o2 == null ? D_FundDPDay.FLOAT_NULL : rv._o2.floatValue();
             tr_dps[3] = r;
@@ -195,17 +216,17 @@ public class ExtractFromHTML_Vanguard {
 
         rv = ExtractFromHTML_Helper.validFloat(MM.assignAndReturnNextTagValue(ot, "<td"));
         if (!rv._o1) {
-            iw.println("Vanguard, YTD ExtractFromHTML_Helper.error");
+            iwd.println("Vanguard, YTD ExtractFromHTML_Helper.error");
             fi._errorCode = D_FundInfo.IC_HTML_VG_DP_PARSING;
-            return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
         } else {
         }
 
         rv = ExtractFromHTML_Helper.validFloat(MM.assignAndReturnNextTagValue(ot, "<td"));
         if (!rv._o1) {
-            iw.println("Vanguard, r1y ExtractFromHTML_Helper.error");
+            iwd.println("Vanguard, r1y ExtractFromHTML_Helper.error");
             fi._errorCode = D_FundInfo.IC_HTML_VG_DP_PARSING;
-            return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
         } else {
             float r = rv._o2 == null ? D_FundDPDay.FLOAT_NULL : rv._o2.floatValue();
             tr_dps[4] = r;
@@ -213,9 +234,9 @@ public class ExtractFromHTML_Vanguard {
 
         rv = ExtractFromHTML_Helper.validFloat(MM.assignAndReturnNextTagValue(ot, "<td"));
         if (!rv._o1) {
-            iw.println("Vanguard, r3y ExtractFromHTML_Helper.error");
+            iwd.println("Vanguard, r3y ExtractFromHTML_Helper.error");
             fi._errorCode = D_FundInfo.IC_HTML_VG_DP_PARSING;
-            return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
         } else {
             float r = rv._o2 == null ? D_FundDPDay.FLOAT_NULL : rv._o2.floatValue();
             tr_dps[5] = r;
@@ -223,9 +244,9 @@ public class ExtractFromHTML_Vanguard {
 
         rv = ExtractFromHTML_Helper.validFloat(MM.assignAndReturnNextTagValue(ot, "<td"));
         if (!rv._o1) {
-            iw.println("Vanguard, r5y ExtractFromHTML_Helper.error");
+            iwd.println("Vanguard, r5y ExtractFromHTML_Helper.error");
             fi._errorCode = D_FundInfo.IC_HTML_VG_DP_PARSING;
-            return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
         } else {
             float r = rv._o2 == null ? D_FundDPDay.FLOAT_NULL : rv._o2.floatValue();
             tr_dps[6] = r;
@@ -233,23 +254,28 @@ public class ExtractFromHTML_Vanguard {
 
         rv = ExtractFromHTML_Helper.validFloat(MM.assignAndReturnNextTagValue(ot, "<td"));
         if (!rv._o1) {
-            iw.println("Vanguard, r10y ExtractFromHTML_Helper.error");
+            iwd.println("Vanguard, r10y ExtractFromHTML_Helper.error");
             fi._errorCode = D_FundInfo.IC_HTML_VG_DP_PARSING;
-            return ExtractFromHTML_Helper.RC_ERROR_KEEP_FUND;
+            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
         } else {
             float r = rv._o2 == null ? D_FundDPDay.FLOAT_NULL : rv._o2.floatValue();
             tr_dps[7] = r;
         }
+        iwd.println("parseTR successful");
         return ExtractFromHTML_Helper.RC_SUCCESS;
-
 	}
 
-    public static final String getVanguardTickerFromFundName(String name) {
+    public static final String getVanguardTickerFromFundName(
+            String name,
+            IndentWriter iwd) {
         int io1 = name.lastIndexOf("(");
         int io2 = name.lastIndexOf(")");
         if (io1 == -1 || io2 == -1) {
+            iwd.println("Could not find ( or )");
             return null;
         }
-        return name.substring(io1+1, io2);
+        String s = name.substring(io1+1, io2);
+        iwd.println("Ticker name is: " + s);
+        return s;
     }
 }

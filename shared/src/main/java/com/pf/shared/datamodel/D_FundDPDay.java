@@ -25,11 +25,11 @@ public class D_FundDPDay {
 
 	public static String f2s(float f) {
 		if (f == FLOAT_NULL) return "-";
-		return String.valueOf(f);
+		return String.format("%.2f", f);
 	}
 	
 	public void dumpInfo(IndentWriter iw) {
-		iw.print("DPDay: " + _dateYYMMDD + ", actual: " + _dateYYMMDD_Actual + ", " +_currency + ": ");
+		iw.print(_dateYYMMDD + ", act: " + _dateYYMMDD_Actual + ", " +_currency + ": ");
 		iw.print("[" + f2s(_r1d));
 		iw.print("," + f2s(_r1w));
 		iw.print("," + f2s(_r1m));

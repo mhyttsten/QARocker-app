@@ -1,6 +1,7 @@
 package com.pf.fl.be.servlet;
 
 import com.pf.fl.be.extract.FLOps1_Ext1_Extract_New;
+import com.pf.mr.be.Constants;
 import com.pf.shared.utils.IndentWriter;
 import com.pf.shared.utils.MM;
 
@@ -32,17 +33,13 @@ public class CronExtractServlet_New extends HttpServlet {
         }
     }
 
-    /**
-     *
-     */
     public void doExtract(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        IndentWriter iwError = new IndentWriter();
-        FLOps1_Ext1_Extract_New extract = new FLOps1_Ext1_Extract_New(true, iwError);
+        FLOps1_Ext1_Extract_New extract = new FLOps1_Ext1_Extract_New(
+                null,
+                false,
+                true,
+                null,
+                false);
         extract.doIt();
-        String strError = iwError.getString().trim();
-        if (strError.length() > 0) {
-            log.info("Errors: " + iwError);
-        }
-
     }
 }

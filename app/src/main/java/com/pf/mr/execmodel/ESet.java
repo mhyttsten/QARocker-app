@@ -6,7 +6,7 @@ import com.google.firebase.crash.FirebaseCrash;
 import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.utils.Constants;
-import com.pf.mr.utils.IndentWriter;
+import com.pf.shared.utils.IndentWriter;
 import com.pf.mr.utils.MPair;
 import com.pf.mr.utils.Misc;
 

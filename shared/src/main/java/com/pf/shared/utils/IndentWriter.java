@@ -27,7 +27,8 @@ public class IndentWriter {
 		_indentChar = c;
 	}
     public void setFlowChar(char c) { _flowChar = c; }
-	
+	public void setNewline(String c) { _newline = c; }
+
 	public void setIndentDistance(int distance) {
 		_incIndent = distance;
 	}
@@ -85,13 +86,13 @@ public class IndentWriter {
 	public void println(String a1) {
 		if(a1 == null)
 			a1 = "";
-		print(a1 + "\n");
+		print(a1 + _newline);
         _isFirstWriteLine = true;
 	}
 
 	//------------------------------------------------------------------------
 	public void println() {
-		print("\n");
+		print(_newline);
         _isFirstWriteLine = true;
 	}
 
@@ -126,5 +127,5 @@ public class IndentWriter {
     private String _currentIndentStr = "";
     private char _indentChar = ' ';
     private char _flowChar = ' ';
-
+    private String _newline = "\n";
 }

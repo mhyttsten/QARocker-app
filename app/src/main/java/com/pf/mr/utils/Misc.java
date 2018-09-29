@@ -23,9 +23,13 @@ import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.execmodel.ESet;
 import com.pf.mr.execmodel.ETerm;
+import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.extract.ExtractFromHTML_Helper;
 import com.pf.shared.utils.Compresser;
+import com.pf.shared.utils.HtmlRetriever;
 import com.pf.shared.utils.MM;
+import com.pf.shared.utils.OTuple2G;
+import com.pf.shared.utils.IndentWriter;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -38,6 +42,53 @@ import java.util.List;
 
 public class Misc {
     public static final String TAG = Misc.class.getSimpleName();
+
+    public static void executedAtAppStart() {
+        try {
+            @SuppressLint("StaticFieldLeak") AsyncTask<URL, Integer, Long> at = new AsyncTask<URL, Integer, Long>() {
+                protected Long doInBackground(URL... urls) {
+                    try {
+                        Log.e(TAG, "*** In background");
+                        Log.e(TAG, "Will now get HTML data");
+                        IndentWriter iw_html_debug = new IndentWriter();
+                        byte[] htmlDataRaw = HtmlRetriever.htmlGet(
+                                iw_html_debug,
+                                "https://www.morningstar.se/Funds/Quicktake/Overview.aspx?perfid=0P0000HLO5&programid=0000000000",
+                                5000,
+                                6);
+                        if (htmlDataRaw == null) {
+                            Log.e(TAG, "Received NULL");
+                        } else {
+                            Log.e(TAG, "Retrieved: " + htmlDataRaw.length + " bytes");
+                        }
+
+                        boolean error = false;
+                        if (htmlDataRaw == null || htmlDataRaw.length == 0) {
+                            Log.e(TAG, "HTML info null");
+                        }
+                        String htmlDataString = MM.newString(htmlDataRaw, com.pf.shared.Constants.ENCODING_FILE_READ);
+                        if (htmlDataString == null || htmlDataString.length() == 0) {
+                            Log.e(TAG, "HTML could not create String from bytep[]");
+                        }
+                    } catch(Exception exc) {
+                        Log.i(TAG, "Exception when trying to get webpage: " + exc.toString());
+                        Log.i(TAG, MM.getStackTraceString(exc));
+                    }
+                    Log.e(TAG, "Returning without error");
+                    return 0L;
+                }
+
+                protected void onProgressUpdate(Integer... progress) { }
+                protected void onPostExecute(Long result) { }
+            }.execute();
+
+        } catch(Exception exc) {
+            Log.e(TAG, exc.toString());
+        }
+        Log.e(TAG, "*** Now exiting from executeAtAppStartImpl");
+//        throw new AssertionError("We've just executed the executeAtAppStartImpl");
+    }
+
 
     public static byte[] getFirebaseStorageFile() {
         Log.w(TAG, "*** Will now try to download content");
@@ -78,19 +129,23 @@ public class Misc {
 
     }
 
-    public static void extractFundInfo() {
+    public static void doTestImpl() {
+        Log.w(TAG, "*** Entered doTest");
         @SuppressLint("StaticFieldLeak") AsyncTask<URL, Integer, Long> at = new AsyncTask<URL, Integer, Long>() {
             protected Long doInBackground(URL... urls) {
-//                String url = "https://www.google.com";
-//                try {
-//                    Log.i(TAG, "About to retrieve web page");
-//                    byte[] ba = MM.getURLContentBA(url);
-//                    Log.i(TAG, "Retrieved web page, size: " + ba.length);
-//                } catch(Exception exc) {
-//                    Log.i(TAG, "Exception when trying to get webpage: " + exc.toString());
-//                    Log.i(TAG, MM.getStackTraceString(exc));
-//                }
-                ExtractFromHTML_Helper.extractFund();
+                try {
+                    Log.w(TAG, "*** About to retrieve web page");
+                    D_FundInfo fi = new D_FundInfo();
+                    fi._url = "http://www.morningstar.se/Funds/Quicktake/Overview.aspx?perfid=0P00018UZ6&programid=0000000000";
+                    ExtractFromHTML_Helper eh = new ExtractFromHTML_Helper();
+                    IndentWriter iwd = new IndentWriter();
+                    int rc = eh.extractFundDetails(fi, iwd);
+                    Log.i(TAG, "Result code: " + String.valueOf(rc));
+                    Log.i(TAG, "Debug information: " + iwd.getString());
+                } catch(Exception exc) {
+                    Log.i(TAG, "Exception when trying to get webpage: " + exc.toString());
+                    Log.i(TAG, MM.getStackTraceString(exc));
+                }
                 return 0L;
             }
 

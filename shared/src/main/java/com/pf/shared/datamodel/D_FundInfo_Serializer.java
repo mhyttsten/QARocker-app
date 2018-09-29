@@ -1,6 +1,8 @@
 package com.pf.shared.datamodel;
 
 import com.pf.shared.utils.Compresser;
+import com.pf.shared.utils.IndentWriter;
+import com.pf.shared.utils.MM;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -85,10 +87,11 @@ public class D_FundInfo_Serializer {
     public static void crunch_D_FundInfo(DataOutputStream dout_output, D_FundInfo fi) throws IOException {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         DataOutputStream dout = new DataOutputStream(bout);
-        dout.writeBoolean(fi._isUpdated);
+        dout.writeBoolean(fi._notUsed);
         dout.writeUTF(fi._url);
         dout.writeBoolean(fi._isValid);
         dout.writeInt(fi._errorCode);
+        dout.writeUTF(fi._lastExtractInfo);
         dout.writeUTF(fi._type);
         dout.writeUTF(fi._nameMS);
         dout.writeUTF(fi._nameOrig);
@@ -135,13 +138,34 @@ public class D_FundInfo_Serializer {
         dout_output.write(data);
     }
 
+    private static IndentWriter _iw;
+    private static void debug(String s) {
+//        if (_iw == null) {
+//            _iw = new IndentWriter();
+//        }
+//        _iw.println(s);
+        log.info(s);
+    }
+    private static void debug_end() {
+
+    }
+
     //------------------------------------------------------------------------
     public static D_FundInfo decrunch_D_FundInfo(DataInputStream din_input) throws IOException {
+        IndentWriter iw = new IndentWriter();
+
         D_FundInfo fi = new D_FundInfo();
+//        debug("Decrunching D_FundInfo");
 
         String tag = din_input.readUTF();
+//        debug(tag);
+
         int length = din_input.readInt();
+//        debug(String.valueOf(length));
+
         byte[] record = new byte[length];
+//        debug(MM.bytesToHexDumpString(record, "\n"));
+
         int rlength = din_input.read(record);
         if (rlength != length) {
             throw new IOException("Not enough bytes to read entire record");
@@ -150,10 +174,11 @@ public class D_FundInfo_Serializer {
         ByteArrayInputStream bin = new ByteArrayInputStream(record);
         DataInputStream din = new DataInputStream(bin);
 
-        fi._isUpdated = din.readBoolean();
+        fi._notUsed = din.readBoolean();
         fi._url = din.readUTF();
         fi._isValid = din.readBoolean();
         fi._errorCode = din.readInt();
+        fi._lastExtractInfo = din.readUTF();
         fi._type = din.readUTF();
         fi._nameMS = din.readUTF();
         fi._nameOrig = din.readUTF();

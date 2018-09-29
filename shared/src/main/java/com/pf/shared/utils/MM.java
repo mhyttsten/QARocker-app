@@ -1,5 +1,7 @@
 package com.pf.shared.utils;
 
+import com.pf.shared.Constants;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -40,6 +42,13 @@ public class MM {
     private static final Logger log = Logger.getLogger(MM.class.getName());
     private static final String TAG = "MM";
 
+	public static void writeBrowser(OutputStream out, String str, String enc) throws Exception {
+        out.write(str.getBytes(Constants.ENCODING_ISO));
+	}
+	public static void writeBrowser(OutputStream out, String str) throws Exception {
+		out.write(str.getBytes(Constants.ENCODING_FILE_WRITE));
+	}
+
 	//------------------------------------------------------------------------
 	public static void testLog() {
 		log.warning("*** THIS IS MY WARNING LOG message ***");
@@ -48,14 +57,16 @@ public class MM {
 	private static long _timeStart;
 	public static void timerStart() {
 		_timeStart = System.currentTimeMillis();
+//		log.info("MM.timerStart, set to: " + _timeStart);
 	}
 	public static boolean timerContinue(long numberOfSeconds) {
 		long timeNow = System.currentTimeMillis();
 		long diff = (timeNow - _timeStart) / 1000;
+//		log.severe("MM.timerContinue, number of seconds: " + numberOfSeconds + ", _timeStart: " + _timeStart + ", timeNow: " + timeNow + ", diff: " + diff);
 		if (diff > numberOfSeconds) {
-			return true;
+			return false;
 		}
-		return false;
+		return true;
 	}
 
 	//------------------------------------------------------------------------
@@ -102,10 +113,7 @@ public class MM {
 	//------------------------------------------------------------------------
     public static void main(String[] args) {
         try {
-            String yymmdd = "140103";
-            System.out.println(tgif_getLastFridayTodayIncl(yymmdd));
-
-            System.out.println(MM.tgif_getNextWeekday("140704", Calendar.MONDAY));
+            System.out.println("Date diff: " + tgif_dayCountDiff("180318", "180318"));
         } catch (Exception exc) {
             System.out.println("Exception: " + exc);
             exc.printStackTrace();
@@ -204,6 +212,13 @@ public class MM {
      */
     public static boolean tgif_isFriday(String dateYYMMDD) {
         java.util.Date d = getDateFrom_YYMMDD(null, dateYYMMDD);
+        if (d == null) {
+        	String length = "N/A";
+        	if (dateYYMMDD != null) {
+        		length = String.valueOf(dateYYMMDD.length());
+			}
+			throw new AssertionError("Date became null, incoming string: " + dateYYMMDD + ", length: " + length);
+		}
         GregorianCalendar gc = new GregorianCalendar();
         gc.setTime(d);
         int dow = gc.get(Calendar.DAY_OF_WEEK);
@@ -793,20 +808,23 @@ public class MM {
 	}
 
 	//-------------------------------------------------------------------------------------
-	public static ArrayList<String[]> fileReadToLin_eelements(String fileName, String separator, String encoding) throws Exception {
+	public static List<String[]> fileReadToLin_eelements(String fileName, String separator, String encoding) throws Exception {
 		return fileReadToLin_eelements(new File(fileName), separator, encoding);
 	}
-	public static ArrayList<String[]> fileReadToLin_eelements(File file, String separator, String encoding) throws Exception {
+
+	public static List<String[]> fileReadToLin_eelements(File file, String separator, String encoding) throws Exception {
 		byte[] fileContent = fileReadFrom(file);
 		String fileContentStr = null;
-		if(encoding != null && encoding.trim().length() > 0) {
-			fileContentStr = new String(fileContent,encoding);
-		}
-		else {
+		if (encoding != null && encoding.trim().length() > 0) {
+			fileContentStr = new String(fileContent, encoding);
+		} else {
 			fileContentStr = new String(fileContent);
 		}
+		return strReadToLin_eelements(fileContentStr, separator);
+	}
+	public static List<String[]> strReadToLin_eelements(String fileContentStr, String separator) throws IOException {
 	    BufferedReader d = new BufferedReader(new StringReader(fileContentStr));
-	    ArrayList<String[]> al = new ArrayList<String[]>();
+	    List<String[]> al = new ArrayList<String[]>();
 	    String line = null;
 	    do {
 	    	line = d.readLine();
@@ -944,7 +962,7 @@ public class MM {
 	}
 	
 	//------------------------------------------------------------------------
-	public static String fileList(ArrayList<File> result, String directory, boolean includeDirectories) throws Exception {
+	public static String fileList(List<File> result, String directory, boolean includeDirectories) throws Exception {
 		File f = new File(directory);
 		File[] flist = f.listFiles();
 		if(flist == null) {
@@ -969,18 +987,31 @@ public class MM {
     }
     public static byte[] fileReadFrom(InputStream fin) throws Exception {
     	ByteArrayOutputStream bout = new ByteArrayOutputStream();
-    	int data = -1;
+    	byte[] data = new byte[10*1024];
+    	int rcount = -1;
     	do {
-    		data = fin.read();
-    		if(data != -1) {
-    			bout.write(data & 0xFF);
-    		}
-    	}
-    	while(data != -1);
+    	    rcount = fin.read(data);
+    	    if (rcount > 0) {
+    	        bout.write(data, 0, rcount);
+            }
+        } while(rcount > 0);
     	fin.close();
     	return bout.toByteArray();
     }
-	
+    public static byte[] fileReadFromOld(InputStream fin) throws Exception {
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        int data = -1;
+        do {
+            data = fin.read();
+            if(data != -1) {
+                bout.write(data & 0xFF);
+            }
+        }
+        while(data != -1);
+        fin.close();
+        return bout.toByteArray();
+    }
+
 	// ***********************************************************************
 	
     //------------------------------------------------------------------------
@@ -1143,9 +1174,6 @@ public class MM {
 		return result;
 	}
 	
-	//  o1: The result value
-	//  o2: The string starting after the closing tag (but also ">" may be the starting character)
-	//  Returns null if it cannot find any more values
 	public static String assignAndReturnNextTagValue(
 			OTuple2G<String, String> t,
 			String tagStart) {

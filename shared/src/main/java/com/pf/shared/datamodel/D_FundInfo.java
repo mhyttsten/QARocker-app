@@ -36,6 +36,33 @@ public class D_FundInfo {
     public static final int IC_HTML_VG_DP_ROWS_NO_INDEX = 306;
     public static final int IC_HTML_VG_DP_ROWS_INCONSISTENCY = 307;
 
+    public String error2str() {
+        switch(_errorCode) {
+            case IC_NO_ERROR: return "No Error";
+            case IC_COM_NO_URL_DATA: return "No URL Data";
+            case IC_COM_NO_DECODABLE_DATA: return "No Decodable Data";
+            case IC_INVALID_URL_IRRECOVERABLE: return "Invalid URL (irrecoverable)";
+            case IC_NO_RECENT_DPDAY: return "No recent DPDay";
+            case IC_HTML_MS_DAILY_TABLE: return "MS, HTML error on Daily Table";
+            case IC_HTML_MS_DAILY_SEK_CURRENCY: return "MS, HTML SEK error";
+            case IC_HTML_MS_RATING: return "MS, HTML rating error";
+            case IC_HTML_MS_CATEGORY: return "MS, HTML category error";
+            case IC_HTML_MS_YEARLY_TABLE_YEAR: return "MS, HTML yearly table year error";
+            case IC_HTML_MS_YEARLY_TABLE_FUND: return "MS, HTML yearly table fund error";
+            case IC_HTML_MS_YEARLY_TABLE_INDEX: return "MS, HTML yearly table index error";
+            case IC_HTML_MS_YEARLY_TABLE_CATEGORY: return "MS, HTML yearly table category error";
+            case IC_HTML_MS_DPDAY_NULLDATE: return "MS, HTML dpday null date error";
+            case IC_VG_NOT_MF_NOR_ETF: return "VG, Not MF nor ETF";
+            case IC_HTML_VG_DATA_TICKER_MISMATCH: return "VG, HTML data table mismatch error";
+            case IC_HTML_VG_TOTAL_RETURNS_NOT_FOUND: return "VG, HTML total returns not found error";
+            case IC_HTML_VG_DATE_NOT_FOUND: return "VG, HTML date not found error";
+            case IC_HTML_VG_DP_PARSING: return "VG, HTML dp parsing error";
+            case IC_HTML_VG_DP_ROWS_NO_INDEX: return "VG, HTML dp rows no index error";
+            case IC_HTML_VG_DP_ROWS_INCONSISTENCY: return "VG, HTML dp rows inconsistency error";
+            default: return "<Software error, unknown error code>";
+        }
+    }
+
     public static final String TYPE_PPM = "PPM";
     public static final String TYPE_SEB = "SEB";
     public static final String TYPE_SPP = "SPP";
@@ -44,12 +71,14 @@ public class D_FundInfo {
     public static final String TYPE_INVALID = "INVALID";
     public static final String[] TYPES = new String[] { TYPE_SEB, TYPE_SPP, TYPE_VANGUARD, TYPE_PPM };
 
-    public boolean _isUpdated;
-    public String _url = "";
+    public boolean _notUsed; // But kept since DB structure stores / reads it
     public boolean _isValid = true;
     public int _errorCode;
+    public String _lastExtractInfo = "<No Info>";
+
     public String _type = "";
     public String _nameMS = "";
+    public String _url = "";
     public String _nameOrig = "";
     public String _dateYYMMDD_Updated = "";
     public String _dateYYMMDD_Update_Attempted = "";
@@ -67,18 +96,19 @@ public class D_FundInfo {
         iw.println("Fund: " + _type + "." + _nameMS);
         iw.push();
         iw.println("url: " + _url);
-        iw.println("isValid: " + _isValid);
-        iw.println("errorCode: " + _errorCode);
-        iw.println("type: " + _type);
-        iw.println("nameMS: " + _nameMS);
-        iw.println("nameOrig: " + _nameOrig);
-        iw.println("dateYYMMDD_Updated: " + _dateYYMMDD_Updated);
-        iw.println("dateYYMMDD_Update_Attempted: " + _dateYYMMDD_Update_Attempted);
-        iw.println("msRating: " + _msRating);
-        iw.println("ppmNumber: " + _ppmNumber);
-        iw.println("categoryName: " + _categoryName);
-        iw.println("indexName: " + _indexName);
-        iw.println("currencyName: " + _currencyName);
+        iw.println("isV: " + _isValid);
+        iw.println("ec: " + _errorCode);
+        iw.println("lastExtractInfo: " + _lastExtractInfo);
+        iw.println("t: " + _type);
+        iw.println("nMS: " + _nameMS);
+        iw.println("nOrig: " + _nameOrig);
+        iw.println("updated: " + _dateYYMMDD_Updated);
+        iw.println("updateAttempted: " + _dateYYMMDD_Update_Attempted);
+        iw.println("rating: " + _msRating);
+        iw.println("ppm: " + _ppmNumber);
+        iw.println("category: " + _categoryName);
+        iw.println("index: " + _indexName);
+        iw.println("currency: " + _currencyName);
 
         iw.println("DPYears, length: " + _dpYears.size());
         iw.push();
@@ -106,6 +136,7 @@ public class D_FundInfo {
             }
         }
         iw.pop();
+        iw.pop();
     }
 
     public String toString() {
@@ -114,18 +145,26 @@ public class D_FundInfo {
         return iw.toString();
     }
 
-    public String getOneLiner() {
-        String dp1 = "none";
-        String dp2 = "none";
-        if (_dpDays.size() > 0) {
-            D_FundDPDay dpd = _dpDays.get(0);
-            dp1 = dpd._dateYYMMDD + "," + dpd._dateYYMMDD_Actual + "," + dpd._r1w;
-        }
-        if (_dpDays.size() > 1) {
-            D_FundDPDay dpd = _dpDays.get(_dpDays.size()-1);
-            dp2 = dpd._dateYYMMDD + "," + dpd._dateYYMMDD_Actual + "," + dpd._r1w;
-        }
+    public String toString(String nl) {
+        IndentWriter iw = new IndentWriter();
+        iw.setNewline(nl);
+        dumpInfo(iw);
+        return iw.toString();
+    }
 
+    private String dpday(int index) {
+        if (_dpDays.size() < index+1) {
+            return "null";
+        }
+        D_FundDPDay dpd = _dpDays.get(index);
+        String r1w = dpd._r1w == D_FundDPDay.FLOAT_NULL ? "null" : String.format("%.2f", dpd._r1w);
+        String r1m = dpd._r1m== D_FundDPDay.FLOAT_NULL ? "null" : String.format("%.2f", dpd._r1m);
+        return dpd._dateYYMMDD + "," + dpd._dateYYMMDD_Actual + "," + r1w + "," + r1m;
+    }
+    public String getDPDOneLiner() {
+        return dpday(0) + ", " + dpday(1) + ", " + dpday(2) + ", " + dpday(3);
+    }
+    public String getOneLiner() {
         StringBuffer strb = new StringBuffer();
         strb.append(getTypeAndName()
                 + ", ec: " + _errorCode
@@ -136,10 +175,12 @@ public class D_FundInfo {
                 + ", mr: " + _msRating
                 + ", p#: " + _ppmNumber
                 + ", cur: " + _currencyName
+                + ", 1:" + dpday(0)
+                + ", 2:" + dpday(1)
+                + ", 3:" + dpday(2)
+                + ", 4:" + dpday(3)
                 + ", in: " + _indexName
-                + ", cn: " + _categoryName
-                + ", dpd1: " + dp1
-                + ", dpd2: " + dp2);
+                + ", cn: " + _categoryName);
         return strb.toString();
     }
 
@@ -154,4 +195,14 @@ public class D_FundInfo {
         DataInputStream din = new DataInputStream(bin);
         return D_FundInfo_Serializer.decrunch_D_FundInfo(din);
     }
+
+    public String getLastestDPDate() {
+        if (_dpDays == null) return "null";
+        if (_dpDays.size() == 0) return "";
+        String date = _dpDays.get(0)._dateYYMMDD;
+        if (date == null) return "null_date";
+        return date;
+    }
+
+
 }

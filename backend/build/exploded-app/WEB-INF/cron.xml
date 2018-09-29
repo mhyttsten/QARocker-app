@@ -2,60 +2,31 @@
 <cronentries>
 
     <cron>
-        <url>/cronExtractNew</url>
-        <description>Cron_Extract_New</description>
-        <schedule>every 10 minutes from 05:40 to 08:30</schedule>
-        <timezone>Europe/Stockholm</timezone>
+        <url>/cronWork</url>
+        <description>Cron_Work</description>
+        <schedule>every day 12:05</schedule>
+        <timezone>America/Los_Angeles</timezone>
     </cron>
 
     <!--<cron>-->
-        <!--<url>/cronExtractNew</url>-->
-        <!--<description>Cron_Extract_New</description>-->
-        <!--<schedule>every 10 minutes from 11:05 to 08:14</schedule>-->
-        <!--<timezone>America/Los_Angeles</timezone>-->
+    <!--<url>/cronExtractNew</url>-->
+    <!--<description>Cron_Extract_New</description>-->
+    <!--<schedule>every 10 minutes from 13:50 to 14:50</schedule>-->
+    <!--<timezone>America/Los_Angeles</timezone>-->
     <!--</cron>-->
+
+    <cron>
+    <url>/cronExtractNew</url>
+    <description>Cron_Extract_New</description>
+    <schedule>every 10 minutes from 06:00 to 08:30</schedule>
+    <timezone>Europe/Stockholm</timezone>
+    </cron>
 
     <!--<cron>-->
-        <!--<url>/cronExtractNew</url>-->
-        <!--<description>Cron_Extract_New</description>-->
-        <!--<schedule>every wednesday 06:00</schedule>-->
-        <!--<timezone>America/Los_Angeles</timezone>-->
+    <!--<url>/cronExtractNew</url>-->
+    <!--<description>Cron_Extract_New</description>-->
+    <!--<schedule>every 10 minutes from 23:00 to 23:30</schedule>-->
+    <!--<timezone>America/Los_Angeles</timezone>-->
     <!--</cron>-->
-
-
-    <!--<cron>-->
-        <!--<url>/cronExtractNow</url>-->
-        <!--<description>Cron_Extract_Now</description>-->
-        <!--<schedule>every day 05:30</schedule>-->
-        <!--<timezone>Europe/Stockholm</timezone>-->
-    <!--</cron>-->
-
-    <!--<cron>-->
-        <!--<url>/cronExtract</url>-->
-        <!--<description>Cron_Extract</description>-->
-        <!--<schedule>every 10 minutes from 05:40 to 08:30</schedule>-->
-        <!--<timezone>Europe/Stockholm</timezone>-->
-    <!--</cron>-->
-
-    <!--<cron>-->
-        <!--<url>/cronMaintenance</url>-->
-        <!--<description>Cron_Maintenance</description>-->
-        <!--<schedule>every day 08:40</schedule>-->
-        <!--<timezone>Europe/Stockholm</timezone>-->
-    <!--</cron>-->
-    <!--<cron>-->
-        <!--<url>/cronStoreInFirebaseServlet</url>-->
-        <!--<description>Cron_StoreInFirebaseServlet</description>-->
-        <!--<schedule>every day 08:50</schedule>-->
-        <!--<timezone>Europe/Stockholm</timezone>-->
-    <!--</cron>-->
-
-    <!--<cron>-->
-        <!--<url>/cronWork</url>-->
-        <!--<description>Cron_Work</description>-->
-        <!--<schedule>every day 12:05</schedule>-->
-        <!--<timezone>America/Los_Angeles</timezone>-->
-    <!--</cron>-->
-
 
 </cronentries>

@@ -22,8 +22,9 @@
 </head>
 <body>
 
+This code has been retired
 <%
-    final Logger log = Logger.getLogger("JSP_FundURLData_Display");
+/*    final Logger log = Logger.getLogger("JSP_FundURLData_Display");
     final String TAG = MM.getClassName("JSP_FundURLData_Display");
 
     response.setContentType("text/html");
@@ -45,7 +46,6 @@
 if (argOperation != null && argOperation.equals(JSP_Constants.OP_COMMIT)) {
 String fundsWLF = request.getParameter(JSP_Constants.PARAM_NAME);
 String[] funds = fundsWLF.split("\n");
-
 
 List<String> fundsSaved = new ArrayList<>();
 List<String> fundsDups = new ArrayList<>();
@@ -93,15 +93,16 @@ for (String s: fundsDups) {
 else {
 %>
 
+<!--
 <form action="JSP_FundURLData_VGAddNames.jsp" method="POST" accept-charset="utf-8" id="usrform">
 <input type="hidden" name="<%=JSP_Constants.ARG_OPERATION%>" value="<%=JSP_Constants.OP_COMMIT%>">
-
 <br>
 <input type="submit" value="Add Vanguard Funds">
 </form>
 <textarea rows="50" cols="80" name="<%=JSP_Constants.PARAM_NAME%>" form="usrform"></textarea>
+-->
 
-<% } %>
+<% } */ %>
 
 </body>
 </html>

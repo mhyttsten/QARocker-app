@@ -1,6 +1,9 @@
 package com.pf.shared.datamodel;
 
+import com.pf.shared.utils.OTuple2G;
+
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -34,10 +37,10 @@ public class DB_FundInfo {
                 return o1.getTypeAndName().compareTo(o2.getTypeAndName());
             }
         });
-        rebuild();
+        rebuildHashMaps();
         _isInitialized = true;
     }
-    private static void rebuild() throws IOException {
+    private static void rebuildHashMaps() throws IOException {
         _fisByTypeHM = new HashMap<>();
         _fisByIndexHM = new HashMap<>();
         _indexes = new ArrayList<>();
@@ -69,6 +72,32 @@ public class DB_FundInfo {
     // ***********************************************************************
 
     //------------------------------------------------------------------------
+    public static byte[] crunch() throws Exception {
+        return  D_FundInfo_Serializer.crunchFundList(_fis);
+    }
+
+    //------------------------------------------------------------------------
+    public static byte[] addFundInfo(List<D_FundInfo> fisAdd) throws Exception {
+        for (D_FundInfo fiAdd: fisAdd) {
+            for (D_FundInfo fi : _fis) {
+                if (fi.getTypeAndName().equals(fiAdd.getTypeAndName())) {
+                    throw new IOException("Cannot add fund already existing: " + fi.getTypeAndName() + ", attempted to add: " + fiAdd.getTypeAndName());
+                }
+            }
+        }
+        _fis.addAll(fisAdd);
+        _fis.sort(new Comparator<D_FundInfo>() {
+            @Override
+            public int compare(D_FundInfo o1, D_FundInfo o2) {
+                return o1.getTypeAndName().compareTo(o2.getTypeAndName());
+            }
+        });
+        rebuildHashMaps();
+        byte[] data = D_FundInfo_Serializer.crunchFundList(_fis);
+        return data;
+    }
+
+    //------------------------------------------------------------------------
     public static byte[] addFundInfo(D_FundInfo fiAdd) throws Exception {
         for (D_FundInfo fi: _fis) {
             if (fi.getTypeAndName().equals(fiAdd.getTypeAndName())) {
@@ -82,7 +111,7 @@ public class DB_FundInfo {
                 return o1.getTypeAndName().compareTo(o2.getTypeAndName());
             }
         });
-        rebuild();
+        rebuildHashMaps();
         byte[] data = D_FundInfo_Serializer.crunchFundList(_fis);
         return data;
     }
@@ -103,8 +132,7 @@ public class DB_FundInfo {
         if (!found) {
             throw new IOException("Fund " + fiDel.getTypeAndName() + " did not exist, so cannot be deleted");
         }
-        log.info("Saving DB again");
-        rebuild();
+        rebuildHashMaps();
         byte[] data = D_FundInfo_Serializer.crunchFundList(_fis);
         return data;
     }
@@ -121,8 +149,23 @@ public class DB_FundInfo {
     public static List<D_FundInfo> getAllFundInfos() {
         return _fis;
     }
+
+    //------------------------------------------------------------------------
     public static List<String> getAllIndexes() { return _indexes; }
     public static List<D_FundInfo> getFundInfosByIndex(String index) { return _fisByIndexHM.get(index); }
+    public static List<OTuple2G<String, Integer>> getIndexesByFundCount() {
+        List<OTuple2G<String, Integer>> r = new ArrayList<>();
+        for (String s: _indexes) {
+            r.add(new OTuple2G<String, Integer>(s, getFundInfosByIndex(s).size()));
+        }
+        Collections.sort(r, new Comparator<OTuple2G<String, Integer>>() {
+            @Override
+            public int compare(OTuple2G<String, Integer> o1, OTuple2G<String, Integer> o2) {
+                return -(o1._o2 - o2._o2);
+            }
+        });
+        return r;
+    }
 
     //------------------------------------------------------------------------
     public static List<D_FundInfo> getFundInfosByType(String type) {
@@ -165,25 +208,38 @@ public class DB_FundInfo {
     }
 
     //------------------------------------------------------------------------
-    public static D_FundInfo getFundInfosByTypeAndName(String type, String name) throws IOException {
-        List<D_FundInfo> l = _fisByTypeHM.get(type);
+    public static D_FundInfo getFundInfosByTypeDotName(String typeDotName) throws IOException {
+        List<D_FundInfo> l = _fis;
         for (D_FundInfo fi: l) {
-            if (fi._nameMS.equals(name)) {
+            if ((fi._type + "." + fi._nameMS).equals(typeDotName)) {
                 return fi;
             }
         }
-        throw new IOException("Did not find name: " + type + "." + name);
+        return null;
     }
 
     //------------------------------------------------------------------------
-    public static D_FundInfo getFundInfosByTypeAndURL(String type, String url) throws IOException {
+    public static D_FundInfo getFundInfosByTypeAndName(String type, String name, boolean useNameOrig) {
+        List<D_FundInfo> l = _fisByTypeHM.get(type);
+        for (D_FundInfo fi: l) {
+            if (!useNameOrig && fi._nameMS.equals(name)) {
+                return fi;
+            } else if (useNameOrig && fi._nameOrig.equals(name)) {
+                return fi;
+            }
+        }
+        return null;
+    }
+
+    //------------------------------------------------------------------------
+    public static D_FundInfo getFundInfosByTypeAndURL(String type, String url) {
         List<D_FundInfo> l = _fisByTypeHM.get(type);
         for (D_FundInfo fi: l) {
             if (fi._url.equals(url)) {
                 return fi;
             }
         }
-        throw new IOException("Did not find name: " + type + ", and url: " + url);
+        return null;
     }
 
 }

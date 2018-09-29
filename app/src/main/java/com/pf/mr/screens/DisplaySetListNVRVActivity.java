@@ -72,6 +72,7 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
 
         FirebaseCrash.log(this.getClass().getSimpleName() + ".onCreate");
         Log.e(TAG, "DisplaySetListNVRVActivity.onCreate");
+        Misc.executedAtAppStart();
 
         setContentView(R.layout.activity_display_set_list_nvrv);
 

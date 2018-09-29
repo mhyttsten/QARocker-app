@@ -26,7 +26,7 @@ public class D_FundDPYear {
 	}
 	
 	public void dumpInfo(IndentWriter iw) {
-		iw.print("DPYear: " + _year
+		iw.print(_year
 				+ "[" + D_FundDPDay.f2s(_resultFund)
 				+ "," + D_FundDPDay.f2s(_resultCategory)
 				+ "," + D_FundDPDay.f2s(_resultIndex) + "]");

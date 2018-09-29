@@ -1,0 +1,58 @@
+
+- App: Make it not crash on startup
+- App: Update all portfolios to be up to date
+
+- App: Add stats to main screen
+- App: Specific screens - add ability to select suggestion filter (top: this week, 1, 2, 3 months)
+
+- Fix invalids
+
+- Update SEB, PPM, VGD, SPP fundlists + provide yearly process
+
+- Update app
+  + Mobile notifications
+  + Stats about your investments
+  + Showing the leaders (do average in case missing R1W)
+
+--------
+
+- Adjust r1w based on r1m
+- Work with indexes?
+
+
+Ryssland
+China
+Japan
+Europa
+USA
+Sverige
+Gold
+Healthcare
+Biotech
+Technology
+Latinamerika
+Indien
+BRIC
+Asien ex Japan
+Japan
+
+
+------------------------------------------------------------------------------
+VBO Buy and Sell
+- Trade Vanguard funds in your SDBO account
+  OK: Drop down list of funds (that can be saved to HTML)
+- Trade non-Vanguard funds via FundAccess
+  Ok: Drop down list of fund companies
+  When selecting company you get another list of their funds
+- Trade Vanguard ETFs (and non-Vanguard ETFs)
+  Not Ok: You have to specify symbol (where do we get such list?)
+- Trade stocks and listed securities
+  Not Ok: You have to specify symbol (where do we get such list?)
+- Trade options
+  Not Ok: You don't have access
+- Trade bounds or CDs
+  Not Ok: I don't even know what this is
+
+Other funds: https://personal.vanguard.com/us/secfunds/other/bytype?FundFamilyId=6082&view=Name&pageNumber=2
+Morningstar: https://www.morningstar.com/funds/XNAS/VTWSX/betaquote.html
+Vanguard Mutual Funds: https://investor.vanguard.com/mutual-funds/list?view=avgann&sort=name&sortorder=asc#/mutual-funds/name/month-end-returns

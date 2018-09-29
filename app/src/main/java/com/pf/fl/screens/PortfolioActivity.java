@@ -16,9 +16,7 @@ import android.widget.CompoundButton;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.pf.fl.datamodel.FL_DB;
+import com.pf.fl.datamodel.DB_FundInfo_UI;
 import com.pf.mr.R;
 import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.datamodel.D_Portfolio;
@@ -66,7 +64,7 @@ public class PortfolioActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mType = D_FundInfo.TYPE_SEB;
-                mPortfolio = FL_DB.portfoliosHM.get(mType);
+                mPortfolio = DB_FundInfo_UI.portfoliosHM.get(mType);
                 mRVAdapter.initializeList(mRV, mType, mPortfolio);
             }
         });
@@ -75,7 +73,7 @@ public class PortfolioActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mType = D_FundInfo.TYPE_VANGUARD;
-                mPortfolio = FL_DB.portfoliosHM.get(mType);
+                mPortfolio = DB_FundInfo_UI.portfoliosHM.get(mType);
                 mRVAdapter.initializeList(mRV, mType, mPortfolio);
             }
         });
@@ -84,7 +82,7 @@ public class PortfolioActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mType = D_FundInfo.TYPE_PPM;
-                mPortfolio = FL_DB.portfoliosHM.get(mType);
+                mPortfolio = DB_FundInfo_UI.portfoliosHM.get(mType);
                 mRVAdapter.initializeList(mRV, mType, mPortfolio);
             }
         });
@@ -93,28 +91,28 @@ public class PortfolioActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mType = D_FundInfo.TYPE_SPP;
-                mPortfolio = FL_DB.portfoliosHM.get(mType);
+                mPortfolio = DB_FundInfo_UI.portfoliosHM.get(mType);
                 mRVAdapter.initializeList(mRV, mType, mPortfolio);
             }
         });
         if (rbSEB.isChecked()) {
             mType = D_FundInfo.TYPE_SEB;
-            mPortfolio = FL_DB.portfoliosHM.get(mType);
+            mPortfolio = DB_FundInfo_UI.portfoliosHM.get(mType);
             mRVAdapter.initializeList(mRV, mType, mPortfolio);
         }
         if (rbSPP.isChecked()) {
             mType = D_FundInfo.TYPE_SPP;
-            mPortfolio = FL_DB.portfoliosHM.get(mType);
+            mPortfolio = DB_FundInfo_UI.portfoliosHM.get(mType);
             mRVAdapter.initializeList(mRV, mType, mPortfolio);
         }
         if (rbVGD.isChecked()) {
             mType = D_FundInfo.TYPE_VANGUARD;
-            mPortfolio = FL_DB.portfoliosHM.get(mType);
+            mPortfolio = DB_FundInfo_UI.portfoliosHM.get(mType);
             mRVAdapter.initializeList(mRV, mType, mPortfolio);
         }
         if (rbPPM.isChecked()) {
             mType = D_FundInfo.TYPE_PPM;
-            mPortfolio = FL_DB.portfoliosHM.get(mType);
+            mPortfolio = DB_FundInfo_UI.portfoliosHM.get(mType);
             mRVAdapter.initializeList(mRV, mType, mPortfolio);
         }
 
@@ -125,13 +123,13 @@ public class PortfolioActivity extends AppCompatActivity {
             public void onClick(View v) {
                 D_Portfolio f = new D_Portfolio();
                 f._name = mType;
-                for (FL_DB.CheckableFund cf: h.rvAdapter.mFunds) {
+                for (DB_FundInfo_UI.CheckableFund cf: h.rvAdapter.mFunds) {
                     if (cf.isChecked) {
                         f._urls.add(cf.fund._url);
                     }
                 }
-                FL_DB.portfoliosHM.put(f._name, f);
-                FL_DB.savePortfolios(PortfolioActivity.this);
+                DB_FundInfo_UI.portfoliosHM.put(f._name, f);
+                DB_FundInfo_UI.savePortfolios(PortfolioActivity.this);
                 finish();
             }
         });
@@ -174,7 +172,7 @@ public class PortfolioActivity extends AppCompatActivity {
 
     private static class MyRVAdapter extends RecyclerView.Adapter<MyRVAdapter.MyRVViewHolder> {
         private AppCompatActivity mParent;
-        public List<FL_DB.CheckableFund> mFunds = new ArrayList<>();
+        public List<DB_FundInfo_UI.CheckableFund> mFunds = new ArrayList<>();
         private D_Portfolio mPortfolio;
 
         private static class MyRVViewHolder extends RecyclerView.ViewHolder {
@@ -195,8 +193,8 @@ public class PortfolioActivity extends AppCompatActivity {
 
             int oldCount = mFunds.size();
             mPortfolio = p;
-            mFunds = FL_DB.cfundsByTypeHM.get(kind);
-            for (FL_DB.CheckableFund f : mFunds) {
+            mFunds = DB_FundInfo_UI.cfundsByTypeHM.get(kind);
+            for (DB_FundInfo_UI.CheckableFund f : mFunds) {
                 for (String url: mPortfolio._urls) {
                     if (url.equals(f.fund._url)) {
                         Log.i(TAG, "*** Setting to checked: " + f.fund._nameMS);
@@ -252,7 +250,7 @@ public class PortfolioActivity extends AppCompatActivity {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     Log.i(TAG, "...onCheckedChanged to: " + isChecked + " for position: " + position);
-                    FL_DB.CheckableFund cf = mFunds.get(position);
+                    DB_FundInfo_UI.CheckableFund cf = mFunds.get(position);
                     cf.isChecked = isChecked;
                 }
             });

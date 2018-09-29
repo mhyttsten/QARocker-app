@@ -111,68 +111,68 @@ public class DPSequenceAnalyzer {
 
     public static void createList() {
 
-        FL_DB.listContent.mHeaderAndBody.clear();
+        DB_FundInfo_UI.listContent.mHeaderAndBody.clear();
         DPSequenceAnalyzer dpsa = null;
         ListImpl.HeaderAndBody hb = null;
         List<DPSequenceAnalyzer> l = null;
         int end = -1;
 
-        FL_DB.listContent.mTitle = "Show Changes";
+        DB_FundInfo_UI.listContent.mTitle = "Show Changes";
 
         // Best performing funds
         hb = new ListImpl.HeaderAndBody("*** Best Funds", "");
-        FL_DB.listContent.mHeaderAndBody.add(hb);
+        DB_FundInfo_UI.listContent.mHeaderAndBody.add(hb);
         l = getBestFunds(0, 2);
         end = l.size() > 5 ? 5 : l.size();
         for (int i=0; i < end; i++) {
             dpsa = l.get(i);
             hb = new ListImpl.HeaderAndBody(dpsa._fund.getName(), String.format("%.2f", dpsa._bodyTotal));
-            FL_DB.listContent.mHeaderAndBody.add(hb);
+            DB_FundInfo_UI.listContent.mHeaderAndBody.add(hb);
         }
 
 //        // List of best indexes
 //        hb = new ListImpl.HeaderAndBody("", "");
-//        FL_DB.listContent.mHeaderAndBody.add(hb);
+//        DB_FundInfo_UI.listContent.mHeaderAndBody.add(hb);
 //        hb = new ListImpl.HeaderAndBody("*** Best Indexes", "");
-//        FL_DB.listContent.mHeaderAndBody.add(hb);
+//        DB_FundInfo_UI.listContent.mHeaderAndBody.add(hb);
 //        l = getBestIndexes(0, 2);
 //        end = l.size() > 5 ? 5 : l.size();
 //        for (int i=0; i < end; i++) {
 //            dpsa = l.get(i);
 //            hb = new ListImpl.HeaderAndBody(dpsa._fund.getName(), String.format("%.2f", dpsa._bodyTotal));
-//            FL_DB.listContent.mHeaderAndBody.add(hb);
+//            DB_FundInfo_UI.listContent.mHeaderAndBody.add(hb);
 //        }
 
 //        // List of fund change (positive)
 //        hb = new ListImpl.HeaderAndBody("", "");
-//        FL_DB.listContent.mHeaderAndBody.add(hb);
+//        DB_FundInfo_UI.listContent.mHeaderAndBody.add(hb);
 //        hb = new ListImpl.HeaderAndBody("*** Best Fund Change", "");
-//        FL_DB.listContent.mHeaderAndBody.add(hb);
+//        DB_FundInfo_UI.listContent.mHeaderAndBody.add(hb);
 //        l = getBestFundChange(2, -1);
 //        end = l.size() > 5 ? 5 : l.size();
 //        for (int i=0; i < end; i++) {
 //            dpsa = l.get(i);
 //            hb = new ListImpl.HeaderAndBody(dpsa._fund.getName(), String.format("%.2f", dpsa._bodyTotal));
-//            FL_DB.listContent.mHeaderAndBody.add(hb);
+//            DB_FundInfo_UI.listContent.mHeaderAndBody.add(hb);
 //        }
 //
 //        // List of fund change (positive)
 //        hb = new ListImpl.HeaderAndBody("", "");
-//        FL_DB.listContent.mHeaderAndBody.add(hb);
+//        DB_FundInfo_UI.listContent.mHeaderAndBody.add(hb);
 //        hb = new ListImpl.HeaderAndBody("*** Best Index Change", "");
-//        FL_DB.listContent.mHeaderAndBody.add(hb);
+//        DB_FundInfo_UI.listContent.mHeaderAndBody.add(hb);
 //        l = getBestIndexChange(2, -1);
 //        end = l.size() > 5 ? 5 : l.size();
 //        for (int i=0; i < end; i++) {
 //            dpsa = l.get(i);
 //            hb = new ListImpl.HeaderAndBody(dpsa._fund.getName(), String.format("%.2f", dpsa._bodyTotal));
-//            FL_DB.listContent.mHeaderAndBody.add(hb);
+//            DB_FundInfo_UI.listContent.mHeaderAndBody.add(hb);
 //        }
     }
 
     private static List<DPSequenceAnalyzer> getBestFunds(int start, int end) {
         List<DPSequenceAnalyzer> r = new ArrayList<>();
-        List<DM_Fund> funds = FL_DB.getFunds();
+        List<DM_Fund> funds = DB_FundInfo_UI.getFunds();
         for (DM_Fund f: funds) {
             DPSequenceAnalyzer dpsa = new DPSequenceAnalyzer();
             dpsa.initialize(f, start, end);
@@ -189,8 +189,8 @@ public class DPSequenceAnalyzer {
 
 //    private static List<DPSequenceAnalyzer> getBestIndexes(int start, int end) {
 //        List<DPSequenceAnalyzer> r = new ArrayList<>();
-//        List<DM_Index> indexes = FL_DB.
-//        List<DM_Fund> funds = FL_DB.getFunds();
+//        List<DM_Index> indexes = DB_FundInfo_UI.
+//        List<DM_Fund> funds = DB_FundInfo_UI.getFunds();
 //        for (DM_Fund f: funds) {
 //            DPSequenceAnalyzer dpsa = new DPSequenceAnalyzer();
 //            dpsa.initialize(f, start, end);

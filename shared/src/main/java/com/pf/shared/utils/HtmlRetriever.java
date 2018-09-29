@@ -14,28 +14,34 @@ public class HtmlRetriever {
 	}
 
     public static byte[] htmlGet(
-            IndentWriter iw,
+            IndentWriter iwd,
             String url,
             int retryIntervalInMS, int retryCount) throws IOException {
-        iw.println("FLOps1_Ext1_HTMLGet.htmlGet, entered with URL: " + url + "retryIntervalMS: " + retryIntervalInMS + ", retryCount: " + retryCount);
-        byte[] result = htmlGetImpl(iw, url, retryIntervalInMS, retryCount);
+        iwd.println("HtmlRetriever, entered with URL: " + url + ", retryIntervalMS: " + retryIntervalInMS + ", retryCount: " + retryCount);
+		byte[] result = htmlGetImpl(iwd, url, retryIntervalInMS, retryCount);
         if (result != null) {
-            iw.println("Returning: " + result.length + " number of bytes");
+            iwd.println("Returning: " + result.length + " number of bytes");
         } else {
-            iw.println("Returning null");
+            iwd.println("Returning null");
         }
         return result;
     }
 
 	private static byte[] htmlGetImpl(
-			IndentWriter iw,
+			IndentWriter iwd,
 			String url,
 			int retryIntervalInMS, int retryCount) throws IOException {
 
 		byte[] pageContent = null;
 		do {
 			try {
+				iwd.println("Now issuing URL get network call, retryCount: " + retryCount + ", retryInterval: " + retryIntervalInMS);
 				pageContent = MM.getURLContentBA(url);
+				if (pageContent != null) {
+					iwd.println("...Done successfully, returning: " + pageContent.length + " bytes");
+				} else {
+					iwd.println("...Successful return but result data was null");
+				}
 				return pageContent;
 			} catch(Exception exc) {
 				log.warning("*****************************************************\n" +
@@ -44,10 +50,12 @@ public class HtmlRetriever {
 						"    Retry count: " + retryCount + "\n" +
 						"    Exception: " + exc.toString() + "\n" +
 						"    " + MM.getStackTraceString(exc));
-				iw.println("FLMain, exception caught while extracting the HTML pages\n" +
+
+				String s = "FLMain, exception caught while extracting the HTML pages\n" +
 						"   Exception error: " + exc.toString() + "\n" +
 						"  " + MM.getStackTraceString(exc) + "\n" +
-						"   Retry count: " + retryCount);
+						"   Retry count: " + retryCount;
+				iwd.println(s);
 				retryCount--;
 				if (retryCount == 0) {
 					return null;
