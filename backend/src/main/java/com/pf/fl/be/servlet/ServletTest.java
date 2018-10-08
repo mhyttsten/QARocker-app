@@ -57,20 +57,52 @@ public class ServletTest extends HttpServlet {
         log.info("*** processFund started");
 
         byte[] fundInfoBA = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
-        DB_FundInfo.initialize(fundInfoBA);
+        DB_FundInfo.initialize(fundInfoBA, true);
         List<D_FundInfo> fis = DB_FundInfo.getAllFundInfos();
 
         int count = 0;
-        for (D_FundInfo fi: fis) {
-            if (fi._errorCode != D_FundInfo.IC_NO_ERROR
-                && fi._isValid) {
-                fi._isValid = false;
+        for (D_FundInfo fi : fis) {
+            count++;
+        }
+//        byte[] data = D_FundInfo_Serializer.crunchFundList(fis);
+//        GCSWrapper.gcsWriteFile(Constants.FUNDINFO_DB_MASTER_BIN, data);
+//        log.info("*** processFund done, updated: " + count);
+    }
+
+    public void processVGDNameChange() throws Exception {
+        log.info("*** processFund started");
+
+        byte[] fundInfoBA = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
+        DB_FundInfo.initialize(fundInfoBA, true);
+        List<D_FundInfo> fis = DB_FundInfo.getAllFundInfos();
+        List<D_FundInfo> fisVGD = DB_FundInfo.getFundInfosByType(D_FundInfo.TYPE_VANGUARD);
+
+        int count = 0;
+        for (D_FundInfo fi: fisVGD) {
+            if (!fi._type.equals(D_FundInfo.TYPE_VANGUARD))
+                throw new AssertionError("Not VGD type");
+            int io1 = fi._nameMS.lastIndexOf("(");
+            int io2 = fi._nameMS.lastIndexOf(")");
+            if (io1 == -1 || io2 == -1 || io1 + 1 >= fi._nameMS.length()) {
+                MM.writeBrowser(_resp.getOutputStream(),"Could not find ticker fog: " + fi._nameMS);
+                return;
+            }
+            String ticker = fi._nameMS.substring(io1+1, io2);
+            if (ticker.startsWith("V")) {
                 count++;
+                if (fi._nameMS.trim().startsWith("Vanguard")) {
+                    MM.writeBrowser(_resp.getOutputStream(), "*** Already started with Vanguard: " + fi._nameMS + "<br>");
+                } else {
+                    fi._nameMS = "Vanguard " + fi._nameMS;
+                    MM.writeBrowser(_resp.getOutputStream(), "New name: " + fi._nameMS + "<br>");
+                }
             }
         }
-        byte[] data = D_FundInfo_Serializer.crunchFundList(fis);
-        GCSWrapper.gcsWriteFile(Constants.FUNDINFO_DB_MASTER_BIN, data);
-        log.info("*** processFund done, updated: " + count);
+        MM.writeBrowser(_resp.getOutputStream(), "Done with: " + count + " funds");
+
+//        byte[] data = D_FundInfo_Serializer.crunchFundList(fis);
+//        GCSWrapper.gcsWriteFile(Constants.FUNDINFO_DB_MASTER_BIN, data);
+//        log.info("*** processFund done, updated: " + count);
     }
 
 //    public void getURL() throws Exception {

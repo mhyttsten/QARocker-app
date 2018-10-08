@@ -92,7 +92,7 @@ public class FundList_Validator_Fixer {
         };
 
         byte[] fundInfoBA = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
-        DB_FundInfo.initialize(fundInfoBA);
+        DB_FundInfo.initialize(fundInfoBA, true);
         List<D_FundInfo> fis = DB_FundInfo.getAllFundInfos();
 
         log.info("*** About to insert entries, size before: " + fis.size());
@@ -144,7 +144,7 @@ public class FundList_Validator_Fixer {
         };
 
         byte[] fundInfoBA = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
-        DB_FundInfo.initialize(fundInfoBA);
+        DB_FundInfo.initialize(fundInfoBA, true);
         List<D_FundInfo> fis = DB_FundInfo.getAllFundInfos();
 
         int index = 0;
@@ -201,7 +201,7 @@ public class FundList_Validator_Fixer {
         };
 
         byte[] fundInfoBA = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
-        DB_FundInfo.initialize(fundInfoBA);
+        DB_FundInfo.initialize(fundInfoBA, true);
         List<D_FundInfo> fis = DB_FundInfo.getAllFundInfos();
         int index = 0;
         int total_updated = 0;

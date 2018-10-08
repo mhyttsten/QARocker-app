@@ -43,9 +43,10 @@ public class MM {
     private static final String TAG = "MM";
 
 	public static void writeBrowser(OutputStream out, String str, String enc) throws Exception {
-        out.write(str.getBytes(Constants.ENCODING_ISO));
+        out.write((str + "<br").getBytes(Constants.ENCODING_ISO));
 	}
 	public static void writeBrowser(OutputStream out, String str) throws Exception {
+//		out.write((str + "<br").getBytes(Constants.ENCODING_FILE_WRITE));
 		out.write(str.getBytes(Constants.ENCODING_FILE_WRITE));
 	}
 

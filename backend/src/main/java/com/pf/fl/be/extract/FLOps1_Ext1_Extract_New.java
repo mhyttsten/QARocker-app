@@ -97,7 +97,7 @@ public class FLOps1_Ext1_Extract_New {
 
         // Get all Funds and Classify them
         byte[] fundInfoBA = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
-        DB_FundInfo.initialize(fundInfoBA);
+        DB_FundInfo.initialize(fundInfoBA, true);
         List<D_FundInfo> fiAllFunds = DB_FundInfo.getAllFundInfos();
 
         D_FundInfo_Validator fiv = new D_FundInfo_Validator(fiAllFunds);

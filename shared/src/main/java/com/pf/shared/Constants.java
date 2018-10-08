@@ -10,6 +10,7 @@ public class Constants {
 
     public static final String TIMEZONE_STOCKHOLM = "Europe/Stockholm";
     public static final String TIMEZONE_NEW_YORK  = "America/New_York";
+    public static final String TIMEZONE_LOS_ANGELES  = "America/Los_Angeles";
 
     public static final String ENCODING_HTTP_READ = "UTF-8";
     public static final String ENCODING_FILE_READ = "UTF-8";

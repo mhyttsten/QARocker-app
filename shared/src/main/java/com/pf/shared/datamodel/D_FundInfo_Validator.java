@@ -44,7 +44,6 @@ public class D_FundInfo_Validator {
             _error = true;
         }
 
-
         String last = null;
         for (D_FundDPDay dp: fi._dpDays) {
             String s = dp._dateYYMMDD;

@@ -22,8 +22,12 @@ public class DB_FundInfo {
     private static Map<String, List<D_FundInfo>> _fisByIndexHM;
 
     //------------------------------------------------------------------------
-    public static void initialize(byte[] fundInfoData) throws IOException {
+    public static void initialize(byte[] fundInfoData, boolean forceReinitialization) throws IOException {
         log.info("D_FundInfo.initialize");
+        if (forceReinitialization) {
+            _isInitialized = false;
+        }
+
         if (_isInitialized) {
             log.info("...already initialized, returning");
             return;

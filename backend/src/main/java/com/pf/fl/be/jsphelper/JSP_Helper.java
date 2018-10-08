@@ -38,7 +38,7 @@ public class JSP_Helper {
         byte[] data = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
         log.info("...reading data: " + data.length + " bytes");
         DB_FundInfo._isInitialized = false;
-        DB_FundInfo.initialize(data);
+        DB_FundInfo.initialize(data, false);
         _isInitialized = true;
     }
 
@@ -59,7 +59,7 @@ public class JSP_Helper {
         }
 
         byte[] fundInfoBA = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
-        DB_FundInfo.initialize(fundInfoBA);
+        DB_FundInfo.initialize(fundInfoBA, false);
         List<D_FundInfo> fis = new ArrayList<>();
         if (fundTypeAndName != null && fundTypeAndName.trim().length() > 0) {
             D_FundInfo fi = DB_FundInfo.getFundInfosByTypeDotName(fundTypeAndName);
@@ -104,7 +104,7 @@ public class JSP_Helper {
 
         iwd.println("Now reading DB");
         byte[] fundInfoBA = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
-        DB_FundInfo.initialize(fundInfoBA);
+        DB_FundInfo.initialize(fundInfoBA, false);
         D_FundInfo fi = DB_FundInfo.getFundInfosByTypeDotName(fundTypeAndName);
         if(fi == null) {
             iwd.println("Could not find the fund in DB: " + fundTypeAndName);

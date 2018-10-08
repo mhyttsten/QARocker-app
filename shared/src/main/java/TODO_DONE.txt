@@ -1,4 +1,7 @@
 
+- Changed true Vanguard funds to start with 'Vanguard'
+  (we could do this more accurately at extraction with VGD_GetFundName)
+
 - Yearly process for fund db
    + Vanguard & FundAccess funds
 

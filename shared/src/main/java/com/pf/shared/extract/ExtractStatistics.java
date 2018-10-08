@@ -199,7 +199,7 @@ public class ExtractStatistics {
         iw.println("Funds in DB");
         iw.println("...Total: " + es_now._fiAllFunds.size());
         iw.println("...Invalid: " + es_now._fiInvalids.size());
-        iw.println("...Error: " + es_now._fiErrors.size());
+        iw.println("...Error: " + es_now._fiErrors.size() + (es_now._fiErrors.size() > 0 ? ", ***UNEXPECTED***": ""));
         iw.println("Extracted: " + es_now._fiExtracted.size() + ", out of: " + es_now._fiExtractable);
         iw.println("...Thursday: " + es_now._fiExtracted_Thu.size());
         iw.println("...Friday:   " + es_now._fiExtracted_Fri.size());
@@ -215,6 +215,9 @@ public class ExtractStatistics {
         printListStr(iw, "Invalids", es_now._fiInvalids, 10000);
 
         iw.println();
+        if (es_now._fiErrors.size() > 0) {
+            iw.println("*** ERRORS EXISTED UNEXPECTEDLY ***");
+        }
         printListStr(iw, "Errors", es_now._fiErrors, 10000);
 
         int limit = 4;

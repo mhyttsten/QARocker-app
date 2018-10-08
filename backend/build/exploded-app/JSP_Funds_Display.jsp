@@ -1,4 +1,3 @@
-<%@ page import="static com.googlecode.objectify.ObjectifyService.ofy" %>
 <%@ page import="com.pf.fl.be.extract.GCSWrapper" %>
 <%@ page import="com.pf.shared.datamodel.DB_FundInfo" %>
 <%@ page import="com.pf.fl.be.jsphelper.JSP_Helper" %>

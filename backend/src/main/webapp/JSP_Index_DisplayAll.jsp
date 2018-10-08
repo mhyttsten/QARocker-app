@@ -1,4 +1,3 @@
-<%@ page import="static com.googlecode.objectify.ObjectifyService.ofy" %>
 <%@ page import="com.pf.fl.be.jsphelper.JSP_Helper" %>
 <%@ page import="com.pf.fl.be.jsphelper.JSP_Constants" %>
 <%@ page import="com.pf.fl.be.extract.GCSWrapper" %>

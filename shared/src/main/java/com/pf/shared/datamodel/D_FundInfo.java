@@ -167,6 +167,7 @@ public class D_FundInfo {
     public String getOneLiner() {
         StringBuffer strb = new StringBuffer();
         strb.append(getTypeAndName()
+                + ", url: " + _url
                 + ", ec: " + _errorCode
                 + ", iv: " + _isValid
                 + ", du: " + _dateYYMMDD_Updated

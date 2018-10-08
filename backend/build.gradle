@@ -23,14 +23,20 @@ targetCompatibility = JavaVersion.VERSION_1_7
 
 dependencies {
     appengineSdk 'com.google.appengine:appengine-java-sdk:1.9.60'
-    compile 'com.google.appengine:appengine-api-1.0-sdk:1.9.60'
-    compile 'com.google.cloud:google-cloud-storage:1.15.0'
-    compile 'com.google.cloud:google-cloud-core:1.15.0'
-//    compile 'com.google.appengine.tools:appengine-gcs-client:+'
-    compile 'javax.servlet:servlet-api:2.5'
-    compile 'com.googlecode.objectify:objectify:6.0a1'
-    compile 'javax.persistence:persistence-api:1.0.2'
-    compile project(':shared')
+    implementation 'com.google.appengine:appengine-api-1.0-sdk:1.9.60'
+    implementation 'com.google.cloud:google-cloud-storage:1.15.0'
+    implementation 'com.google.cloud:google-cloud-core:1.15.0'
+    implementation 'javax.servlet:servlet-api:2.5'
+
+//    appengineSdk 'com.google.appengine:appengine-java-sdk:1.9.60'
+//    implementation 'com.google.appengine:appengine-api-1.0-sdk:1.9.60'
+//    implementation 'com.google.cloud:google-cloud-storage:1.15.0'
+//    implementation 'com.google.cloud:google-cloud-core:1.15.0'
+////    implementation 'com.google.appengine.tools:appengine-gcs-client:+'
+//    implementation 'javax.servlet:servlet-api:2.5'
+//    implementation 'com.googlecode.objectify:objectify:6.0a1'
+//    implementation 'javax.persistence:persistence-api:1.0.2'
+    implementation project(':shared')
 }
 
 appengine {

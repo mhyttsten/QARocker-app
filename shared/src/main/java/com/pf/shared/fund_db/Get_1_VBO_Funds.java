@@ -5,6 +5,7 @@ import com.pf.shared.datamodel.DB_FundInfo;
 import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.datamodel.D_FundInfo_Validator;
 import com.pf.shared.extract.ExtractFromHTML_Helper;
+import com.pf.shared.utils.HtmlRetriever;
 import com.pf.shared.utils.IndentWriter;
 import com.pf.shared.utils.OTuple2G;
 import com.pf.shared.utils.MM;
@@ -69,6 +70,7 @@ public class Get_1_VBO_Funds {
 
     //------------------------------------------------------------------------
     public static void mainImpl(String[] args) throws Exception {
+
         // Get all the files to analyze
         List<File> tmpList = new ArrayList<>();
         String error = MM.fileList(tmpList, DIR, false);
@@ -86,7 +88,7 @@ public class Get_1_VBO_Funds {
 
         // Get fund database
         byte[] fileDBDataBA = MM.fileReadFrom(DIR + File.separator + DB_FILENAME);
-        DB_FundInfo.initialize(fileDBDataBA);
+        DB_FundInfo.initialize(fileDBDataBA, true);
 
         // Go through each files HTML content
         List<D_FundInfo> fisFiles = new ArrayList<>();
@@ -314,3 +316,11 @@ public class Get_1_VBO_Funds {
     }
 
 }
+
+/*
+ETF
+https://performance.morningstar.com/perform/Performance/etf/trailing-total-returns.action?&t=TICKER&region=usa&culture=en-US&cur=&ops=clear&s=0P00001MJB&ndec=2&ep=true&align=d&annlz=true&comparisonRemove=false&loccat=&taxadj=&benchmarkSecId=&benchmarktype=
+
+Mutual fund
+https://performance.morningstar.com/perform/Performance/fund/trailing-total-returns.action?&t=XNAS:TICKER&region=usa&culture=en-US&cur=&ops=clear&s=0P00001MJB&ndec=2&ep=true&align=d&annlz=true&comparisonRemove=false&loccat=&taxadj=&benchmarkSecId=&benchmarktype=
+*/

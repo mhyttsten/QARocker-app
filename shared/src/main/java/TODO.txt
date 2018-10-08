@@ -1,10 +1,11 @@
 
-- App: Make it not crash on startup
-- App: Update all portfolios to be up to date
-
+- App: Analyzer - fill missing stats
 - App: Add stats to main screen
-- App: Specific screens - add ability to select suggestion filter (top: this week, 1, 2, 3 months)
+- App: Analyzer - Calculate winners on a time period
+- App: Analyzer - Get it into UI
 
+
+- App: Make it not crash on startup
 - Fix invalids
 
 - Update SEB, PPM, VGD, SPP fundlists + provide yearly process
