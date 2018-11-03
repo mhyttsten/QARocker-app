@@ -1,26 +1,20 @@
-
-- App: Analyzer - fill missing stats
-- App: Add stats to main screen
-- App: Analyzer - Calculate winners on a time period
-- App: Analyzer - Get it into UI
-
-
-- App: Make it not crash on startup
+- App: Create startup screen with MemoryRocker & FundLifter split screen
+- App: Add 4w stats to main screen (for each portfolio)
+   + Also colors
+- App in portfolio screen:
+   + Add colors for each week
+   + Add FundRank winners on a time period (after the funds)
+   + Allow swiping to change calculated time span
+- Backend: Send mail on extraction
+- Backend: Send notification on extraction status (and your fund status)
+- App: Cache DB always
 - Fix invalids
-
 - Update SEB, PPM, VGD, SPP fundlists + provide yearly process
-
-- Update app
-  + Mobile notifications
-  + Stats about your investments
-  + Showing the leaders (do average in case missing R1W)
 
 --------
 
-- Adjust r1w based on r1m
-- Work with indexes?
-
-
+- Work with indexes? A lot to potentially do here
+- Main screen: Show Rank winners per index/region/category ?
 Ryssland
 China
 Japan

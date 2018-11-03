@@ -30,7 +30,6 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-import com.google.firebase.crash.FirebaseCrash;
 import com.pf.mr.R;
 import com.pf.mr.SingletonMR;
 import com.pf.mr.execmodel.ECalculateStats;
@@ -70,7 +69,6 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         Log.i(TAG, "onCreate");
 
-        FirebaseCrash.log(this.getClass().getSimpleName() + ".onCreate");
         Log.e(TAG, "DisplaySetListNVRVActivity.onCreate");
         Misc.executedAtAppStart();
 
@@ -112,7 +110,8 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
                         mDrawerLayout.closeDrawers();
                         switch (menuItem.getItemId()) {
                             case R.id.nv_goto_fl:
-                                Intent i1 = new Intent(DisplaySetListNVRVActivity.this, com.pf.fl.screens.MainActivity.class);
+//                                Intent i1 = new Intent(DisplaySetListNVRVActivity.this, com.pf.fl.screens.MainActivity.class);
+                                Intent i1 = new Intent(DisplaySetListNVRVActivity.this, com.pf.fl.screens.buttonnavigation.BNMainActivity.class);
                                 startActivity(i1);
                                 return true;
                             case R.id.nv_settings:

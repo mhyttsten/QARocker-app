@@ -85,7 +85,7 @@ public class DB_FundInfo_UI {
     }
 
     public static void initializeDB(final String fileName, final DB_FundInfo_UI_Callback cb) {
-        Log.i(TAG, "initializeDB, fileName: " + fileName);
+        Log.i(TAG, "initializeDB, fileName: " + fileName + ",  time: " + System.currentTimeMillis());
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference sr = storage.getReference(fileName);
         Task<byte[]> t = sr.getBytes(20 * 1024 * 1024);
@@ -93,6 +93,7 @@ public class DB_FundInfo_UI {
                 new OnCompleteListener<byte[]>() {
                     @Override
                     public void onComplete(@NonNull Task<byte[]> task) {
+                        Log.i(TAG, "...initializeDB loaded file, time: " + System.currentTimeMillis());
                         boolean isError = false;
                         String errorMessage = null;
                         if (!task.isSuccessful()) {
@@ -103,12 +104,11 @@ public class DB_FundInfo_UI {
                         } else {
                             try {
                                 byte[] data = task.getResult();
-                                Log.i(TAG, "...initializeDB, fileName: " + fileName + ", success: " + data.length);
+                                Log.i(TAG, "...initializeDB, fileName: " + fileName + ", success: " + data.length + ", time: " + System.currentTimeMillis());
                                 if (fileName.equals(com.pf.shared.Constants.FUNDINFO_DB_MASTER_BIN)) {
                                     data = Compresser.dataUncompress(data);
                                     ByteArrayInputStream bin = new ByteArrayInputStream(data);
                                     DataInputStream din = new DataInputStream(bin);
-
                                     List<D_FundInfo> l = new ArrayList<>();
                                     while (din.available() > 0) {
                                         D_FundInfo fi = D_FundInfo_Serializer.decrunch_D_FundInfo(din);
@@ -120,7 +120,7 @@ public class DB_FundInfo_UI {
                                             return lh._nameMS.compareTo(rh._nameMS);
                                         }
                                     });
-                                    Log.i(TAG, "...done reading funds DB, entries: " + l.size());
+                                    Log.i(TAG, "...initializeDB, fileName: " + fileName + ", done entries : " + l.size() + ", time: " + System.currentTimeMillis());
                                     cb.callback(false, null, l);
                                     return;
                                 } else if (fileName.equals(com.pf.shared.Constants.PORTFOLIO_DB_MASTER_BIN)) {

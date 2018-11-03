@@ -22,13 +22,18 @@ public class FLAnalyze {
 
     //------------------------------------------------------------------------
     public static void main(String[] args) {
-        try {
-            FLAnalyze fla = new FLAnalyze(D_FundInfo.TYPE_SEB, 2);
-            IndentWriter iw = new IndentWriter();
-            fla.analyze(iw);
-        } catch(Exception exc) {
-            exc.printStackTrace();
-        }
+//        try {
+//            String DIR = "/Users/magnushyttsten/Desktop/Vanguard";
+//            String DB_FILENAME = "fundinfo-db-master.bin";
+//            byte[] fileDBDataBA = MM.fileReadFrom(DIR + File.separator + DB_FILENAME);
+//            DB_FundInfo.initialize(fileDBDataBA, true);
+//
+//            FLAnalyze fla = new FLAnalyze(D_FundInfo.TYPE_SEB, 2);
+//            IndentWriter iw = new IndentWriter();
+//            fla.analyze(iw);
+//        } catch(Exception exc) {
+//            exc.printStackTrace();
+//        }
     }
 
     private String _type;
@@ -81,15 +86,10 @@ public class FLAnalyze {
         if (weekCount <= 0) {
             throw new AssertionError("weekCount must be larger than 0");
         }
-        String now = MM.getNowAs_YYMMDD(Constants.TIMEZONE_LOS_ANGELES);
-        String lastFriday = MM.tgif_getLastFridayTodayIncl(now);
-        int dayDiff = MM.tgif_dayCountDiff(now, lastFriday);
-        if (dayDiff == 0) {
-            lastFriday = MM.tgif_getLastFridayTodayExcl(lastFriday);
-        }
-        weekCount--;
-        _fridayList.add(lastFriday);
+        String lastFriday = D_Utils.getLastExtractedFriday();
 
+        _fridayList.add(lastFriday);
+        weekCount--;
         while (weekCount >= 1) {
             lastFriday = MM.tgif_getLastFridayTodayExcl(lastFriday);
             _fridayList.add(lastFriday);
@@ -113,11 +113,6 @@ public class FLAnalyze {
     //------------------------------------------------------------------------
     public void analyze(IndentWriter iw) throws Exception {
         System.out.println("FLAnalyze.analyze");
-
-        String DIR = "/Users/magnushyttsten/Desktop/Vanguard";
-        String DB_FILENAME = "fundinfo-db-master.bin";
-        byte[] fileDBDataBA = MM.fileReadFrom(DIR + File.separator + DB_FILENAME);
-        DB_FundInfo.initialize(fileDBDataBA, true);
 
         fillVoids(null);
 

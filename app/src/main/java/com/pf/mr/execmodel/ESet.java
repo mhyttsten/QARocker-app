@@ -2,7 +2,6 @@ package com.pf.mr.execmodel;
 
 import android.util.Log;
 
-import com.google.firebase.crash.FirebaseCrash;
 import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.utils.Constants;
@@ -283,7 +282,6 @@ public class ESet {
             iw.println();
             iw.pop();
             iw.println("Done");
-            FirebaseCrash.log(iw.getString());
             Log.e(TAG, iw.getString());
             Log.e(TAG, iwError.getString());
             Log.e(TAG, "That was the end of everything");

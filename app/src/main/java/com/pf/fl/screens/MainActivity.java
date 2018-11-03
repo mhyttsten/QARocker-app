@@ -13,16 +13,15 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
 //import com.pf.fl.datamodel.DMA_ExtractInfo;
 import com.pf.fl.datamodel.DB_FundInfo_UI;
 import com.pf.fl.datamodel.DB_FundInfo_UI_Callback;
+import com.pf.fl.screens.recyclerview.MarketReturnAdapter;
+import com.pf.fl.screens.recyclerview.MarketReturnEntity;
 import com.pf.mr.R;
 import com.pf.mr.utils.TestYourBatchStuff;
 import com.pf.shared.Constants;
@@ -48,6 +47,9 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
+
+    // *************************************************************
+    // Activity Lifecycle Setup
 
     private DrawerLayout mDrawerLayout;
 
@@ -132,8 +134,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         Log.w(TAG, "MainActivity.onResume");
-        if (mRVAdapter != null) {
-            mRVAdapter.notifyDataSetChanged();
+        if (_rvAdapter != null) {
+            _rvAdapter.notifyDataSetChanged();
         }
     }
 
@@ -149,7 +151,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-
         AsyncTask<Void, Void, Void> at = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
@@ -164,70 +165,8 @@ public class MainActivity extends AppCompatActivity {
         setupRecyclerView();
     }
 
-    // **********
-
-    private RecyclerView mRV;
-    private RecyclerView.LayoutManager mRVLayout;
-    private MyRVAdapter mRVAdapter;
-    private void setupRecyclerView() {
-        Log.e(TAG, "setupRecyclerView 1");
-        mRV = (RecyclerView)findViewById(R.id.recycler_view_fl);
-        mRVLayout = new LinearLayoutManager(this);
-        mRV.setLayoutManager(mRVLayout);
-        mRVAdapter = new MyRVAdapter(this);
-        mRVAdapter.mPortfolios = DB_FundInfo_UI.getPortfolios();
-        mRV.setAdapter(mRVAdapter);
-        Log.e(TAG, "setupRecyclerView 3");
-        mRVAdapter.notifyDataSetChanged();
-        Log.e(TAG, "setupRecyclerView 4");
-    }
-    private static class MyRVAdapter extends RecyclerView.Adapter<MyRVAdapter.MyRVViewHolder> {
-        private AppCompatActivity mParent;
-        List<D_Portfolio> mPortfolios = new ArrayList<>();
-
-        private static class MyRVViewHolder extends RecyclerView.ViewHolder {
-            private TextView mTextView;
-
-            public MyRVViewHolder(View v, TextView tv) {
-                super(v);
-                mTextView = tv;
-            }
-        }
-
-        public MyRVAdapter(AppCompatActivity parent) {
-            mParent = parent;
-        }
-
-        @Override
-        public int getItemCount() {
-            return mPortfolios.size();
-        }
-
-        @Override
-        public MyRVViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.rv_viewitem_fl, parent, false);
-            // set the view's size, margins, paddings and layout parameters
-            final View lv = v.findViewById(R.id.rv_viewitem_fl);
-            final TextView tv = (TextView) lv.findViewById(R.id.rv_viewitem_tv_fl);
-            tv.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    String name = tv.getText().toString();
-                    DB_FundInfo_UI.listPopulatePortfolioView(name);
-                    Intent i = new Intent(mParent, ListActivity.class);
-                    mParent.startActivity(i);
-                }
-            });
-            return new MyRVViewHolder(v, tv);
-        }
-
-        @Override
-        public void onBindViewHolder(MyRVViewHolder holder, int position) {
-            Log.i(TAG, "Now setting name for: " + position + ", " + mPortfolios.get(position)._name);
-            holder.mTextView.setText(mPortfolios.get(position)._name);
-        }
-    }
+    // *************************************************************
+    // Drawer Content Setup
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -274,4 +213,97 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    // *************************************************************
+    // RecyclerView setup
+
+    private MarketReturnAdapter _rvAdapter;
+
+    private void setupRecyclerView() {
+        List<MarketReturnEntity> l = new ArrayList<>();
+        l.add(new MarketReturnEntity("Ronaldo 0", "Portugal 0", "Real Madrid 0", 0, 20));
+        l.add(new MarketReturnEntity("Ronaldo 1", "Portugal 1", "Real Madrid 1", 1, 21));
+        l.add(new MarketReturnEntity("Ronaldo 2", "Portugal 2", "Real Madrid 2", 2, 22));
+        l.add(new MarketReturnEntity("Ronaldo 3", "Portugal 3", "Real Madrid 3", 3, 23));
+        l.add(new MarketReturnEntity("Ronaldo 4", "Portugal 4", "Real Madrid 4", 4, 24));
+        l.add(new MarketReturnEntity("Ronaldo 5", "Portugal 5", "Real Madrid 5", 5, 25));
+        l.add(new MarketReturnEntity("Ronaldo 6", "Portugal 6", "Real Madrid 6", 6, 26));
+        l.add(new MarketReturnEntity("Ronaldo 7", "Portugal 7", "Real Madrid 7", 7, 27));
+        l.add(new MarketReturnEntity("Ronaldo 8", "Portugal 8", "Real Madrid 8", 8, 28));
+        l.add(new MarketReturnEntity("Ronaldo 9", "Portugal 9", "Real Madrid 9", 9, 29));
+        l.add(new MarketReturnEntity("Ronaldo 10", "Portugal 10", "Real Madrid 10", 10, 30));
+        l.add(new MarketReturnEntity("Ronaldo 11", "Portugal 11", "Real Madrid 11", 11, 31));
+        l.add(new MarketReturnEntity("Ronaldo 12", "Portugal 12", "Real Madrid 12", 12, 32));
+        l.add(new MarketReturnEntity("Ronaldo 13", "Portugal 13", "Real Madrid 13", 13, 33));
+        l.add(new MarketReturnEntity("Ronaldo 14", "Portugal 14", "Real Madrid 14", 14, 34));
+        l.add(new MarketReturnEntity("Ronaldo 15", "Portugal 15", "Real Madrid 15", 15, 35));
+        l.add(new MarketReturnEntity("Ronaldo 16", "Portugal 16", "Real Madrid 16", 16, 36));
+        l.add(new MarketReturnEntity("Ronaldo 17", "Portugal 17", "Real Madrid 17", 17, 37));
+        l.add(new MarketReturnEntity("Ronaldo 18", "Portugal 18", "Real Madrid 18", 18, 38));
+        l.add(new MarketReturnEntity("Ronaldo 19", "Portugal 19", "Real Madrid 19", 19, 39));
+        _rvAdapter = new MarketReturnAdapter(l);
+
+        RecyclerView recyclerView = (RecyclerView)findViewById(R.id.recycler_view_fl);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        recyclerView.setAdapter(_rvAdapter);
+    }
+
+//    private RecyclerView mRV;
+//    private RecyclerView.LayoutManager mRVLayout;
+//    private MyRVAdapter mRVAdapter;
+//    private void setupRecyclerView() {
+//        mRV = (RecyclerView)findViewById(R.id.recycler_view_fl);
+//        mRVLayout = new LinearLayoutManager(this);
+//        mRV.setLayoutManager(mRVLayout);
+//        mRVAdapter = new MyRVAdapter(this);
+//        mRVAdapter.mPortfolios = DB_FundInfo_UI.getPortfolios();
+//        mRV.setAdapter(mRVAdapter);
+//        mRVAdapter.notifyDataSetChanged();
+//    }
+//    private static class MyRVAdapter extends RecyclerView.Adapter<MyRVAdapter.MyRVViewHolder> {
+//        private AppCompatActivity mParent;
+//        List<D_Portfolio> mPortfolios = new ArrayList<>();
+//
+//        private static class MyRVViewHolder extends RecyclerView.ViewHolder {
+//            private TextView mTextView;
+//
+//            public MyRVViewHolder(View v, TextView tv) {
+//                super(v);
+//                mTextView = tv;
+//            }
+//        }
+//
+//        public MyRVAdapter(AppCompatActivity parent) {
+//            mParent = parent;
+//        }
+//
+//        @Override
+//        public int getItemCount() {
+//            return mPortfolios.size();
+//        }
+//
+//        @Override
+//        public MyRVViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+//            View v = LayoutInflater.from(parent.getContext())
+//                    .inflate(R.layout.rv_viewitem_fl, parent, false);
+//            // set the view's size, margins, paddings and layout parameters
+//            final View lv = v.findViewById(R.id.rv_viewitem_fl);
+//            final TextView tv = (TextView) lv.findViewById(R.id.rv_viewitem_tv_fl);
+//            tv.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    String name = tv.getText().toString();
+//                    DB_FundInfo_UI.listPopulatePortfolioView(name);
+//                    Intent i = new Intent(mParent, ListActivity.class);
+//                    mParent.startActivity(i);
+//                }
+//            });
+//            return new MyRVViewHolder(v, tv);
+//        }
+//
+//        @Override
+//        public void onBindViewHolder(MyRVViewHolder holder, int position) {
+//            Log.i(TAG, "Now setting name for: " + position + ", " + mPortfolios.get(position)._name);
+//            holder.mTextView.setText(mPortfolios.get(position)._name);
+//        }
+//    }
 }

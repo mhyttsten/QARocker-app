@@ -24,7 +24,6 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.analytics.FirebaseAnalytics;
-import com.google.firebase.crash.FirebaseCrash;
 import com.pf.mr.SingletonMR;
 import com.pf.mr.screens.display_set_stats.RehearsalFinishedActivity;
 import com.pf.mr.utils.Constants;
@@ -75,11 +74,9 @@ public class CardFlipActivity extends Activity {
         super.onResume();
         Log.i(TAG, "onResume Entered");
 
-        FirebaseCrash.log("CardFlipActivity.onResume: Entered");
         mTitle = (TextView)findViewById(R.id.test_title_id);
         SingletonMR.mCurrentESet.rescaleImages();
         startNextRound(); // newCard);
-        FirebaseCrash.log("CardFlipActivity.onResume: Exit");
     }
 
     /**
@@ -295,7 +292,6 @@ public class CardFlipActivity extends Activity {
                         public void onGlobalLayout() {
                             if (getActivity() != null
                                     && CardFlipActivity.mData.mCurrentETerm != null) {
-                                FirebaseCrash.log("CardBackFragment.onResume: About to do mData.mCurrentETerm.rednerA");
                                 CardFlipActivity.mData.mCurrentETerm.renderA(getActivity(), tv);
                             }
                         }

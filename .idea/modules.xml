@@ -2,12 +2,12 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file:///Volumes/Personal_Bulk/Personal/Code/source/AndroidStudioProjects/QARocker-app/JavaCode/JavaCode.iml" filepath="/Volumes/Personal_Bulk/Personal/Code/source/AndroidStudioProjects/QARocker-app/JavaCode/JavaCode.iml" />
-      <module fileurl="file:///Volumes/Personal_Bulk/Personal/Code/source/AndroidStudioProjects/QARocker-app/QARocker-app.iml" filepath="/Volumes/Personal_Bulk/Personal/Code/source/AndroidStudioProjects/QARocker-app/QARocker-app.iml" />
-      <module fileurl="file:///Volumes/Personal_Bulk/Personal/Code/source/AndroidStudioProjects/QARocker-app/app/app.iml" filepath="/Volumes/Personal_Bulk/Personal/Code/source/AndroidStudioProjects/QARocker-app/app/app.iml" />
-      <module fileurl="file:///Volumes/Personal_Bulk/Personal/Code/source/AndroidStudioProjects/QARocker-app/backend/backend.iml" filepath="/Volumes/Personal_Bulk/Personal/Code/source/AndroidStudioProjects/QARocker-app/backend/backend.iml" />
-      <module fileurl="file:///Volumes/Personal_Bulk/Personal/Code/source/AndroidStudioProjects/QARocker-app/photomanager/photomanager.iml" filepath="/Volumes/Personal_Bulk/Personal/Code/source/AndroidStudioProjects/QARocker-app/photomanager/photomanager.iml" />
-      <module fileurl="file:///Volumes/Personal_Bulk/Personal/Code/source/AndroidStudioProjects/QARocker-app/shared/shared.iml" filepath="/Volumes/Personal_Bulk/Personal/Code/source/AndroidStudioProjects/QARocker-app/shared/shared.iml" />
+      <module fileurl="file://$PROJECT_DIR$/JavaCode/JavaCode.iml" filepath="$PROJECT_DIR$/JavaCode/JavaCode.iml" />
+      <module fileurl="file://$PROJECT_DIR$/QARocker-app.iml" filepath="$PROJECT_DIR$/QARocker-app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/backend/backend.iml" filepath="$PROJECT_DIR$/backend/backend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/photomanager/photomanager.iml" filepath="$PROJECT_DIR$/photomanager/photomanager.iml" />
+      <module fileurl="file://$PROJECT_DIR$/shared/shared.iml" filepath="$PROJECT_DIR$/shared/shared.iml" />
     </modules>
   </component>
 </project>

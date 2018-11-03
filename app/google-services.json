@@ -15,19 +15,27 @@
       },
       "oauth_client": [
         {
-          "client_id": "412665086704-pu0hqjh8k63kmpr19ohbdcbmf85k8nd6.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.pf.mr",
-            "certificate_hash": "8EF9DF9DE22B2FDEA7F2A8FD131B39B8A321F285"
-          }
-        },
-        {
           "client_id": "412665086704-d0rle39l3sd3boakijkudn309k1hqcrk.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.pf.mr",
-            "certificate_hash": "F99A5A4F2CB38885829C1D8E0F49870182F2840B"
+            "certificate_hash": "f99a5a4f2cb38885829c1d8e0f49870182f2840b"
+          }
+        },
+        {
+          "client_id": "412665086704-tn2qkh2gianbtstonjd70mojm6i7k760.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pf.mr",
+            "certificate_hash": "8ef9df9de22b2fdea7f2a8fd131b39b8a321f285"
+          }
+        },
+        {
+          "client_id": "412665086704-kvmi63r06ok2r6mt2nuashrlq5g1pg5u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pf.mr",
+            "certificate_hash": "c8698ae751a8a3131e6d390648c02bf81b3c4073"
           }
         },
         {

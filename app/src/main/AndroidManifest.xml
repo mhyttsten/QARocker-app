@@ -51,6 +51,10 @@
             android:label="FundLifterActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
+            android:name="com.pf.fl.screens.buttonnavigation.BNMainActivity"
+            android:label="BNMainActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
             android:name="com.pf.fl.screens.PortfolioActivity"
             android:label="PortfolioActivity"
             android:parentActivityName="com.pf.fl.screens.MainActivity"
