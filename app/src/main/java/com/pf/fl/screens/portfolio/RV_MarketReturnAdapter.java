@@ -1,4 +1,4 @@
-package com.pf.fl.screens.recyclerview;
+package com.pf.fl.screens.portfolio;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -10,9 +10,9 @@ import com.pf.mr.R;
 
 import java.util.List;
 
-public class MarketReturnAdapter extends RecyclerView.Adapter<MarketReturnAdapter.MarketReturnViewHolder> {
+public class RV_MarketReturnAdapter extends RecyclerView.Adapter<RV_MarketReturnAdapter.MarketReturnViewHolder> {
 
-    private List<MarketReturnEntity> _entities;
+    private List<RV_MarketReturnEntity> _entities;
 
     public class MarketReturnViewHolder extends RecyclerView.ViewHolder {
         private TextView _name, _nationality, _club, _rating, _age;
@@ -27,7 +27,7 @@ public class MarketReturnAdapter extends RecyclerView.Adapter<MarketReturnAdapte
         }
     }
 
-    public MarketReturnAdapter(List<MarketReturnEntity> entities) {
+    public RV_MarketReturnAdapter(List<RV_MarketReturnEntity> entities) {
         _entities = entities;
     }
 
@@ -36,13 +36,13 @@ public class MarketReturnAdapter extends RecyclerView.Adapter<MarketReturnAdapte
         View itemView =
                 LayoutInflater
                         .from(parent.getContext())
-                        .inflate(R.layout.flrv_market_return_row, parent, false);
+                        .inflate(R.layout.portfolio_rv_display_market_return_row, parent, false);
         return new MarketReturnViewHolder(itemView);
     }
 
     @Override
     public void onBindViewHolder(MarketReturnViewHolder holder, int position) {
-        MarketReturnEntity e = _entities.get(position);
+        RV_MarketReturnEntity e = _entities.get(position);
         holder._name.setText(e._name);
         holder._nationality.setText(e._nationality);
         holder._club.setText(e._club);

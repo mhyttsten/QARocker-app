@@ -1,4 +1,4 @@
-package com.pf.fl.screens;
+package com.pf.fl.screens.portfolio;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
@@ -24,8 +24,8 @@ import com.pf.shared.datamodel.D_Portfolio;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PortfolioActivity extends AppCompatActivity {
-    private static final String TAG = PortfolioActivity.class.getSimpleName();
+public class PortfolioUpdateActivity extends AppCompatActivity {
+    private static final String TAG = PortfolioUpdateActivity.class.getSimpleName();
 
     private String mType = D_FundInfo.TYPE_SEB;
     private D_Portfolio mPortfolio = new D_Portfolio();
@@ -129,7 +129,7 @@ public class PortfolioActivity extends AppCompatActivity {
                     }
                 }
                 DB_FundInfo_UI.portfoliosHM.put(f._name, f);
-                DB_FundInfo_UI.savePortfolios(PortfolioActivity.this);
+                DB_FundInfo_UI.savePortfolios(PortfolioUpdateActivity.this);
                 finish();
             }
         });

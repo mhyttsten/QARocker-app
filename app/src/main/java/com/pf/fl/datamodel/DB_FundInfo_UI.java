@@ -12,9 +12,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.pf.fl.screens.ListImpl;
+import com.pf.fl.screens.utils.ListImpl;
 import com.pf.shared.Constants;
-import com.pf.shared.datamodel.D_FundDPDay;
 import com.pf.shared.datamodel.D_FundInfo_Serializer;
 import com.pf.shared.datamodel.D_FundInfo_Validator;
 import com.pf.shared.datamodel.D_Portfolio;
@@ -22,7 +21,6 @@ import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.utils.Compresser;
 import com.pf.shared.utils.D_Utils;
 import com.pf.shared.utils.MM;
-import com.pf.shared.utils.OTuple2G;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

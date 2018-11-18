@@ -13,7 +13,7 @@
         android:theme="@style/AppTheme">
 
         <!--<activity-->
-        <!--android:name="com.pf.fl.screens.MainActivity"-->
+        <!--android:name="com.pf.fl.screens.main.MainActivity"-->
         <!--android:label="FundLifterActivity"-->
         <!--android:theme="@style/AppTheme.NoActionBar">-->
         <activity
@@ -47,7 +47,7 @@
             android:parentActivityName=".screens.DisplaySetListNVRVActivity" />
 
         <activity
-            android:name="com.pf.fl.screens.MainActivity"
+            android:name="com.pf.fl.screens.main.MainActivity"
             android:label="FundLifterActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
@@ -55,24 +55,24 @@
             android:label="BNMainActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name="com.pf.fl.screens.PortfolioActivity"
+            android:name="com.pf.fl.screens.portfolio.PortfolioUpdateActivity"
             android:label="PortfolioActivity"
-            android:parentActivityName="com.pf.fl.screens.MainActivity"
+            android:parentActivityName="com.pf.fl.screens.main.MainActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name="com.pf.fl.screens.PortfolioViewerActivity"
+            android:name="com.pf.fl.screens.portfolio.PortfolioDisplayActivity"
             android:label="PortfolioViewerActivity"
-            android:parentActivityName="com.pf.fl.screens.MainActivity"
+            android:parentActivityName="com.pf.fl.screens.main.MainActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name="com.pf.fl.screens.ViewExtractResultActivity"
+            android:name="com.pf.fl.screens.extract.ViewExtractResultActivity"
             android:label=""
-            android:parentActivityName="com.pf.fl.screens.MainActivity"
+            android:parentActivityName="com.pf.fl.screens.main.MainActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name="com.pf.fl.screens.ListActivity"
+            android:name="com.pf.fl.screens.utils.ListActivity"
             android:label=""
-            android:parentActivityName="com.pf.fl.screens.MainActivity"
+            android:parentActivityName="com.pf.fl.screens.main.MainActivity"
             android:theme="@style/AppTheme.NoActionBar" />
 
         <meta-data

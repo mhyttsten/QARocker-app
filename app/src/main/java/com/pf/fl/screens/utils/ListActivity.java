@@ -1,4 +1,4 @@
-package com.pf.fl.screens;
+package com.pf.fl.screens.utils;
 
 import android.content.Intent;
 import android.os.Bundle;

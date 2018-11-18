@@ -1,4 +1,4 @@
-package com.pf.fl.screens;
+package com.pf.fl.screens.extract;
 
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;

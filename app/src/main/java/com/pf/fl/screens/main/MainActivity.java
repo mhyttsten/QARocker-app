@@ -1,4 +1,4 @@
-package com.pf.fl.screens;
+package com.pf.fl.screens.main;
 
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -20,15 +20,14 @@ import android.widget.Toast;
 //import com.pf.fl.datamodel.DMA_ExtractInfo;
 import com.pf.fl.datamodel.DB_FundInfo_UI;
 import com.pf.fl.datamodel.DB_FundInfo_UI_Callback;
-import com.pf.fl.screens.recyclerview.MarketReturnAdapter;
-import com.pf.fl.screens.recyclerview.MarketReturnEntity;
+import com.pf.fl.screens.extract.ViewExtractResultActivity;
+import com.pf.fl.screens.portfolio.PortfolioUpdateActivity;
 import com.pf.mr.R;
 import com.pf.mr.utils.TestYourBatchStuff;
 import com.pf.shared.Constants;
 import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.datamodel.D_Portfolio;
 
-import java.util.ArrayList;
 import java.util.List;
 
 // Main page
@@ -57,20 +56,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.w(TAG, "MainActivity.onCreate");
-        setContentView(R.layout.activity_main_fl);
+        setContentView(R.layout.main_activity);
 
         Toolbar t = (Toolbar)findViewById(R.id.toolbar_fl);
         setSupportActionBar(t);
 
         final ActionBar ab = getSupportActionBar();
-        ab.setHomeAsUpIndicator(R.drawable.ic_menu_fl);
+        ab.setHomeAsUpIndicator(R.mipmap.ic_menu_fl);
         ab.setDisplayHomeAsUpEnabled(true);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab_fl);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent i = new Intent(MainActivity.this, PortfolioActivity.class);
+                Intent i = new Intent(MainActivity.this, PortfolioUpdateActivity.class);
                 startActivity(i);
             }
         });
@@ -216,49 +215,16 @@ public class MainActivity extends AppCompatActivity {
     // *************************************************************
     // RecyclerView setup
 
-    private MarketReturnAdapter _rvAdapter;
+    private RV_MainAdapter _rvAdapter;
 
     private void setupRecyclerView() {
-        List<MarketReturnEntity> l = new ArrayList<>();
-        l.add(new MarketReturnEntity("Ronaldo 0", "Portugal 0", "Real Madrid 0", 0, 20));
-        l.add(new MarketReturnEntity("Ronaldo 1", "Portugal 1", "Real Madrid 1", 1, 21));
-        l.add(new MarketReturnEntity("Ronaldo 2", "Portugal 2", "Real Madrid 2", 2, 22));
-        l.add(new MarketReturnEntity("Ronaldo 3", "Portugal 3", "Real Madrid 3", 3, 23));
-        l.add(new MarketReturnEntity("Ronaldo 4", "Portugal 4", "Real Madrid 4", 4, 24));
-        l.add(new MarketReturnEntity("Ronaldo 5", "Portugal 5", "Real Madrid 5", 5, 25));
-        l.add(new MarketReturnEntity("Ronaldo 6", "Portugal 6", "Real Madrid 6", 6, 26));
-        l.add(new MarketReturnEntity("Ronaldo 7", "Portugal 7", "Real Madrid 7", 7, 27));
-        l.add(new MarketReturnEntity("Ronaldo 8", "Portugal 8", "Real Madrid 8", 8, 28));
-        l.add(new MarketReturnEntity("Ronaldo 9", "Portugal 9", "Real Madrid 9", 9, 29));
-        l.add(new MarketReturnEntity("Ronaldo 10", "Portugal 10", "Real Madrid 10", 10, 30));
-        l.add(new MarketReturnEntity("Ronaldo 11", "Portugal 11", "Real Madrid 11", 11, 31));
-        l.add(new MarketReturnEntity("Ronaldo 12", "Portugal 12", "Real Madrid 12", 12, 32));
-        l.add(new MarketReturnEntity("Ronaldo 13", "Portugal 13", "Real Madrid 13", 13, 33));
-        l.add(new MarketReturnEntity("Ronaldo 14", "Portugal 14", "Real Madrid 14", 14, 34));
-        l.add(new MarketReturnEntity("Ronaldo 15", "Portugal 15", "Real Madrid 15", 15, 35));
-        l.add(new MarketReturnEntity("Ronaldo 16", "Portugal 16", "Real Madrid 16", 16, 36));
-        l.add(new MarketReturnEntity("Ronaldo 17", "Portugal 17", "Real Madrid 17", 17, 37));
-        l.add(new MarketReturnEntity("Ronaldo 18", "Portugal 18", "Real Madrid 18", 18, 38));
-        l.add(new MarketReturnEntity("Ronaldo 19", "Portugal 19", "Real Madrid 19", 19, 39));
-        _rvAdapter = new MarketReturnAdapter(l);
-
+        _rvAdapter = new RV_MainAdapter(this);
         RecyclerView recyclerView = (RecyclerView)findViewById(R.id.recycler_view_fl);
         recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         recyclerView.setAdapter(_rvAdapter);
+//        _rvAdapter.notifyDataSetChanged();
     }
 
-//    private RecyclerView mRV;
-//    private RecyclerView.LayoutManager mRVLayout;
-//    private MyRVAdapter mRVAdapter;
-//    private void setupRecyclerView() {
-//        mRV = (RecyclerView)findViewById(R.id.recycler_view_fl);
-//        mRVLayout = new LinearLayoutManager(this);
-//        mRV.setLayoutManager(mRVLayout);
-//        mRVAdapter = new MyRVAdapter(this);
-//        mRVAdapter.mPortfolios = DB_FundInfo_UI.getPortfolios();
-//        mRV.setAdapter(mRVAdapter);
-//        mRVAdapter.notifyDataSetChanged();
-//    }
 //    private static class MyRVAdapter extends RecyclerView.Adapter<MyRVAdapter.MyRVViewHolder> {
 //        private AppCompatActivity mParent;
 //        List<D_Portfolio> mPortfolios = new ArrayList<>();

@@ -110,8 +110,8 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
                         mDrawerLayout.closeDrawers();
                         switch (menuItem.getItemId()) {
                             case R.id.nv_goto_fl:
-//                                Intent i1 = new Intent(DisplaySetListNVRVActivity.this, com.pf.fl.screens.MainActivity.class);
-                                Intent i1 = new Intent(DisplaySetListNVRVActivity.this, com.pf.fl.screens.buttonnavigation.BNMainActivity.class);
+                                Intent i1 = new Intent(DisplaySetListNVRVActivity.this, com.pf.fl.screens.main.MainActivity.class);
+//                                Intent i1 = new Intent(DisplaySetListNVRVActivity.this, com.pf.fl.screens.buttonnavigation.BNMainActivity.class);
                                 startActivity(i1);
                                 return true;
                             case R.id.nv_settings:
