@@ -27,6 +27,7 @@ public class IndentWriter {
 		_indentChar = c;
 	}
     public void setFlowChar(char c) { _flowChar = c; }
+    public void generateHTML() { _generateHTML = true; }
 	public void setNewline(String c) { _newline = c; }
 
 	public void setIndentDistance(int distance) {
@@ -116,6 +117,8 @@ public class IndentWriter {
 	}
 	
 	// ***********************************************************************
+
+	public boolean _generateHTML;
 
 	private int _incIndent = 2;
 	private StringBuffer _buffer = new StringBuffer();

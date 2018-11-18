@@ -135,7 +135,7 @@ public class JSP_Helper {
         String fridayLast = MM.tgif_getLastFridayTodayExcl(now);
         List<D_FundInfo> fis = DB_FundInfo.getAllFundInfos();
         IndentWriter iw = new IndentWriter();
-        iw.setNewline("<br>");
+        iw.generateHTML();
         String debug = ExtractStatistics.getExtractSummary(
                 iw,
                 true,

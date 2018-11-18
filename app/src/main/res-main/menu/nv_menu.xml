@@ -24,15 +24,15 @@
 
         <item
             android:id="@+id/nv_goto_fl"
-            android:icon="@drawable/ic_exit_to_app_black_24dp"
+            android:icon="@mipmap/ic_exit_to_app_black_24dp"
             android:title="Goto FundLifter" />
         <item
             android:id="@+id/nv_logout"
-            android:icon="@drawable/ic_exit_to_app_black_24dp"
+            android:icon="@mipmap/ic_exit_to_app_black_24dp"
             android:title="Logout" />
         <item
             android:id="@+id/nv_settings"
-            android:icon="@drawable/ic_settings_black_24dp"
+            android:icon="@mipmap/ic_settings_black_24dp"
             android:title="Settings" />
     </group>
 

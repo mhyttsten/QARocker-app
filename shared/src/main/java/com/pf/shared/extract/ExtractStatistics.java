@@ -205,10 +205,10 @@ public class ExtractStatistics {
         iw.println("...Friday:   " + es_now._fiExtracted_Fri.size());
         iw.println("...Monday:   " + es_now._fiExtracted_Mon.size());
         iw.println("...Tuesday:  " + es_now._fiExtracted_Tue.size());
-        iw.println("Not Extracted (1F): " + es_now._fiNotExtracted_1F.size());
-        iw.println("...Extracted 2F:  " + es_now._fiLastExtracted_2F.size());
-        iw.println("...Extracted 3F:  " + es_now._fiLastExtracted_3F.size());
-        iw.println("...Extracted >3F: " + es_now._fiLastExtracted_GT3F.size());
+        iw.println("Not Extracted last F: " + es_now._fiNotExtracted_1F.size());
+        iw.println("...But extracted 2F:  " + es_now._fiLastExtracted_2F.size());
+        iw.println("...But extracted 3F:  " + es_now._fiLastExtracted_3F.size());
+        iw.println("...But extracted >3F: " + es_now._fiLastExtracted_GT3F.size());
         iw.println("...Attempted today: " + es_now._fiExtractAttemptedToday.size());
 
         iw.println();
@@ -268,7 +268,11 @@ public class ExtractStatistics {
             } catch(UnsupportedEncodingException exc) {
                 throw new AssertionError("Unsupported encoding: " + exc.toString());
             }
-            iw.println(fi._url);
+            if (iw._generateHTML) {
+                iw.println("<a href=\"" + fi._url + "\">" + fi._url + "</a>");
+            } else {
+                iw.println(fi._url);
+            }
             iw.pop();
         }
         return iw.getString();

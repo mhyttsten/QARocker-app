@@ -113,7 +113,7 @@ public class CardFlipActivity extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         MenuItem item = menu.add(Menu.NONE, R.id.action_flip, Menu.NONE, R.string.action_info);
-        item.setIcon(R.drawable.ic_action_info);
+        item.setIcon(R.mipmap.ic_action_info);
         item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         return true;
     }

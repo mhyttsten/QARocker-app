@@ -24,31 +24,31 @@
 
         <item
             android:id="@+id/nv_goto_mr"
-            android:icon="@drawable/ic_settings_black_24dp"
+            android:icon="@mipmap/ic_settings_black_24dp"
             android:title="Goto MemoryRocker" />
         <item
             android:id="@+id/nv_extract_info_fl"
-            android:icon="@drawable/ic_settings_black_24dp"
+            android:icon="@mipmap/ic_settings_black_24dp"
             android:title="Extraction Info" />
         <item
             android:id="@+id/nv_show_change_fl"
-            android:icon="@drawable/ic_settings_black_24dp"
+            android:icon="@mipmap/ic_settings_black_24dp"
             android:title="Show Change" />
         <item
             android:id="@+id/nv_trend_up_len_fl"
-            android:icon="@drawable/ic_settings_black_24dp"
+            android:icon="@mipmap/ic_settings_black_24dp"
             android:title="Up Trends-Len (SEB)" />
         <item
             android:id="@+id/nv_trend_down_len_fl"
-            android:icon="@drawable/ic_settings_black_24dp"
+            android:icon="@mipmap/ic_settings_black_24dp"
             android:title="Down Trends-Len (SEB)" />
         <item
             android:id="@+id/nv_trend_up_value_fl"
-            android:icon="@drawable/ic_settings_black_24dp"
+            android:icon="@mipmap/ic_settings_black_24dp"
             android:title="Up Trends-Val (SEB)" />
         <item
             android:id="@+id/nv_trend_down_value_fl"
-            android:icon="@drawable/ic_settings_black_24dp"
+            android:icon="@mipmap/ic_settings_black_24dp"
             android:title="Down Trends-Val (SEB)" />
     </group>
 
