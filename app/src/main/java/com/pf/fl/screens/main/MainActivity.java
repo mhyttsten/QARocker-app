@@ -224,52 +224,5 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(_rvAdapter);
 //        _rvAdapter.notifyDataSetChanged();
     }
-
-//    private static class MyRVAdapter extends RecyclerView.Adapter<MyRVAdapter.MyRVViewHolder> {
-//        private AppCompatActivity mParent;
-//        List<D_Portfolio> mPortfolios = new ArrayList<>();
-//
-//        private static class MyRVViewHolder extends RecyclerView.ViewHolder {
-//            private TextView mTextView;
-//
-//            public MyRVViewHolder(View v, TextView tv) {
-//                super(v);
-//                mTextView = tv;
-//            }
-//        }
-//
-//        public MyRVAdapter(AppCompatActivity parent) {
-//            mParent = parent;
-//        }
-//
-//        @Override
-//        public int getItemCount() {
-//            return mPortfolios.size();
-//        }
-//
-//        @Override
-//        public MyRVViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-//            View v = LayoutInflater.from(parent.getContext())
-//                    .inflate(R.layout.rv_viewitem_fl, parent, false);
-//            // set the view's size, margins, paddings and layout parameters
-//            final View lv = v.findViewById(R.id.rv_viewitem_fl);
-//            final TextView tv = (TextView) lv.findViewById(R.id.rv_viewitem_tv_fl);
-//            tv.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    String name = tv.getText().toString();
-//                    DB_FundInfo_UI.listPopulatePortfolioView(name);
-//                    Intent i = new Intent(mParent, ListActivity.class);
-//                    mParent.startActivity(i);
-//                }
-//            });
-//            return new MyRVViewHolder(v, tv);
-//        }
-//
-//        @Override
-//        public void onBindViewHolder(MyRVViewHolder holder, int position) {
-//            Log.i(TAG, "Now setting name for: " + position + ", " + mPortfolios.get(position)._name);
-//            holder.mTextView.setText(mPortfolios.get(position)._name);
-//        }
-//    }
+    
 }
