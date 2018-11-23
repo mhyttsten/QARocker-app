@@ -14,6 +14,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.pf.fl.screens.utils.ListImpl;
 import com.pf.shared.Constants;
+import com.pf.shared.analyze.DPSeries;
 import com.pf.shared.datamodel.D_FundInfo_Serializer;
 import com.pf.shared.datamodel.D_FundInfo_Validator;
 import com.pf.shared.datamodel.D_Portfolio;
@@ -35,17 +36,17 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DB_FundInfo_UI {
     public static final String TAG = DB_FundInfo_UI.class.getSimpleName();
 
-    public static final String INTENT_EXTRA_PORTFOLIO_NAME = "EXTRA_PORTFOLIO_NAME";
-
+    //------------------------------------------------------------------------
     public static void savePortfolios(final Context c) {
         StorageReference sr = FirebaseStorage.getInstance().getReference();
         sr = sr.child(Constants.PORTFOLIO_DB_MASTER_BIN);
 
-        Collection<D_Portfolio> psC = portfoliosHM.values();
+        Collection<D_Portfolio> psC = _portfoliosHM.values();
         List<D_Portfolio> ps = new ArrayList<>();
         Iterator<D_Portfolio> psI = psC.iterator();
         while (psI.hasNext()) {
@@ -82,6 +83,7 @@ public class DB_FundInfo_UI {
         });
     }
 
+    //------------------------------------------------------------------------
     public static void initializeDB(final String fileName, final DB_FundInfo_UI_Callback cb) {
         Log.i(TAG, "initializeDB, fileName: " + fileName + ",  time: " + System.currentTimeMillis());
         FirebaseStorage storage = FirebaseStorage.getInstance();
@@ -154,34 +156,11 @@ public class DB_FundInfo_UI {
                 });
     }
 
-    public static List<D_Portfolio> getPortfolios() {
-        List<D_Portfolio> l = new ArrayList<>();
-        Collection<D_Portfolio> portfolioC = portfoliosHM.values();
-        Iterator<D_Portfolio> portfolioI = portfolioC.iterator();
-        while (portfolioI.hasNext()) {
-            l.add(portfolioI.next());
-        }
-        Collections.sort(l, new Comparator<D_Portfolio>() {
-            @Override
-            public int compare(D_Portfolio lh, D_Portfolio rh) {
-                return lh._name.compareTo(rh._name);
-            }
-        });
-        return l;
-    }
-
-    public static boolean _initialized;
-    public static String _fridayMin = null;
-    public static String _fridayMax = null;
-    public static String _extractStatistics;
-    public static Map<String, List<CheckableFund>> cfundsByTypeHM = new HashMap<>();
-    public static Map<String, D_FundInfo> fundsByURL = new HashMap<>();
-    public static HashMap<String, D_Portfolio> portfoliosHM = new HashMap<>();
-
+    //------------------------------------------------------------------------
     public static void initialize_Funds(List<D_FundInfo> fis) {
         Log.i(TAG, "*** initialize1: " + fis.size());
-        List<CheckableFund> fis_cf = null;
 
+        // Validate funds and set min/max friday
         D_FundInfo_Validator fiv = new D_FundInfo_Validator(fis);
         fiv.process();
         if (fiv._error) {
@@ -190,28 +169,37 @@ public class DB_FundInfo_UI {
         _fridayMax = fiv._fridayMax_YYMMDD;
         _fridayMin = fiv._fridayMin_YYMMDD;
 
+        // Funds by type & URL
         for (D_FundInfo fi: fis) {
-            if (!cfundsByTypeHM.containsKey(fi._type)) {
-                cfundsByTypeHM.put(fi._type, new ArrayList<CheckableFund>());
+            String key = getKeyForTypeAndURL(fi._type, fi._url);
+            if (!_fundsByTypeAndURL.containsKey(key)) {
+                _fundsByTypeAndURL.put(key, fi);
             }
-            if (!portfoliosHM.containsKey(fi._type)) {
-                portfoliosHM.put(fi._type, new D_Portfolio());
-            }
-            fis_cf = cfundsByTypeHM.get(fi._type);
-            fis_cf.add(new CheckableFund(fi));
 
-//            Log.d(TAG, "Adding URL: " + fi._url);
-            fundsByURL.put(fi._url, fi);
-        }
-        Collections.sort(fis_cf, new Comparator<CheckableFund>() {
-            public int compare(CheckableFund lh, CheckableFund rh) {
-                return lh.fund._nameMS.compareTo(rh.fund._nameMS);
+            List<D_FundInfo> typeFIs = _fundsByType.get(fi._type);
+            if (typeFIs == null) {
+                typeFIs = new ArrayList<>();
+                _fundsByType.put(fi._type, typeFIs);
             }
-        });
+            typeFIs.add(fi);
+        }
+
+        // Sort each respective type fund lists
+        Iterator<String> iter = _fundsByType.keySet().iterator();
+        while (iter.hasNext()) {
+            List<D_FundInfo> tmp = _fundsByType.get(iter.next());
+            Collections.sort(tmp, new Comparator<D_FundInfo>() {
+                @Override
+                public int compare(D_FundInfo o1, D_FundInfo o2) {
+                    return o1._nameMS.compareTo(o2._nameMS);
+                }
+            });
+        }
     }
 
+    //------------------------------------------------------------------------
     public static void initialize2_Portfolios(List<D_Portfolio> ps) {
-        Log.i(TAG, "*** initialize2: " + ps.size());
+        // Make sure we have one for each type
         Map<String, Void> tmp = new HashMap<>();
         for (D_Portfolio p: ps) {
             tmp.put(p._name, null);
@@ -224,63 +212,59 @@ public class DB_FundInfo_UI {
             }
         }
 
-        for (D_Portfolio p: ps) {
-            portfoliosHM.put(p._name, p);
+        // Assign the list and hashmap structures
+        _portfolios = ps;
+        Collections.sort(_portfolios, new Comparator<D_Portfolio>() {
+            @Override
+            public int compare(D_Portfolio o1, D_Portfolio o2) {
+                return o1._name.compareTo(o2._name);
+            }
+        });
+        for (D_Portfolio p: _portfolios) {
+            _portfoliosHM.put(p._name, p);
         }
     }
 
+    //------------------------------------------------------------------------
     public static void initialize3_ExtractStatistics(String statistics) {
         Log.i(TAG, "*** initialize3: " + statistics.length());
         _extractStatistics = statistics;
     }
 
-    public static ListImpl listContent = new ListImpl();
-    public static void listPopulatePortfolioView(String portfolioName) {
-        listContent.mHeaderAndBody.clear();
-
-        listContent.mTitle = portfolioName;
-
-        // Header
-        String[] ss = getRecentDates(4);
-        ListImpl.HeaderAndBody hb = new ListImpl.HeaderAndBody(MM.strArray2CSV(ss), "");
-        listContent.mHeaderAndBody.add(hb);
-
-        // Funds
-        D_Portfolio p = portfoliosHM.get(portfolioName);
-        Log.i(TAG, "Portfolio: " + p._name);
-        Log.i(TAG, "...number of URLs: " + p._urls.size());
-        Log.i(TAG, "...fundsByURL.size: " + fundsByURL.size());
-
-        for (String url : p._urls) {
-            Log.i(TAG, "...url: " + url);
-            D_FundInfo f = fundsByURL.get(url);
-            if (f == null) {
-                Log.e(TAG, "Unexpected null result for URL: " + url);
-            }
-            hb = new ListImpl.HeaderAndBody();
-            hb.mHeader = f._nameMS;
-            hb.mBody = D_Utils.getR1WsAsCSV(ss, f);
-            listContent.mHeaderAndBody.add(hb);
+    //------------------------------------------------------------------------
+    public static String getKeyForTypeAndURL(String type, String url) { return type + "_" + url; }
+    public static List<D_FundInfo> getFundsForPortfolio(String name) {
+        List<D_FundInfo> r = new ArrayList<>();
+        D_Portfolio p = _portfoliosHM.get(name);
+        for (String url: p._urls) {
+            r.add(_fundsByTypeAndURL.get(getKeyForTypeAndURL(name, url)));
         }
-    }
-    private static String[] getRecentDates(int count) {
-        List<String> l = new ArrayList<>();
-        String current = _fridayMax;
-        l.add(current);
-        count--;
-        while (count > 0) {
-            current = MM.tgif_getLastFridayTodayExcl(current);
-            l.add(current);
-            count--;
-        }
-        return (String[])l.toArray(new String[l.size()]);
+        return r;
     }
 
+    // ***********************************************************************
 
-    public static class CheckableFund {
-        public CheckableFund(D_FundInfo f) { fund = f; }
-        public D_FundInfo fund;
-        public boolean isChecked;
+    public static boolean _initialized;
+    public static String _fridayMin = null;
+    public static String _fridayMax = null;
+    public static String _extractStatistics;
+
+    // Data structures
+    public static Map<String, List<D_FundInfo>> _fundsByType = new HashMap<>();
+    public static Map<String, D_FundInfo> _fundsByTypeAndURL = new HashMap<>();
+
+    public static List<D_Portfolio> _portfolios = new ArrayList<>();
+    public static HashMap<String, D_Portfolio> _portfoliosHM = new HashMap<>();
+
+    //------------------------------------------------------------------------
+    public static List<DPSeries> getPortfolioStats(String name) {
+        List<D_FundInfo> funds = getFundsForPortfolio(name);
+        List<DPSeries> dpss = DPSeries.getDPSeriesForFunds(funds, 4);
+        return dpss;
+    }
+    public static DPSeries getPortfolioSummaryStats(String name) {
+        List<DPSeries> t = getPortfolioStats(name);
+        DPSeries r = DPSeries.getDPSeriesForDPSerieses(name, t);
+        return r;
     }
 }
-

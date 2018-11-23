@@ -18,6 +18,7 @@ import com.pf.fl.datamodel.DB_FundInfo_UI;
 import com.pf.mr.R;
 
 public class ListActivity extends AppCompatActivity {
+    /*
     private static final String TAG = ListActivity.class.getSimpleName();
 
     ListImpl mLI;
@@ -114,4 +115,5 @@ public class ListActivity extends AppCompatActivity {
             holder.mTVBody.setText(mLI.mHeaderAndBody.get(position).mBody);
         };
     }
+    */
 }

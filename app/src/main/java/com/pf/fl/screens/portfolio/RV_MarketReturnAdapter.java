@@ -36,7 +36,7 @@ public class RV_MarketReturnAdapter extends RecyclerView.Adapter<RV_MarketReturn
         View itemView =
                 LayoutInflater
                         .from(parent.getContext())
-                        .inflate(R.layout.portfolio_rv_display_market_return_row, parent, false);
+                        .inflate(R.layout.portfolio_r_rv_market_return_row, parent, false);
         return new MarketReturnViewHolder(itemView);
     }
 

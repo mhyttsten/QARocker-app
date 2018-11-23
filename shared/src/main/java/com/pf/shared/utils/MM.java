@@ -71,6 +71,30 @@ public class MM {
 	}
 
 	//------------------------------------------------------------------------
+	public static String[] array_String(int count, String initialValue) {
+		String[] r = new String[count];
+		for (int i=0; i < count; i++) {
+			r[i] = initialValue;
+		}
+		return r;
+	}
+	public static int[] array_int(int count, int initialValue) {
+		int[] r = new int[count];
+		for (int i=0; i < count; i++) {
+			r[i] = initialValue;
+		}
+		return r;
+	}
+
+	public static float[] array_float(int count, float initialValue) {
+		float[] r = new float[count];
+		for (int i=0; i < count; i++) {
+			r[i] = initialValue;
+		}
+		return r;
+	}
+
+	//------------------------------------------------------------------------
 	public static String strArray2CSV(String[] ss) {
 		StringBuffer strb = new StringBuffer();
 		for (int i=0; i < ss.length; i++) {
@@ -232,7 +256,7 @@ public class MM {
     /**
      *
      */
-    public static String tgif_getLastFridayTodayIncl(String dateYYMMDD) throws Exception {
+    public static String tgif_getLastFridayTodayIncl(String dateYYMMDD) {
         java.util.Date d = getDateFrom_YYMMDD(null, dateYYMMDD);
         GregorianCalendar gc = new GregorianCalendar();
         gc.setTime(d);

@@ -21,7 +21,7 @@ import android.widget.Toast;
 import com.pf.fl.datamodel.DB_FundInfo_UI;
 import com.pf.fl.datamodel.DB_FundInfo_UI_Callback;
 import com.pf.fl.screens.extract.ViewExtractResultActivity;
-import com.pf.fl.screens.portfolio.PortfolioUpdateActivity;
+import com.pf.fl.screens.portfolio.PortfolioU_Activity;
 import com.pf.mr.R;
 import com.pf.mr.utils.TestYourBatchStuff;
 import com.pf.shared.Constants;
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent i = new Intent(MainActivity.this, PortfolioUpdateActivity.class);
+                Intent i = new Intent(MainActivity.this, PortfolioU_Activity.class);
                 startActivity(i);
             }
         });
@@ -78,14 +78,12 @@ public class MainActivity extends AppCompatActivity {
         mDrawerLayout.closeDrawers();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view_fl);
-//        navigationView.getMenu().clear();
         if (navigationView != null) {
             Log.i(TAG, "NavigationView != null settting drawer content");
             setupDrawerContent(navigationView);
         } else {
             Log.i(TAG, "NavigationView == null cannot set drawer content");
         }
-//        navigationView.inflateMenu(R.menu.nv_menu_fl);
 
         if (DB_FundInfo_UI._initialized) {
             processInitSequence(true);
@@ -129,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    //------------------------------------------------------------------------
     @Override
     protected void onResume() {
         super.onResume();
@@ -138,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //------------------------------------------------------------------------
     private int _initSequenceCount = 3;
     private void processInitSequence(boolean done) {
         if (done) {
@@ -146,6 +146,7 @@ public class MainActivity extends AppCompatActivity {
             _initSequenceCount--;
         }
         Log.e(TAG, "*** initSequenceCount down to: " + _initSequenceCount);
+        // We are done when the sequence counter has reached zero
         if (_initSequenceCount > 0) {
             return;
         }
@@ -215,14 +216,13 @@ public class MainActivity extends AppCompatActivity {
     // *************************************************************
     // RecyclerView setup
 
-    private RV_MainAdapter _rvAdapter;
+    private MainActivity_RV_Adapter _rvAdapter;
 
     private void setupRecyclerView() {
-        _rvAdapter = new RV_MainAdapter(this);
+        _rvAdapter = new MainActivity_RV_Adapter(this);
         RecyclerView recyclerView = (RecyclerView)findViewById(R.id.recycler_view_fl);
         recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         recyclerView.setAdapter(_rvAdapter);
 //        _rvAdapter.notifyDataSetChanged();
     }
-    
 }

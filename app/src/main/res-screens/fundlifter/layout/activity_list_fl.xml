@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="com.pf.fl.screens.portfolio.PortfolioUpdateActivity">
+    tools:context="com.pf.fl.screens.portfolio.PortfolioU_Activity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"

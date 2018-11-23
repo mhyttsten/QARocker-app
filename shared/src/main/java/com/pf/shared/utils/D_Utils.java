@@ -2,6 +2,7 @@ package com.pf.shared.utils;
 
 
 import com.pf.shared.Constants;
+import com.pf.shared.analyze.DPSeries;
 import com.pf.shared.datamodel.D_FundDPDay;
 import com.pf.shared.datamodel.D_FundInfo;
 
@@ -11,7 +12,7 @@ import java.util.List;
 public class D_Utils {
 
     //------------------------------------------------------------------------
-    public static String getLastExtractedFriday() throws Exception {
+    public static String getLastExtractedFriday() {
         String now = MM.getNowAs_YYMMDD(Constants.TIMEZONE_LOS_ANGELES);
         String lastFriday = MM.tgif_getLastFridayTodayIncl(now);
         int dayDiff = MM.tgif_dayCountDiff(now, lastFriday);
@@ -19,6 +20,20 @@ public class D_Utils {
             lastFriday = MM.tgif_getLastFridayTodayExcl(lastFriday);
         }
         return lastFriday;
+    }
+
+    //------------------------------------------------------------------------
+    public static String[] getRecentDates(int count) {
+        List<String> l = new ArrayList<>();
+        String current = getLastExtractedFriday();
+        l.add(current);
+        count--;
+        while (count > 0) {
+            current = MM.tgif_getLastFridayTodayExcl(current);
+            l.add(current);
+            count--;
+        }
+        return (String[])l.toArray(new String[l.size()]);
     }
 
     //------------------------------------------------------------------------

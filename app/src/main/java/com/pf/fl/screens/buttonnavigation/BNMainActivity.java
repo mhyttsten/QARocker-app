@@ -27,6 +27,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+
+import com.pf.fl.screens.portfolio.PortfolioR_Holdings;
 import com.pf.mr.R;
 
 public class BNMainActivity extends AppCompatActivity {

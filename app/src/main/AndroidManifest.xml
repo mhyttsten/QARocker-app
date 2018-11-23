@@ -55,12 +55,12 @@
             android:label="BNMainActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name="com.pf.fl.screens.portfolio.PortfolioUpdateActivity"
+            android:name="com.pf.fl.screens.portfolio.PortfolioU_Activity"
             android:label="PortfolioActivity"
             android:parentActivityName="com.pf.fl.screens.main.MainActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name="com.pf.fl.screens.portfolio.PortfolioDisplayActivity"
+            android:name="com.pf.fl.screens.portfolio.PortfolioR_Activity"
             android:label="PortfolioViewerActivity"
             android:parentActivityName="com.pf.fl.screens.main.MainActivity"
             android:theme="@style/AppTheme.NoActionBar" />

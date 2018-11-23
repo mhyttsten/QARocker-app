@@ -1,15 +1,20 @@
-- App: Create startup screen with MemoryRocker & FundLifter split screen
-- App: Add 4w stats to main screen (for each portfolio)
-   + Also colors
-- App in portfolio screen:
-   + Add colors for each week
-   + Add FundRank winners on a time period (after the funds)
-   + Allow swiping to change calculated time span
-- Backend: Send mail on extraction
-- Backend: Send notification on extraction status (and your fund status)
+
+- App: Add FundRank winner in Portfolio screen + scrollbar to change time window
+- App: Verify numbers (month + weekly for portfolio summary & detail)
+- App: Verify FundRank numbers
+- App: Check that non-existing week results in Yellow (or is marked somehow) + '-' if nothing is available
+- App: Add extraction info on main screen (after portfolio, at least with fridayYYMMDD and #total/#extracted/#left)
+
+
+- App: Create startup screen with MemoryRocker & FundLifter split screen (as TAB)
+- Backend: Send mail on extraction each morning (PST)
+- Backend: Send notification on extraction status (and your fund status) each morning (PST)
 - App: Cache DB always
 - Fix invalids
 - Update SEB, PPM, VGD, SPP fundlists + provide yearly process
+
+Cosmetics
+- App: Display Portfolio: Fund name gets truncated (should not) + show orig fundname when swiping over it
 
 --------
 

@@ -236,6 +236,14 @@ public class DB_FundInfo {
     }
 
     //------------------------------------------------------------------------
+    public static List<D_FundInfo> getFundInfosByTypeAndURLs(String type, List<String> urls) {
+        List<D_FundInfo> r = new ArrayList<>();
+        for (String url: urls) {
+            D_FundInfo fi = getFundInfosByTypeAndURL(type, url);
+            r.add(fi);
+        }
+        return r;
+    }
     public static D_FundInfo getFundInfosByTypeAndURL(String type, String url) {
         List<D_FundInfo> l = _fisByTypeHM.get(type);
         for (D_FundInfo fi: l) {

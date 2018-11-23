@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="com.pf.fl.screens.portfolio.PortfolioU_Activity">
+
+    <!-- I don't know but if we don't add this to all Fragments then the fragment will be overwritten
+     by the top level bar.
+     At the same time, adding this also adds another vertical (padding) space in addition to Activity
+     AppBar. In any case, the Fragment is visible and the toolsbar seems to work -->
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar_fl"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/AppTheme.PopupOverlay" />
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.v7.widget.RecyclerView
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    android:id="@+id/recycler_view_fl"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:clipToPadding="false"
+    android:overScrollMode="never"
+    />
+</android.support.design.widget.CoordinatorLayout>
+
+

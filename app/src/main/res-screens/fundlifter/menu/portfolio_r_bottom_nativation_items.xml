@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_item1"
+        android:icon="@mipmap/bn_ic_account_box_black_24dp"
+        android:title="Funds"/>
+    <item
+        android:id="@+id/action_item2"
+        android:icon="@mipmap/bn_ic_account_circle_black_24dp"
+        android:title="Leaders"/>
+</menu>
