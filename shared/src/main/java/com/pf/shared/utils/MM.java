@@ -332,7 +332,7 @@ public class MM {
     /**
      *
      */
-    public static String tgif_getNextFridayTodayExcl(String dateYYMMDD) throws Exception {
+    public static String tgif_getNextFridayTodayExcl(String dateYYMMDD) {
         java.util.Date d = getDateFrom_YYMMDD(null, dateYYMMDD);
         GregorianCalendar gc = new GregorianCalendar();
         gc.setTime(d);

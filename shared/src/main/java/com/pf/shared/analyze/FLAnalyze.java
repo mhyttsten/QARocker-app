@@ -7,6 +7,7 @@ import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.utils.D_Utils;
 import com.pf.shared.utils.IndentWriter;
 import com.pf.shared.utils.MM;
+import com.pf.shared.utils.OTuple2G;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -14,53 +15,45 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.List;
 import java.util.Set;
 
 public class FLAnalyze {
 
-    //------------------------------------------------------------------------
-    public static void main(String[] args) {
-//        try {
-//            String DIR = "/Users/magnushyttsten/Desktop/Vanguard";
-//            String DB_FILENAME = "fundinfo-db-master.bin";
-//            byte[] fileDBDataBA = MM.fileReadFrom(DIR + File.separator + DB_FILENAME);
-//            DB_FundInfo.initialize(fileDBDataBA, true);
-//
-//            FLAnalyze fla = new FLAnalyze(D_FundInfo.TYPE_SEB, 2);
-//            IndentWriter iw = new IndentWriter();
-//            fla.analyze(iw);
-//        } catch(Exception exc) {
-//            exc.printStackTrace();
-//        }
-    }
+    // This is original list from DB file, but with DPDs padded so all have entries
+    private List<D_FundInfo> _fundsToAnalyzeOrig;
 
-    private String _type;
-    private List<String> _fridayList = new ArrayList<>();
+
+    // Usage
+    // - Call setRange, analyze repeatedly
 
     // These are the resulting structures from the analysis
-    private Map<String, List<FundRank>> _typeAndName2FRs;
-    private List<FundRank> _frSummary;  // Sorted by lowest rank (which is strongest rank :)
+    public Map<String, List<FundRank>> _typeAndName2FRs;
+    public List<FundRank> _frSummary;  // Sorted by lowest rank (which is strongest rank :)
+
+    // Private members used in calculation
+    private List<String> _fridayList = new ArrayList<>();
+
+    //------------------------------------------------------------------------
+    public static class FundRank {
+        public D_FundInfo _fi;
+
+        String _friday;
+        public float _rank;
+        public float _r1w = D_FundDPDay.FLOAT_NULL;
+
+        public int _countMissing;
+        public int _countTotal;
+
+        public String toString() { return _fi.getTypeAndName() + ", rank: " + _rank + ", r1w: " + _r1w; }
+    }
 
     //------------------------------------------------------------------------
     public static class FundRankFriday {
         public String _friday;
         public List<FundRank> _frs;
-    }
-
-    public static class FundRank {
-        String _friday;
-        public float _rank;
-        public D_FundInfo _fi;
-
-        public float _r1w;
-        public boolean _deducedR1W;
-        public float   _deducedR1WRatio; // r1wNull / (r1wNull + r1wNotNull). Set for all
-
-        public int _tmpCounter;
-
-        public String toString() { return _fi.getTypeAndName() + ", rank: " + _rank + ", r1w: " + _r1w; }
     }
 
     //------------------------------------------------------------------------
@@ -81,11 +74,21 @@ public class FLAnalyze {
     };
 
     //------------------------------------------------------------------------
-    public FLAnalyze(String type, int weekCount) throws Exception {
-        _type = type;
-        if (weekCount <= 0) {
-            throw new AssertionError("weekCount must be larger than 0");
+    public FLAnalyze(List<D_FundInfo> fundsToAnalyze) {
+        _fundsToAnalyze = fundsToAnalyze;
+        FLAnalyze_DataPreparation.fillVoids(null, _fundsToAnalyze);
+    }
+
+    //------------------------------------------------------------------------
+    public void setRange(int weekCount) {
+        _fridayList = new ArrayList<>();
+        _typeAndName2FRs = null;
+        _frSummary = null;
+
+        if(weekCount <= 0) {
+            throw new AssertionError("Week count must be positive");
         }
+
         String lastFriday = D_Utils.getLastExtractedFriday();
 
         _fridayList.add(lastFriday);
@@ -96,10 +99,11 @@ public class FLAnalyze {
             weekCount--;
         }
     }
+    public void setRange(String type, String fridayNewest, String fridayOldest) {
+        _fridayList = new ArrayList<>();
+        _typeAndName2FRs = null;
+        _frSummary = null;
 
-    //------------------------------------------------------------------------
-    public FLAnalyze(String type, String fridayNewest, String fridayOldest) {
-        _type = type;
         if(!MM.tgif_isFriday(fridayNewest) || !MM.tgif_isFriday(fridayOldest)) {
             throw new AssertionError("One parameter not a friday: " + fridayNewest + ", " + fridayOldest);
         }
@@ -111,47 +115,77 @@ public class FLAnalyze {
     }
 
     //------------------------------------------------------------------------
-    public void analyze(IndentWriter iw) throws Exception {
-        System.out.println("FLAnalyze.analyze");
+    public void analyze(IndentWriter iw) {
 
-        fillVoids(null);
 
-        // For each friday
-        // Create FundRankFriday
-        // With ranked entries (rank 0 = best, ..., rank = -1 no DPDay
-        Set<String> fisNullR1W = new HashSet<>();
+        here();
+        // Problem is, we modify dpds list
+        // Ideally we should work on a clone only valid for this range analysis
+        // Solution - clone D_FundInfo and extract only DPDs needed for range
+        List<FundRank> frTemplates = new ArrayList<>();
+        for (D_FundInfo fi: _fundsToAnalyze) {
+            FundRank fr = getFundRanks(fi, _fridayList);
+            frTemplates.add(fr);
+        }
+
+        // List fridayNewest -> fridayOldest with ranked lists of the fund performances
+        //   FundRankFriday: Friday -> List<Funds> (ranked)
         List<FundRankFriday> fundRankSeries = new ArrayList<>();
-        List<D_FundInfo> fis = DB_FundInfo.getFundInfosByType(_type);
-        for (String friday: _fridayList) {
+
+        // Funds that has had at least 1 r1w == FLOAT_NULL throughout analyzed fridays
+        // We will rescue these in next phase by assiging average rank to null slots
+        Map<String, D_FundInfo> fundsToFix = new HashMap<>();
+
+        // For each friday, create FundRankFriday (friday->List<Funds> 0=best, ..., -1=no DPDay)
+        // Store each friday in fundRankSeries
+        for (int fridayIndex=0; fridayIndex < _fridayList.size(); fridayIndex++) {
+            String friday = _fridayList.get(fridayIndex);
             FundRankFriday frf = new FundRankFriday();
             frf._friday = friday;
             List<FundRank> frs = new ArrayList<>();
             frf._frs = frs;
             fundRankSeries.add(frf);
-            for (D_FundInfo fi: fis) {
+
+            // First,add all FundInfos to a FundRank structure
+            for (D_FundInfo fi: _fundsToAnalyze) {
                 FundRank fr = new FundRank();
                 fr._fi = fi;
                 fr._friday = friday;
-                List<D_FundDPDay> dpds = fi._dpDays;
-                for (D_FundDPDay dpd: dpds) {
-                    if (dpd._dateYYMMDD.equals(friday)) {
-                        if (dpd._r1w == D_FundDPDay.FLOAT_NULL) {
-                            fisNullR1W.add(fi.getTypeAndName());
-                        }
-                        fr._r1w = dpd._r1w;
-                    }
+
+                D_FundDPDay dpd = fi._dpDays.get(fridayIndex);
+                if (!dpd._dateYYMMDD.equals(friday)) {
+                    throw new AssertionError("Friday mismatch, found: " + dpd._dateYYMMDD + ", expected: " + friday);
                 }
+                fr._r1w = dpd._r1w;  // It's ok if this is FLOAT_NULL we're dealing with that below
                 frs.add(fr);
             }
+
+            // Then sort based on r1w (those with FLOAT_NULL will be at end of list)
             Collections.sort(frs, R1WComparator);
+
+            // Assign rank according to position or -1 if ranking could not be done (r1w == FLOAT_NULL)
+            int index = 1;
+            for (int i=0; i < frs.size(); i++) {
+                FundRank fr = frs.get(i);
+                if (fr._r1w == D_FundDPDay.FLOAT_NULL) {
+                    fr._rank = -1;
+                    fundsToFix.put(fr._fi.getTypeAndName(), fr._fi);
+                } else {
+                    fr._rank = index;
+                    index++;
+                }
+            }
         }
 
-        // For those where, you don't have a rank
-        // Calculate average rank over series and assign that
-        // If we cannot calculate average R1W (i.e. no data to work on), then remove typeAndName from series
-        for (String typeAndName: fisNullR1W) {
-            assignAveragesWhereNull(fundRankSeries, typeAndName);
+        // Fix all ranks having -1 (== FLOAT_NULL) to their average value throughout all fridays
+        // If we cannot calculate average R1W (i.e. no data to work on), then remove them from series
+        Iterator<D_FundInfo> f2fixIter = fundsToFix.values().iterator();
+        while (f2fixIter.hasNext()) {
+            D_FundInfo fl2fix = f2fixIter.next();
+            assignAveragesWhereNull(fundRankSeries, fl2fix);
         }
+
+        here();
 
         // Do the ranking
         // Those who did not have enough DP will have FLOAT_NULL and get last rating
@@ -207,27 +241,81 @@ public class FLAnalyze {
             }
         });
     }
-    private void assignAveragesWhereNull(List<FundRankFriday> fundRankFridayList, String typeAndName) {
-        float r1wSum = 0.0F;
-        float r1wValueCount = 0;
-        float r1wNullCount = 0;
 
+    //------------------------------------------------------------------------
+    public static FundRank getFundRanks(List<D_FundDPDay> dpds, String[] fridays) {
+        OTuple2G<Integer, Integer> p = D_Utils.getStartAndEndP1Indexes(dpds, fridays);
+        int indexStart = p._o1;
+        int indexEndP1 = p._o2;
+
+        // First calculate sum of r1w that exist
+        // And how many we used to get to that sum
+        float r1wSum = 0;
+        int countTotal = 0;
+        int countMissing = 0;
+        for (int i=indexStart; i < indexEndP1; i++) {
+            D_FundDPDay dpd = dpds.get(i);
+            countTotal++;
+            if (dpd._r1w != D_FundDPDay.FLOAT_NULL) {
+                r1wSum += dpd._r1w;
+            } else {
+                countMissing++;
+            }
+        }
+
+        // If ratio of missing > 25% then don't use this
+        float countTotalF = (float)countTotal;
+        float countMissingF = (float)countMissing;
+        if ((countMissingF / countTotalF) > 0.25) {
+            return null;
+        }
+
+        // Calculate the average
+        // Then assign it to the empty slots
+        float averageR1W = r1wSum / (countTotalF - countMissingF);
+        for (int i=indexStart; i < indexEndP1; i++) {
+            D_FundDPDay dpd = dpds.get(i);
+            if (dpd._r1w == D_FundDPDay.FLOAT_NULL) {
+                dpd._r1w = averageR1W;
+
+            }
+        }
+
+        FundRank fr = new FundRank();
+        fr._countMissing  = countMissing;
+        fr._countTotal = countTotal;
+        return fr;
+    }
+
+    //------------------------------------------------------------------------
+    private static void assignAveragesWhereNull(List<FundRankFriday> fundRankFridayList, D_FundInfo fi) {
+        maybe_do_This_firwst_on_all_funds();
+        // And assign r1w based on averages (not its rank)
+        // And remove the ones that have a too high enough ratio (>=0.75)
+        // Then we can do the ranking that can assume all r1ws are non-null
+        float r1wSum = 0;
+        int countTotal = 0;
+        int countMissing = 0;
+
+        // Go through all fridays
         for (FundRankFriday fundRankFriday: fundRankFridayList) {
             List<FundRank> fundRankFridaySeries = fundRankFriday._frs;
+            // Go through all funds every friday
             for (FundRank fr: fundRankFridaySeries) {
-                if (fr._fi.getTypeAndName().equals(typeAndName)) {
+                if (fr._fi.getTypeAndName().equals(fi.getTypeAndName())) {
+                    countTotal++;
                     if (fr._r1w == D_FundDPDay.FLOAT_NULL) {
-                        r1wNullCount++;
+                        countMissing++;
                     } else {
                         r1wSum += fr._r1w;
-                        r1wValueCount++;
+                        r1wSum++;
                     }
                 }
             }
         }
         float r1wAvg = D_FundDPDay.FLOAT_NULL;
         if (r1wValueCount != 0) {
-            r1wAvg = r1wSum / r1wValueCount;
+            r1wAvg = ((float)r1wSum) / ((float)r1wValueCount);
         }
 
         // Assign the averages where R1W == null
@@ -248,213 +336,13 @@ public class FLAnalyze {
                             fr._r1w = r1wAvg;
                             fr._deducedR1W = true;
                         }
-                        fr._deducedR1WRatio = r1wNullCount / (r1wNullCount+r1wSum);
+                        fr._countMissing = r1wNullCount;
+                        fr._countTotal = r1wSum;
+                        fr._deducedR1WRatio = ((float)r1wNullCount) / ((float)(r1wNullCount+r1wSum));
                         index++;
                     }
                 }
             }
         }
     }
-
-    //------------------------------------------------------------------------
-    public void fillVoids(IndentWriter iw) throws Exception {
-        if (iw == null) {
-            iw = new IndentWriter();
-        }
-
-        List<D_FundInfo> l = DB_FundInfo.getFundInfosByType(_type);
-        String fridayOldest = D_Utils.getOldestFriday(l);
-
-        for (D_FundInfo fi: l) {
-            addNullMonths(fi, fridayOldest);
-        }
-
-        List<D_FundDPDay> dpds = null;
-        for (D_FundInfo fi: l) {
-            dpds = fi._dpDays;
-
-            boolean modified = true;
-            do {
-                modified = true;
-                boolean emodified = deduceMissingR1Ws(iw, fi, fridayOldest);
-//                System.out.println("DPDs now: ");
-//                for (D_FundDPDay dpd: dpds) { System.out.println("..." + dpd); }
-                if (!emodified) {
-                    modified = false;
-                    boolean r1m = true;
-                    do {
-                        r1m = deduceMissingR1Ms(iw, fi, fridayOldest);
-                        if (r1m) {
-                            modified = true;
-                        }
-                    } while (r1m);
-                }
-            } while(modified);
-        }
-
-//        System.out.println("Done with: " + _countFunds + ", r1w fixed: " + _countR1WFixed + ", r1m fixed: " + _countR1MFixed);
-    }
-
-    //------------------------------------------------------------------------
-    private boolean deduceMissingR1Ms(IndentWriter iw, D_FundInfo fi, String fridayOldest) {
-        String nowYYMMDD = MM.getNowAs_YYMMDD(Constants.TIMEZONE_STOCKHOLM);
-        String fridayExpected = MM.tgif_getLastFridayTodayExcl(nowYYMMDD);
-        List<D_FundDPDay> dpds = fi._dpDays;
-
-        boolean updated = false;
-        int index = dpds.size() - 1;
-        while (index >= 0) {
-            D_FundDPDay dpd = dpds.get(index);
-            String date = dpd._dateYYMMDD;
-            if (dpd._r1m == D_FundDPDay.FLOAT_NULL) {
-                if (index+3 < dpds.size()
-                        && dpd._r1w != D_FundDPDay.FLOAT_NULL
-                        && dpds.get(index+1)._r1w != D_FundDPDay.FLOAT_NULL
-                        && dpds.get(index+2)._r1w != D_FundDPDay.FLOAT_NULL
-                        && dpds.get(index+3)._r1w != D_FundDPDay.FLOAT_NULL) {
-                    dpd._r1m = dpd._r1w + dpds.get(index+1)._r1w + dpds.get(index+2)._r1w + dpds.get(index+3)._r1w;
-                    updated = true;
-                }
-            }
-            index--;
-        }
-        return updated;
-    }
-
-    //------------------------------------------------------------------------
-    private boolean deduceMissingR1Ws(IndentWriter iw, D_FundInfo fi, String fridayOldest) {
-        String nowYYMMDD = MM.getNowAs_YYMMDD(Constants.TIMEZONE_STOCKHOLM);
-        String fridayExpected = MM.tgif_getLastFridayTodayExcl(nowYYMMDD);
-        List<D_FundDPDay> dpds = fi._dpDays;
-
-        boolean updated = false;
-        int index = dpds.size() - 1;
-        while (index >= 0) {
-            D_FundDPDay dpd = dpds.get(index);
-            String date = dpd._dateYYMMDD;
-            if (dpd._r1w == D_FundDPDay.FLOAT_NULL) {
-                boolean subupdated = deduceR1WUsingR1M(iw, dpds, index);
-                if (subupdated) {
-                    updated = true;
-                }
-            }
-            index--;
-        }
-        return updated;
-    }
-    private boolean deduceR1WUsingR1M(IndentWriter iw, List<D_FundDPDay> dpds, int index) {
-        boolean modified = false;
-
-        // W = Weekly, M=Monthly, C=CurrentR1WNull
-
-        // Earlier indexes are later dates
-
-        // Index order: WM, W, W, C
-        if (index-3 >=0
-                && index < dpds.size()
-                && dpds.get(index-1)._r1w != D_FundDPDay.FLOAT_NULL
-                && dpds.get(index-2)._r1w != D_FundDPDay.FLOAT_NULL
-                && dpds.get(index-3)._r1w != D_FundDPDay.FLOAT_NULL
-                && dpds.get(index-3)._r1m != D_FundDPDay.FLOAT_NULL) {
-            float w3 = dpds.get(index-1)._r1w + dpds.get(index-2)._r1w + dpds.get(index-3)._r1w;
-            float r = dpds.get(index-3)._r1m - w3;
-            dpds.get(index)._r1w = r;
-            modified = true;
-        }
-        // Index order: WM, W, C, W
-        else if (index-2 >= 0
-                && index+1 < dpds.size()
-                && dpds.get(index-2)._r1w != D_FundDPDay.FLOAT_NULL
-                && dpds.get(index-1)._r1w != D_FundDPDay.FLOAT_NULL
-                && dpds.get(index+1)._r1w != D_FundDPDay.FLOAT_NULL
-                && dpds.get(index-2)._r1m != D_FundDPDay.FLOAT_NULL) {
-            float w3 = dpds.get(index-2)._r1w + dpds.get(index-1)._r1w + dpds.get(index+1)._r1w;
-            float r = dpds.get(index-2)._r1m - w3;
-            dpds.get(index)._r1w = r;
-            modified = true;
-        }
-        // Index order: WM, C, W, W
-        else if (index-1 >= 0
-                && index+2 < dpds.size()
-                && dpds.get(index-1)._r1w != D_FundDPDay.FLOAT_NULL
-                && dpds.get(index+1)._r1w != D_FundDPDay.FLOAT_NULL
-                && dpds.get(index+2)._r1w != D_FundDPDay.FLOAT_NULL
-                && dpds.get(index-1)._r1m != D_FundDPDay.FLOAT_NULL) {
-            float w3 = dpds.get(index-1)._r1w + dpds.get(index+1)._r1w + dpds.get(index+2)._r1w;
-            float r = dpds.get(index-1)._r1m - w3;
-            dpds.get(index)._r1w = r;
-            modified = true;
-        }
-        // Index order: CM, W, W, W
-        else if (index >= 0
-                && index+3 < dpds.size()
-                && dpds.get(index+1)._r1w != D_FundDPDay.FLOAT_NULL
-                && dpds.get(index+2)._r1w != D_FundDPDay.FLOAT_NULL
-                && dpds.get(index+3)._r1w != D_FundDPDay.FLOAT_NULL
-                && dpds.get(index)._r1m != D_FundDPDay.FLOAT_NULL) {
-            float w3 = dpds.get(index+1)._r1w + dpds.get(index+2)._r1w + dpds.get(index+3)._r1w;
-            float r = dpds.get(index)._r1m - w3;
-            dpds.get(index)._r1w = r;
-            modified = true;
-        }
-
-        return modified;
-    }
-
-    //------------------------------------------------------------------------
-    private void addNullMonths(D_FundInfo fi, String fridayOldest) {
-        String nowYYMMDD = MM.getNowAs_YYMMDD(Constants.TIMEZONE_STOCKHOLM);
-        String fridayExpected = MM.tgif_getLastFridayTodayExcl(nowYYMMDD);
-        List<D_FundDPDay> dpds = fi._dpDays;
-
-        // Fill in the blanks
-        int index = 0;
-        while (index < dpds.size()) {
-            D_FundDPDay dpd = dpds.get(index);
-            if (dpd._dateYYMMDD.compareTo(fridayExpected) > 0) {
-                throw new AssertionError("Date of DPD cannot be larger than expected friday");
-            } else if (dpd._dateYYMMDD.compareTo(fridayExpected) == 0) {
-                fridayExpected = MM.tgif_getLastFridayTodayExcl(fridayExpected);
-                index++;
-            } else {
-                while (dpd._dateYYMMDD.compareTo(fridayExpected) < 0) {
-                    D_FundDPDay newDPD = new D_FundDPDay();
-                    newDPD._dateYYMMDD = fridayExpected;
-                    newDPD._dateYYMMDD_Actual = nowYYMMDD;
-                    dpds.add(index, newDPD);
-                    fridayExpected = MM.tgif_getLastFridayTodayExcl(fridayExpected);
-                    index++;
-                }
-            }
-        }
-        if (fi._dpDays.size() > 0) {
-            D_FundDPDay dpd = fi._dpDays.get(fi._dpDays.size() - 1);
-            fridayExpected = dpd._dateYYMMDD;
-            if (fridayExpected.compareTo(fridayOldest) > 0) {
-                fridayExpected = MM.tgif_getLastFridayTodayExcl(fridayExpected);
-                while (fridayExpected.compareTo(fridayOldest) >= 0) {
-                    D_FundDPDay newDPD = new D_FundDPDay();
-                    newDPD._dateYYMMDD = fridayExpected;
-                    newDPD._dateYYMMDD_Actual = nowYYMMDD;
-                    fi._dpDays.add(newDPD);
-                    fridayExpected = MM.tgif_getLastFridayTodayExcl(fridayExpected);
-                }
-            }
-        }
-    }
 }
-
-//        dpds = new ArrayList<>();
-//        {
-//        D_FundDPDay dpd = null;
-//        dpd = new D_FundDPDay(); dpd._r1m = 1.0F; dpds.add(dpd);
-//        dpd = new D_FundDPDay(); dpd._r1m = 1.0F; dpds.add(dpd);
-//        dpd = new D_FundDPDay(); dpd._r1m = 1.0F; dpds.add(dpd);
-//        dpd = new D_FundDPDay(); dpd._r1w = 0.25F; dpds.add(dpd);
-//        dpd = new D_FundDPDay(); dpd._r1m = 1.0F; dpd._r1w = 0.25F; dpds.add(dpd);
-//        dpd = new D_FundDPDay(); dpds.add(dpd);
-//        dpd = new D_FundDPDay(); dpd._r1w = 0.25F; dpds.add(dpd);
-//        dpd = new D_FundDPDay(); dpd._r1w = 0.25F; dpds.add(dpd);
-//        dpd = new D_FundDPDay(); dpd._r1m = 1.0F; dpds.add(dpd);
-//        }
-

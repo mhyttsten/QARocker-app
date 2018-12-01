@@ -87,4 +87,24 @@ public class D_Utils {
         return strb.toString();
     }
 
+    //------------------------------------------------------------------------
+    public static OTuple2G<Integer,Integer>  getStartAndEndP1Indexes(
+            List<D_FundDPDay> dpds,
+            String[] fridays) {
+        OTuple2G<Integer,Integer> r = new OTuple2G<>();
+
+        for(int i=0; i < dpds.size(); i++) {
+            if (dpds.get(i)._dateYYMMDD.equals(fridays[0])) {
+                r._o1 = i;
+            }
+            if (dpds.get(i)._dateYYMMDD.equals(fridays[fridays.length-1])) {
+                r._o2 = i+1;
+            }
+            if (r._o1 != null && r._o2 != null) {
+                break;
+            }
+        }
+        return r;
+    }
+
 }

@@ -71,7 +71,6 @@ public class PortfolioR_Holdings extends Fragment {
         RecyclerView recyclerView = (RecyclerView)v.findViewById(R.id.recycler_view_fl);
         recyclerView.setLayoutManager(new LinearLayoutManager(_parentActivity, LinearLayoutManager.VERTICAL, false));
         recyclerView.setAdapter(_rvAdapter);
-//        _rvAdapter.notifyDataSetChanged();
     }
 
 }

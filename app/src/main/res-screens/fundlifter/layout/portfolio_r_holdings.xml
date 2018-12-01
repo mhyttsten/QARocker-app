@@ -24,14 +24,16 @@
     </android.support.design.widget.AppBarLayout>
 
     <android.support.v7.widget.RecyclerView
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    android:id="@+id/recycler_view_fl"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:clipToPadding="false"
-    android:overScrollMode="never"
-    />
+        android:id="@+id/recycler_view_fl"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ll"
+        android:orientation="horizontal"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        />
+
 </android.support.design.widget.CoordinatorLayout>
 
 

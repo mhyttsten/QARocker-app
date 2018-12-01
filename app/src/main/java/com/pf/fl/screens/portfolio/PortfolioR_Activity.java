@@ -58,7 +58,7 @@ public class PortfolioR_Activity extends AppCompatActivity {
                                 selectedFragment = PortfolioR_Holdings.newInstance(PortfolioR_Activity.this);
                                 break;
                             case R.id.action_item2:
-                                selectedFragment = BNItemTwoFragment.newInstance();
+                                selectedFragment = PortfolioR_Leaders.newInstance(PortfolioR_Activity.this);
                                 break;
                         }
                         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();

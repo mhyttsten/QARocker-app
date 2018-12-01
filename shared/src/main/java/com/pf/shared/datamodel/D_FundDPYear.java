@@ -37,4 +37,13 @@ public class D_FundDPYear {
 		dumpInfo(iw);
 		return iw.toString();
 	}
+
+	//------------------------------------------------------------------------
+	public D_FundDPYear cloneMe() {
+		try {
+			return (D_FundDPYear)clone();
+		} catch(CloneNotSupportedException exc) {
+			throw new AssertionError("Assumed this was a clonable object");
+		}
+	}
 }

@@ -1,10 +1,9 @@
+- App: Verify a single extracted number that it matches the one for the week!
+- App: Check that non-existing week results in Yellow (or is marked somehow) + '-' if nothing is available
 
 - App: Add FundRank winner in Portfolio screen + scrollbar to change time window
-- App: Verify numbers (month + weekly for portfolio summary & detail)
 - App: Verify FundRank numbers
-- App: Check that non-existing week results in Yellow (or is marked somehow) + '-' if nothing is available
 - App: Add extraction info on main screen (after portfolio, at least with fridayYYMMDD and #total/#extracted/#left)
-
 
 - App: Create startup screen with MemoryRocker & FundLifter split screen (as TAB)
 - Backend: Send mail on extraction each morning (PST)

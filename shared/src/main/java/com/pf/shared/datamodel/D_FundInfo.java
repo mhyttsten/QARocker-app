@@ -205,5 +205,23 @@ public class D_FundInfo {
         return date;
     }
 
-
+    //------------------------------------------------------------------------
+    public D_FundInfo cloneMe() {
+        try {
+            D_FundInfo fi = (D_FundInfo)clone();
+            List<D_FundDPDay> dpds = new ArrayList<>();
+            List<D_FundDPYear> dpys = new ArrayList<>();
+            fi._dpDays = dpds;
+            fi._dpYears = dpys;
+            for (D_FundDPDay dpd: _dpDays) {
+                dpds.add(dpd.cloneMe());
+            }
+            for (D_FundDPYear dpy: _dpYears) {
+                dpys.add(dpy.cloneMe());
+            }
+            return fi;
+        } catch(CloneNotSupportedException exc) {
+            throw new AssertionError("Assumed this was a clonable object");
+        }
+    }
 }
