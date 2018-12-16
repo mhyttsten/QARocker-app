@@ -4,7 +4,7 @@ import com.pf.shared.utils.IndentWriter;
 
 import java.util.Comparator;
 
-public class D_FundDPYear {
+public class D_FundDPYear implements Cloneable {
 	public static Comparator<D_FundDPYear> COMPARATOR = new Comparator<D_FundDPYear>() {
 		@Override
 		public int compare(D_FundDPYear o1, D_FundDPYear o2) {

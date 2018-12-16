@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class D_FundInfo {
+public class D_FundInfo implements Cloneable {
 
     public static final int IC_NO_ERROR = 0;
 
@@ -224,4 +224,14 @@ public class D_FundInfo {
             throw new AssertionError("Assumed this was a clonable object");
         }
     }
+
+    //------------------------------------------------------------------------
+    public static List<D_FundInfo> cloneList(List<D_FundInfo> fis) {
+        List<D_FundInfo> r = new ArrayList<>();
+        for (D_FundInfo fi: fis) {
+            r.add(fi.cloneMe());
+        }
+        return r;
+    }
+
 }

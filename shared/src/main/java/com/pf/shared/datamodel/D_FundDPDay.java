@@ -5,7 +5,7 @@ import com.pf.shared.utils.IndentWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class D_FundDPDay {
+public class D_FundDPDay implements Cloneable {
 
 	public static final float FLOAT_NULL = Float.MAX_VALUE;
 

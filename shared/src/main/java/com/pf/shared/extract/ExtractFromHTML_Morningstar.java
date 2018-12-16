@@ -42,6 +42,11 @@ public class ExtractFromHTML_Morningstar {
 		}
 
 		fundName = MM.htmlReplaceHTMLCodes(fundName);
+		if (fundName.toLowerCase().startsWith("ett fel uppstod")) {
+			fi._errorCode = D_FundInfo.IC_INVALID_URL_IRRECOVERABLE;
+			iwd.println("Error for fund, it's name is not valid: \"Ett fel uppstod\"");
+			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
+		}
 		iwd.println("...Done, fundName: " + fundName);
 		if (!fi._nameMS.equals(fundName)) {
 			iwd.println("Warning: Fund changed name, before: " + fi._nameMS + ", now: " + fundName);

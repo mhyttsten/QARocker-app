@@ -130,6 +130,7 @@ public class FLOps1_Ext1_Extract_New {
         int countTotal = 0;
         while (_fiToExtract.size() > 0) {
             D_FundInfo fi = _fiToExtract.remove(0);
+            log.info("Now processing fund: " + fi.getTypeAndName());
 
             String fundBeforeStr = fi.getOneLiner();
             int ec_before = fi._errorCode;
@@ -149,30 +150,32 @@ public class FLOps1_Ext1_Extract_New {
                 }
             } else {
                 String s = "Error for: " + fi.getOneLiner();
-                _iwd.println("...**ERROR: " + fi.getOneLiner());
+                iwdetails.println("...**ERROR: " + fi.getOneLiner());
                 boolean is_error = false;
                 switch(errorCode) {
                     case ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND:
                         s += "\nFund became invalid";
-                        _iwd.println("...RC_ERROR_REMOVE_FUND, setting it to invalid");
-                        fi._isValid = true;
+                        iwdetails.println("...RC_ERROR_REMOVE_FUND, setting it to invalid");
+                        fi._isValid = false;
+                        is_error = true;
                         break;
                     case ExtractFromHTML_Helper.RC_SUCCESS_BUT_DATA_WAS_UPDATED:
                         s += "\nSuccess, but data was updated";
-                        _iwd.println("...RC_SUCCESS_BUT_DATA_WAS_UPDATED");
+                        iwdetails.println("...RC_SUCCESS_BUT_DATA_WAS_UPDATED");
                         break;
                     case ExtractFromHTML_Helper.RC_WARNING_NO_DPDAY_FOUND:
                         s += "\nNo DPDay found";
-                        _iwd.println("...NO DPDAY FOUND");
+                        iwdetails.println("...NO DPDAY FOUND");
                         break;
                     default:
-                        _iwd.println("...<UNEXPECTED RETURN CODE>");
+                        iwdetails.println("...<UNEXPECTED RETURN CODE>");
+                        is_error = true;
                         break;
                 }
                 _iwd.println(iwdetails.getString());
 
                 if (is_error) {
-                    log.severe(s);
+                    log.severe(s + "\n" + iwdetails.getString());
                 } else {
                     log.info(s);
                 }
@@ -203,6 +206,7 @@ public class FLOps1_Ext1_Extract_New {
                 break;
             }
 
+            log.info("...done processing: " + fi.getTypeAndName());
             // break;
         }
         log.info("Done, processed: " + countTotal);

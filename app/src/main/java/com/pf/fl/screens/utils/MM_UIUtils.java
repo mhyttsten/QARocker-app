@@ -19,9 +19,21 @@ public class MM_UIUtils {
                 }
             }
         } else {
-            tv.setText("-");
-            tv.setTextColor(a.getResources().getColor(R.color.yellow));
+            tv.setText("N");
         }
     }
 
+    public static int getTextViewAsInt(TextView tv) {
+        if (tv == null) {
+            throw new AssertionError("Argument TextView was null");
+        }
+        String s = tv.getText().toString();
+        if (s == null) return 0;
+        try {
+            int r = Integer.parseInt(s);
+            return r;
+        } catch(NumberFormatException exc) {
+            return 0;
+        }
+    }
 }

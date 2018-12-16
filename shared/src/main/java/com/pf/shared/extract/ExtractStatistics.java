@@ -269,7 +269,7 @@ public class ExtractStatistics {
                 throw new AssertionError("Unsupported encoding: " + exc.toString());
             }
             if (iw._generateHTML) {
-                iw.println("<a href=\"" + fi._url + "\">" + fi._url + "</a>");
+                iw.println     ("<a href=\"" + fi._url + "\" target=\"_blank\">" + fi._url + "</a>");
             } else {
                 iw.println(fi._url);
             }

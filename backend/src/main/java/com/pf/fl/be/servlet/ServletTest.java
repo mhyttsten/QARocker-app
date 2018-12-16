@@ -60,10 +60,13 @@ public class ServletTest extends HttpServlet {
         DB_FundInfo.initialize(fundInfoBA, true);
         List<D_FundInfo> fis = DB_FundInfo.getAllFundInfos();
 
-        int count = 0;
-        for (D_FundInfo fi : fis) {
-            count++;
-        }
+//        int count = 0;
+//        for (D_FundInfo fi : fis) {
+//            if (fi._errorCode != D_FundInfo.IC_NO_ERROR) {
+//                fi._isValid = false;
+//            }
+//            count++;
+//        }
 //        byte[] data = D_FundInfo_Serializer.crunchFundList(fis);
 //        GCSWrapper.gcsWriteFile(Constants.FUNDINFO_DB_MASTER_BIN, data);
 //        log.info("*** processFund done, updated: " + count);

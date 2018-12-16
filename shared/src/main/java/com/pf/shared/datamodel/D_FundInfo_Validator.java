@@ -40,7 +40,7 @@ public class D_FundInfo_Validator {
             _error = true;
         }
         if (fi._nameMS.toLowerCase().contains("ett fel uppstod")) {
-            _iwErrors.println("*** Field _nameMS became null");
+            _iwErrors.println("*** Field _nameMS became \"ett fel uppstod\"");
             _error = true;
         }
 
