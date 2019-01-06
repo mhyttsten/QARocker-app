@@ -24,6 +24,23 @@ public class FLAnalyze_Analyze_Test {
             byte[] raw = MM.fileReadFrom("/Users/magnushyttsten/tmp/fundinfo-db-master.bin");
             t.mark("Reading file");
             DB_FundInfo.initialize(raw, true);
+
+            int count = 0;
+            int nofriday = 0;
+            List<D_FundInfo> l = new ArrayList<>();
+            String f = "181214";
+            for (D_FundInfo fi: DB_FundInfo.getAllFundInfos()) {
+                if (!fi._dpDays.get(0)._dateYYMMDD.equals(f)) {
+                    System.out.println(fi);
+                    nofriday++;
+                }
+                count += fi._dpDays.size();
+            }
+            System.out.println("No friday: " + nofriday);
+            System.out.println("Average DPDs per fund: " + (count / DB_FundInfo.getAllFundInfos().size()));
+            if (true)
+                return;
+
             t.mark("Initialize DB");
             FLAnalyze_Analyze fla = new FLAnalyze_Analyze(DB_FundInfo.getAllFundInfos());
             t.mark("Instantiate FLAnalyze_Analyze");

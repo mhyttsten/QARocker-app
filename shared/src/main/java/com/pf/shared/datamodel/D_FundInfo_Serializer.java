@@ -17,18 +17,22 @@ public class D_FundInfo_Serializer {
     private static final Logger log = Logger.getLogger(D_FundInfo_Serializer.class.getName());
 
     //------------------------------------------------------------------------
-    public static byte[] crunchFundList(List<D_FundInfo> l) throws IOException {
+    public static byte[] crunchFundList(List<D_FundInfo> l) {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         DataOutputStream dout = new DataOutputStream(bout);
 
-        for (D_FundInfo fi : l) {
-            D_FundInfo_Serializer.crunch_D_FundInfo(dout, fi);
-        }
 
-        dout.flush();
-        byte[] data = bout.toByteArray();
-        data = Compresser.dataCompress("FundList", data);
-        return data;
+        try {
+            for (D_FundInfo fi : l) {
+                D_FundInfo_Serializer.crunch_D_FundInfo(dout, fi);
+            }
+            dout.flush();
+            byte[] data = bout.toByteArray();
+            data = Compresser.dataCompress("FundList", data);
+            return data;
+        } catch(IOException exc) {
+            throw new AssertionError("IOException caught: " + exc + "\n" + MM.getStackTraceString(exc));
+        }
     }
 
     //------------------------------------------------------------------------

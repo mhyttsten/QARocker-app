@@ -154,6 +154,7 @@ public class FLOps1_Ext1_Extract_New {
                 boolean is_error = false;
                 switch(errorCode) {
                     case ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND:
+                        log.severe("*** INVALID: " + fi.getOneLiner());
                         s += "\nFund became invalid";
                         iwdetails.println("...RC_ERROR_REMOVE_FUND, setting it to invalid");
                         fi._isValid = false;

@@ -887,12 +887,16 @@ public class MM {
 	}
 
 	//-------------------------------------------------------------------------------------
-	public static List<String> splitIntoLines(String fileContentStr) throws Exception {
+	public static List<String> splitIntoLines(String fileContentStr) {
 		BufferedReader d = new BufferedReader(new StringReader(fileContentStr));
 		ArrayList<String> al = new ArrayList<String>();
 		String line = null;
 		do {
-			line = d.readLine();
+			try {
+				line = d.readLine();
+			} catch(IOException exc) {
+				return null;
+			}
 			if(line != null) {
 				line = line.trim();
 				if(line.length() > 0) {

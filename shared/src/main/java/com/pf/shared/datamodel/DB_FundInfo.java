@@ -3,6 +3,7 @@ package com.pf.shared.datamodel;
 import com.pf.shared.utils.OTuple2G;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +36,7 @@ public class DB_FundInfo {
 
         log.info("...decrunching and rebuilding again");
         _fis = D_FundInfo_Serializer.decrunchFundList(fundInfoData);
-        _fis.sort(new Comparator<D_FundInfo>() {
+        Collections.sort(_fis, new Comparator<D_FundInfo>() {
             @Override
             public int compare(D_FundInfo o1, D_FundInfo o2) {
                 return o1.getTypeAndName().compareTo(o2.getTypeAndName());
@@ -44,7 +45,7 @@ public class DB_FundInfo {
         rebuildHashMaps();
         _isInitialized = true;
     }
-    private static void rebuildHashMaps() throws IOException {
+    private static void rebuildHashMaps() {
         _fisByTypeHM = new HashMap<>();
         _fisByIndexHM = new HashMap<>();
         _indexes = new ArrayList<>();
@@ -64,7 +65,7 @@ public class DB_FundInfo {
                 _fisByIndexHM.put(in, new ArrayList<D_FundInfo>());
             }
             _fisByIndexHM.get(in).add(fi);
-            _indexes.sort(new Comparator<String>() {
+            Collections.sort(_indexes, new Comparator<String>() {
                 @Override
                 public int compare(String o1, String o2) {
                     return o1.compareTo(o2);
@@ -81,16 +82,16 @@ public class DB_FundInfo {
     }
 
     //------------------------------------------------------------------------
-    public static byte[] addFundInfo(List<D_FundInfo> fisAdd) throws Exception {
+    public static byte[] addFundInfo(List<D_FundInfo> fisAdd) {
         for (D_FundInfo fiAdd: fisAdd) {
             for (D_FundInfo fi : _fis) {
                 if (fi.getTypeAndName().equals(fiAdd.getTypeAndName())) {
-                    throw new IOException("Cannot add fund already existing: " + fi.getTypeAndName() + ", attempted to add: " + fiAdd.getTypeAndName());
+                    throw new AssertionError("Cannot add fund already existing: " + fi.getTypeAndName() + ", attempted to add: " + fiAdd.getTypeAndName());
                 }
             }
         }
         _fis.addAll(fisAdd);
-        _fis.sort(new Comparator<D_FundInfo>() {
+        Collections.sort(_fis, new Comparator<D_FundInfo>() {
             @Override
             public int compare(D_FundInfo o1, D_FundInfo o2) {
                 return o1.getTypeAndName().compareTo(o2.getTypeAndName());
@@ -121,7 +122,23 @@ public class DB_FundInfo {
     }
 
     //------------------------------------------------------------------------
-    public static byte[] deleteFundInfo(D_FundInfo fiDel) throws Exception {
+    public static void deleteFundInfoByTypeAndURL(String type, String url) {
+        boolean removed = false;
+        for (int i=0; i < _fis.size(); i++) {
+            D_FundInfo fi = _fis.get(i);
+            if (fi._type.equals(type) && fi._url.equals(url)) {
+                removed = true;
+                _fis.remove(i);
+                break;
+            }
+        }
+        if (removed) {
+            rebuildHashMaps();
+        }
+    }
+
+    //------------------------------------------------------------------------
+    public static byte[] deleteFundInfo(D_FundInfo fiDel) {
         boolean found = false;
         log.info("*** Deleting fund: " + fiDel.getTypeAndName());
         for (int i=0; i < _fis.size(); i++) {
@@ -134,7 +151,7 @@ public class DB_FundInfo {
             }
         }
         if (!found) {
-            throw new IOException("Fund " + fiDel.getTypeAndName() + " did not exist, so cannot be deleted");
+            throw new AssertionError("Fund " + fiDel.getTypeAndName() + " did not exist, so cannot be deleted");
         }
         rebuildHashMaps();
         byte[] data = D_FundInfo_Serializer.crunchFundList(_fis);

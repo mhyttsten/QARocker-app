@@ -79,7 +79,7 @@ public class FLAnalyze_Analyze {
     //------------------------------------------------------------------------
     public FLAnalyze_Analyze(List<D_FundInfo> fundsToAnalyze) {
         _fiClonesOriginals = D_FundInfo.cloneList(fundsToAnalyze);
-        FLAnalyze_DataPreparation.fillVoids(null, _fiClonesOriginals);
+//        FLAnalyze_DataPreparation.fillVoids(null, _fiClonesOriginals);
     }
 
     //------------------------------------------------------------------------

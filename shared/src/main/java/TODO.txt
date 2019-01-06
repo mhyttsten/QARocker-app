@@ -1,3 +1,7 @@
+- Make sure we always store DP even if it doesnt have r1w
+- Retry extractions for all with r1w == null
+
+
 - App: Add FundRank winner in Portfolio screen + scrollbar to change time window
 - App: Verify FundRank numbers
 - App: Add extraction info on main screen (after portfolio, at least with fridayYYMMDD and #total/#extracted/#left)
