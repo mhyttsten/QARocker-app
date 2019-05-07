@@ -31,6 +31,10 @@
             android:icon="@mipmap/ic_settings_black_24dp"
             android:title="Extraction Info" />
         <item
+            android:id="@+id/nv_display_debug"
+            android:icon="@mipmap/ic_settings_black_24dp"
+            android:title="Debug Info" />
+        <item
             android:id="@+id/nv_show_change_fl"
             android:icon="@mipmap/ic_settings_black_24dp"
             android:title="Show Change" />

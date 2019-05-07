@@ -1,11 +1,11 @@
 package com.pf.mr.utils;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -13,82 +13,147 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Logger;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.execmodel.ESet;
-import com.pf.mr.execmodel.ETerm;
+import com.pf.shared.BackgroundWorker;
 import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.extract.ExtractFromHTML_Helper;
 import com.pf.shared.utils.Compresser;
-import com.pf.shared.utils.HtmlRetriever;
-import com.pf.shared.utils.MM;
-import com.pf.shared.utils.OTuple2G;
 import com.pf.shared.utils.IndentWriter;
+import com.pf.shared.utils.MM;
 
 import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 public class Misc {
     public static final String TAG = Misc.class.getSimpleName();
 
-    public static void executedAtAppStart() {
-        try {
+    public static void executedAtAppStartInBackground(AppCompatActivity a) {
+        System.out.println("Misc.executedAtAppStart");
+
+        String s = "Debug: ";
+        String fstr = "No debug file";
+        File file = new File(a.getApplicationContext().getFilesDir(), BackgroundWorker.FILE_NAME);
+        if (file.exists()) {
+            System.out.println("...file existed: " + BackgroundWorker.FILE_NAME);
+            try {
+                fstr = new String(MM.fileReadFrom(file));
+                s += MM.getString(fstr, 100);
+                System.out.println("...Content of file:\n" + s);
+            } catch(Exception exc) {
+                System.out.println("Exception caught: " + exc.getMessage());
+            }
+        } else {
+            s += "Not exist";
+            System.out.println("...file did not exist: " + BackgroundWorker.FILE_NAME);
+        }
+
+        File f2 = new File(a.getApplicationContext().getFilesDir(), com.pf.shared.Constants.FUNDINFO_DB_MASTER_BIN_APP);
+        s += "\nFundDB: ";
+        if (f2.exists()) {
+            s += new java.util.Date(f2.lastModified()).toString();
+        } else {
+            s += "Not found";
+
+            // Get the DB file
+            System.out.println("Creating thread to get the file");
+            final AppCompatActivity a2 = a;
             @SuppressLint("StaticFieldLeak") AsyncTask<URL, Integer, Long> at = new AsyncTask<URL, Integer, Long>() {
                 protected Long doInBackground(URL... urls) {
-                    try {
-                        Log.e(TAG, "*** In background");
-                        Log.e(TAG, "Will now get HTML data");
-                        IndentWriter iw_html_debug = new IndentWriter();
-                        byte[] htmlDataRaw = HtmlRetriever.htmlGet(
-                                iw_html_debug,
-                                "https://www.morningstar.se/Funds/Quicktake/Overview.aspx?perfid=0P0000HLO5&programid=0000000000",
-                                5000,
-                                6);
-                        if (htmlDataRaw == null) {
-                            Log.e(TAG, "Received NULL");
-                        } else {
-                            Log.e(TAG, "Retrieved: " + htmlDataRaw.length + " bytes");
-                        }
-
-                        boolean error = false;
-                        if (htmlDataRaw == null || htmlDataRaw.length == 0) {
-                            Log.e(TAG, "HTML info null");
-                        }
-                        String htmlDataString = MM.newString(htmlDataRaw, com.pf.shared.Constants.ENCODING_FILE_READ);
-                        if (htmlDataString == null || htmlDataString.length() == 0) {
-                            Log.e(TAG, "HTML could not create String from bytep[]");
-                        }
-                    } catch(Exception exc) {
-                        Log.i(TAG, "Exception when trying to get webpage: " + exc.toString());
-                        Log.i(TAG, MM.getStackTraceString(exc));
-                    }
-                    Log.e(TAG, "Returning without error");
+                    System.out.println("We are in the thread");
+                    BackgroundWorker.initializeDB(null, a2.getApplicationContext());
+                    System.out.println("Retrieved the DB file");
                     return 0L;
                 }
-
                 protected void onProgressUpdate(Integer... progress) { }
                 protected void onPostExecute(Long result) { }
             }.execute();
-
-        } catch(Exception exc) {
-            Log.e(TAG, exc.toString());
         }
-        Log.e(TAG, "*** Now exiting from executeAtAppStartImpl");
+
+        Toast.makeText(a, "Version [2019-02-26 13:06:00]\n" + s, Toast.LENGTH_LONG).show();
+        System.out.println("*** DEBUG file\n" + s);
+
+        PeriodicWorkRequest wr = new PeriodicWorkRequest.Builder(
+                BackgroundWorker.class,
+                60,
+                TimeUnit.MINUTES)
+                .setConstraints(new Constraints.Builder()
+                        .setRequiresBatteryNotLow(false)
+                        .setRequiresStorageNotLow(false)
+                        .setRequiresDeviceIdle(false)
+                        .setRequiresCharging(false)
+                        .setRequiredNetworkType(NetworkType.CONNECTED)  // Any type of NW is ok (also roaming)
+                        .build())
+                .build();
+        WorkManager.getInstance().enqueueUniquePeriodicWork(
+                "FUNDINFO_UPDATE_DB",
+                ExistingPeriodicWorkPolicy.KEEP,
+                wr);
+
+//        try {
+//            @SuppressLint("StaticFieldLeak") AsyncTask<URL, Integer, Long> at = new AsyncTask<URL, Integer, Long>() {
+//                protected Long doInBackground(URL... urls) {
+//                    try {
+//                        Log.e(TAG, "*** In background");
+//                        Log.e(TAG, "Will now get HTML data");
+//                        IndentWriter iw_html_debug = new IndentWriter();
+//                        byte[] htmlDataRaw = HtmlRetriever.htmlGet(
+//                                iw_html_debug,
+//                                "https://www.morningstar.se/Funds/Quicktake/Overview.aspx?perfid=0P0000HLO5&programid=0000000000",
+//                                5000,
+//                                6);
+//                        if (htmlDataRaw == null) {
+//                            Log.e(TAG, "Received NULL");
+//                        } else {
+//                            Log.e(TAG, "Retrieved: " + htmlDataRaw.length + " bytes");
+//                        }
+//
+//                        boolean error = false;
+//                        if (htmlDataRaw == null || htmlDataRaw.length == 0) {
+//                            Log.e(TAG, "HTML info null");
+//                        }
+//                        String htmlDataString = MM.newString(htmlDataRaw, com.pf.shared.Constants.ENCODING_FILE_READ);
+//                        if (htmlDataString == null || htmlDataString.length() == 0) {
+//                            Log.e(TAG, "HTML could not create String from bytep[]");
+//                        }
+//                    } catch(Exception exc) {
+//                        Log.i(TAG, "Exception when trying to get webpage: " + exc.toString());
+//                        Log.i(TAG, MM.getStackTraceString(exc));
+//                    }
+//                    Log.e(TAG, "Returning without error");
+//                    return 0L;
+//                }
+//
+//                protected void onProgressUpdate(Integer... progress) { }
+//                protected void onPostExecute(Long result) { }
+//            }.execute();
+//
+//        } catch(Exception exc) {
+//            Log.e(TAG, exc.toString());
+//        }
+//        Log.e(TAG, "*** Now exiting from executeAtAppStartImpl");
 //        throw new AssertionError("We've just executed the executeAtAppStartImpl");
     }
-
 
     public static byte[] getFirebaseStorageFile() {
         Log.w(TAG, "*** Will now try to download content");

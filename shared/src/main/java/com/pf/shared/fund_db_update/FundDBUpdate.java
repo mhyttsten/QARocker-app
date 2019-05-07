@@ -10,6 +10,8 @@ import com.pf.shared.utils.MM;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class FundDBUpdate {
@@ -17,7 +19,7 @@ public class FundDBUpdate {
     /* Manual
      1. Create /tmp2/funddbupdate and make sure it is empty
 
-     2. Put your fund TSV, and HTML files here
+     2. Put your fund TSV, and HTML files here as per below (do one type at a time).
 
      a. SEB and SPP
         Update their spreadsheets
@@ -25,7 +27,9 @@ public class FundDBUpdate {
         Filenames should be: seb_<index>.tsv, spp_<index>.tsv
 
      b. PPM: TBD
-        Filename should be: ppm_<index>html
+        Go to: https://www.morningstar.se/Funds/Quickrank.aspx?ppm=on&view=overview
+        Order by name
+        Right click on each page table and do save as to filename: ppm_<xy>.html
 
      c. Vanguard is HTML
         Go to each table on their HTML page and do 'Save As'
@@ -37,17 +41,18 @@ public class FundDBUpdate {
           https://investor.vanguard.com/mutual-funds/list#/mutual-funds/name/month-end-returns
        List of Vanguard ETF (first entry: Communication Services ETF)
           https://investor.vanguard.com/mutual-funds/list#/etf/name/month-end-returns
-       List of non-Vanguard funds
-       Aberdeen
-          https://personal.vanguard.com/us/funds/other/bytype?FundFamilyId=31698
-       BlackRock
-       Fidelity
-       Goldman Sachs
-       HSBC
-       MotelyFool
-       Morgan Stanley
-       Pimco
-       Primecap
+       List of non-Vanguard funds: See "Select a mutual fund company"
+          https://investor.vanguard.com/other-funds/
+          Then use "Fund Family" selector at top right of list area
+       Aberdeen:      https://personal.vanguard.com/us/funds/other/bytype?FundFamilyId=31698
+       BlackRock:     https://personal.vanguard.com/us/funds/other/bytype?FundFamilyId=6371
+       Fidelity:      https://personal.vanguard.com/us/funds/other/bytype?FundFamilyId=6082
+       Goldman Sachs: https://personal.vanguard.com/us/funds/other/bytype?FundFamilyId=6341
+       HSBC:          https://personal.vanguard.com/us/funds/other/bytype?FundFamilyId=6452
+       Morgan Stanley https://personal.vanguard.com/us/funds/other/bytype?FundFamilyId=6383
+       MotelyFool:    https://personal.vanguard.com/us/funds/other/bytype?FundFamilyId=42698
+       Pimco          https://personal.vanguard.com/us/funds/other/bytype?FundFamilyId=31816
+       Primecap       https://personal.vanguard.com/us/funds/other/bytype?FundFamilyId=225092
        T. Rowe
 
      3. Download latest fundinfo-db-master.bin into this directory
@@ -64,17 +69,6 @@ public class FundDBUpdate {
         }
     }
 
-    public static class Entry {
-        public Entry(String msName, String msURL, String origName) {
-            _msName = msName;
-            _msURL = msURL;
-            _origName = origName;
-        }
-        public String _msName;
-        public String _msURL;
-        public String _origName;
-    }
-
     //------------------------------------------------------------------------
     public static final String DIR = "/tmp2/funddbupdate";
     public static final String DB_ABSOLUTE_FILENAME = DIR + "/fundinfo-db-master.bin";
@@ -87,8 +81,8 @@ public class FundDBUpdate {
     public static void mainImpl(String[] args) throws Exception {
 //        doit(true, D_FundInfo.TYPE_SEB, FILE_TYPE_SEB);
 //        doit(true, D_FundInfo.TYPE_SPP, FILE_TYPE_SPP);
-
-        doit(false, D_FundInfo.TYPE_VANGUARD, FILE_TYPE_VGD);
+//        doit(false, D_FundInfo.TYPE_PPM, FILE_TYPE_PPM);
+//        doit(true, D_FundInfo.TYPE_VANGUARD, FILE_TYPE_VGD);
     }
 
     //------------------------------------------------------------------------
@@ -112,42 +106,65 @@ public class FundDBUpdate {
 
         // Get all the files to analyze
         List<File> tmpList = new ArrayList<>();
+        List<File> fileList = new ArrayList<>();
         String error = MM.fileList(tmpList, DIR, false);
         if (error != null) {
             System.out.println("Error reading files: " + error);
             return;
         }
-        List<D_FundInfo> fisFiles = new ArrayList<>();
         for (File f : tmpList) {
             if (!f.getName().startsWith(filePrefix)) {
                 continue;
             }
-            System.out.println("Adding file: " + f.getName() + ", for analysis");
+            fileList.add(f);
+        }
+        Collections.sort(fileList, new Comparator<File>() {
+            @Override
+            public int compare(File f1, File f2) {
+                return f1.getName().compareTo(f2.getName());
+            }
+        });
+        for (File f: fileList) {
+            System.out.println("Adding file for process: " + f.getName());
+        }
+        System.out.println("\n");
+        List<D_FundInfo> fisFiles = new ArrayList<>();
+        for (File f: fileList) {
+            List<D_FundInfo> tmpFIS = new ArrayList<>();
             byte[] data = MM.fileReadFrom(f);
             String errorStr = null;
             if (type.equals(D_FundInfo.TYPE_SEB)) {
-                errorStr = FundDBUpdate_TSV.update(fisFiles, D_FundInfo.TYPE_SEB, data);
+                errorStr = FundDBUpdate_TSV.update(tmpFIS, D_FundInfo.TYPE_SEB, data);
             }
             else if (type.equals(D_FundInfo.TYPE_SPP)) {
-                errorStr = FundDBUpdate_TSV.update(fisFiles, D_FundInfo.TYPE_SPP, data);
+                errorStr = FundDBUpdate_TSV.update(tmpFIS, D_FundInfo.TYPE_SPP, data);
             }
             else if (type.equals(D_FundInfo.TYPE_PPM)) {
-//                errorStr = FundDBUpdate_PPM(fisFiles, data);
+                errorStr = FundDBUpdate_PPM.update(tmpFIS, f.getName(), data);
             }
             else if (type.equals(D_FundInfo.TYPE_VANGUARD)) {
-                errorStr = FundDBUpdate_VGD.update(fisFiles, f.getName(), data);
+                errorStr = FundDBUpdate_VGD.update(tmpFIS, f.getName(), data);
             }
             if (errorStr != null) {
                 System.out.println("Received error string, will not overwrite existing Fund DB\n" + errorStr);
                 return;
             }
+            System.out.println("Processed file: " + f.getName() + ", found: " + tmpFIS.size() + " entries");
+            if (tmpFIS.size() >= 1) {
+                D_FundInfo f1 = tmpFIS.get(0);
+                D_FundInfo f2 = tmpFIS.get(tmpFIS.size()-1);
+                System.out.println("...1/" + tmpFIS.size()                     + " Orig: " + f1._nameOrig + ", MS: " + f1._nameMS + ", " + f1._url);
+                System.out.println("..." + tmpFIS.size() + "/" + tmpFIS.size() + " Orig: " + f2._nameOrig + ", MS: " + f2._nameMS + ", " + f2._url);
+                fisFiles.addAll(tmpFIS);
+            }
         }
-        System.out.println("Parsed: " + fisFiles.size() + " for type: " + type);
+        System.out.println("\nParsed: " + fisFiles.size() + " for type: " + type);
         if (fisFiles.size() == 0) {
-            System.out.println("Now work to do, exiting without modifying fund DB");
+            System.out.println("No work to do, exiting without modifying fund DB");
             return;
         }
-        System.out.println("Will now process these entries");
+
+        System.out.println("\nComparing File and DB datasets");
         int rc = processFileFIs(testHTMLExtraction, type, fisFiles);
         if (rc == RC_FAILURE) {
             System.out.println("*** ERROR during processFileFIs, exiting without modifying DB");
@@ -188,8 +205,8 @@ public class FundDBUpdate {
         }
         byte[] dataToWrite = DB_FundInfo.crunch();
         // Store a backupo
-//        MM.fileWrite(DB_ABSOLUTE_FILENAME + ".backup_" + MM.getNowAs_YYMMDD_HHMMSS(null), fileDBDataBA);
-//        MM.fileWrite(DB_ABSOLUTE_FILENAME, dataToWrite);
+        MM.fileWrite(DB_ABSOLUTE_FILENAME + ".backup_" + MM.getNowAs_YYMMDD_HHMMSS(null), fileDBDataBA);
+        MM.fileWrite(DB_ABSOLUTE_FILENAME, dataToWrite);
         System.out.println("All done successfully, exiting");
     }
 
@@ -209,15 +226,14 @@ public class FundDBUpdate {
         IndentWriter iwInsert = new IndentWriter();
 
         // Checking which in Files were new/already existed in DB
-        System.out.println("*** Checking file funds to see if they exist in DB");
+        System.out.println("\n1. Checking file funds to see if they exist in DB (report at end)");
         List<D_FundInfo> fisToAdd = new ArrayList<>();
         int countURLMatch = 0;
         int countNewFunds = 0;
         for (D_FundInfo fiFile: fisFiles) {
-
             D_FundInfo fiDB =  DB_FundInfo.getFundInfosByTypeAndURL(fiFile._type, fiFile._url);
             if (fiDB != null) {
-                if (!fiDB._isValid || fiDB._errorCode != D_FundInfo.IC_NO_ERROR) {
+                if (!fiDB._isValid) {
                     System.out.println("*** Error. Found match on URL, but the one in DB is invalid");
                     System.out.println(fiDB.getOneLiner());
                     return RC_FAILURE;
@@ -246,18 +262,47 @@ public class FundDBUpdate {
                     System.out.println("...File Entry: " + fiFile.getOneLiner());
                     return RC_FAILURE;
                 }
-                countNewFunds++;
-                iwInsert.println("...[INSERT] Will insert new fund from file: " + fiFile.getTypeAndName());
                 fisToAdd.add(fiFile);
             }
+        }
+
+        int countNoDPDayFound = 0;
+        if (testHTMLExtraction) {
+            System.out.println("\n2. Testing HTML extraction of added funds from files");
+            int index = 0;
+            while (index < fisToAdd.size()) {
+                D_FundInfo fi = fisToAdd.get(index);
+                int rc_html = htmlExtract(testHTMLExtraction, fi);
+                switch (rc_html) {
+                    case RC_HTML_SUCCESS:
+                        index++;
+                        break;
+                    case RC_HTML_NODPDAY:
+                        index++;
+                        countNoDPDayFound++;
+                        break;
+                    case RC_HTML_GENERAL_ERROR_TERMINATE:
+                        return RC_FAILURE;
+                    case RC_HTML_ERROR:
+                        System.out.println("*** Extraction failed, will not add this file fund to DB");
+                        fisToAdd.remove(index);
+                        countNewFunds--;
+                }
+            }
+        } else {
+            System.out.println("\n2. PASS: Will not test HTML extraction");
         }
         if (fisToAdd.size() > 0) {
             rc = RC_SUCCESS_MODIFIED;
             DB_FundInfo.addFundInfo(fisToAdd);
         }
+        for (D_FundInfo fi : fisToAdd) {
+            countNewFunds++;
+            iwInsert.println("...[INSERT] Will insert new fund from file: " + fi.getTypeAndName());
+        }
 
         // Checking which in DB did not have an entry in file
-        System.out.println("*** Checking DB funds to see if they exist in files");
+        System.out.println("\n3. Checking DB funds to see if they exist in files (report at end)");
         int countUniqueInDB = 0;
         List<D_FundInfo> fisDB = DB_FundInfo.getFundInfosByType(type);
         int countOriginalInDB = fisDB.size();
@@ -276,32 +321,6 @@ public class FundDBUpdate {
             }
         }
 
-
-        // Try to successfully extract
-        if (rc == RC_SUCCESS_MODIFIED) {
-            if (testHTMLExtraction) {
-                System.out.println("Testing extraction for added funds from files");
-                for (int i = 0; i < fisToAdd.size(); i++) {
-                    D_FundInfo fi = fisToAdd.get(i);
-                    System.out.println((i + 1) + "/" + fisToAdd.size() + " Extracting fund: " + fi.getTypeAndName() + ", " + fi._url);
-                    IndentWriter iwd = new IndentWriter();
-                    ExtractFromHTML_Helper eh = new ExtractFromHTML_Helper();
-                    try {
-                        int errorCode = eh.extractFundDetails(fi, iwd);
-                        if (errorCode != ExtractFromHTML_Helper.RC_SUCCESS) {
-                            System.out.println("*** Error extracting fund: " + errorCode + ", " + fi.getTypeAndName());
-                            System.out.println(iwd.getString());
-                            return RC_FAILURE;
-                        }
-                    } catch (IOException exc) {
-                        System.out.println("IOException caught: " + exc + "\n" + MM.getStackTraceString(exc));
-                        return RC_FAILURE;
-                    }
-                    System.out.println("...successfully extracted: " + fi.getOneLiner());
-                }
-            }
-        }
-
         System.out.println("\nSynchronization Report");
         System.out.println(iwInfo.getString());
         System.out.println(iwUpdate.getString());
@@ -311,9 +330,43 @@ public class FundDBUpdate {
         System.out.println("\nTotal in DB: " + fisDB.size());
         System.out.println("Total in files: " + fisFiles.size());
         System.out.println("...Matches between DB/Files: " + countURLMatch);
-        System.out.println("...New funds found in files: " + countNewFunds);
+        System.out.println("...New funds found in files: " + countNewFunds + ", of which had no DP day: " + countNoDPDayFound);
         System.out.println("...Funds to remove from DB: " + countUniqueInDB);
 
         return rc;
+    }
+
+    //------------------------------------------------------------------------
+    private final static int RC_HTML_SUCCESS = 0;
+    private final static int RC_HTML_NODPDAY = 1;
+    private final static int RC_HTML_ERROR = 2;
+    private final static int RC_HTML_GENERAL_ERROR_TERMINATE = 3;
+    private static int htmlExtract(boolean testHTMLExtraction, D_FundInfo fi) {
+        if (testHTMLExtraction) {
+            IndentWriter iwd = new IndentWriter();
+            ExtractFromHTML_Helper eh = new ExtractFromHTML_Helper();
+            System.out.println("Testing extraction: " + fi.getOneLiner());
+            try {
+                int errorCode = eh.extractFundDetails(fi, iwd);
+                if (errorCode != ExtractFromHTML_Helper.RC_SUCCESS
+                        && errorCode != ExtractFromHTML_Helper.RC_WARNING_NO_DPDAY_FOUND
+                        && errorCode != ExtractFromHTML_Helper.RC_SUCCESS_BUT_DATA_WAS_UPDATED) {
+                    System.out.println("*************************************************************");
+                    System.out.println("*** Error extracting fund error code: " + errorCode + ", " + fi.getTypeAndName());
+                    System.out.println(iwd.getString());
+                    return RC_HTML_ERROR;
+                }
+                if (errorCode == ExtractFromHTML_Helper.RC_WARNING_NO_DPDAY_FOUND) {
+                    System.out.println("...*** WARNING *** No DP day found");
+                    System.out.println("...warning fund: " + fi.getOneLiner());
+                    return RC_HTML_NODPDAY;
+                }
+            } catch (IOException exc) {
+                System.out.println("IOException caught: " + exc + "\n" + MM.getStackTraceString(exc));
+                return RC_HTML_GENERAL_ERROR_TERMINATE;
+            }
+            System.out.println("...successfully extracted: " + fi.getOneLiner());
+        }
+        return RC_HTML_SUCCESS;
     }
 }

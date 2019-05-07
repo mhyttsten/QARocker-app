@@ -33,7 +33,7 @@ public class DedupsMain_Calculate {
 		_m.L.info("Scanning and reporting files to generate: " + _hashFileName);
 
 		String hashFilename = _hashFileName.replace('/', '_');
-		hashFilename = hashFilename.replace('.', '_');		
+//		hashFilename = hashFilename.replace('.', '_');
 		if(hashFilename.endsWith("_")) {
 			hashFilename = hashFilename.substring(0, hashFilename.length()-1);
 		}

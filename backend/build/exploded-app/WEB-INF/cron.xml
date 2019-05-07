@@ -11,22 +11,22 @@
     <cron>
         <url>/cronWork</url>
         <description>Cron_Work</description>
-        <schedule>every 1 hours from 10:00 to 20:00</schedule>
+        <schedule>every 1 hours from 09:00 to 11:00</schedule>
         <timezone>America/Los_Angeles</timezone>
     </cron>
 
+    <!--<cron>-->
+        <!--<url>/cronExtractNew</url>-->
+        <!--<description>Cron_Extract_New</description>-->
+        <!--<schedule>every 10 minutes from 06:00 to 08:30</schedule>-->
+        <!--<timezone>Europe/Stockholm</timezone>-->
+    <!--</cron>-->
     <cron>
         <url>/cronExtractNew</url>
         <description>Cron_Extract_New</description>
-        <schedule>every 10 minutes from 06:00 to 08:30</schedule>
-        <timezone>Europe/Stockholm</timezone>
+        <schedule>every 10 minutes from 11:20 to 12:20</schedule>
+        <timezone>America/Los_Angeles</timezone>
     </cron>
 
-    <!--<cron>-->
-    <!--<url>/cronExtractNew</url>-->
-    <!--<description>Cron_Extract_New</description>-->
-    <!--<schedule>every 10 minutes from 00:10 to 01:30</schedule>-->
-    <!--<timezone>America/Los_Angeles</timezone>-->
-    <!--</cron>-->
 
 </cronentries>

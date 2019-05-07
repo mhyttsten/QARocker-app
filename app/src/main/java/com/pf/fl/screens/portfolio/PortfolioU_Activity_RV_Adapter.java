@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.pf.fl.datamodel.DB_FundInfo_UI;
-import com.pf.fl.screens.utils.RVRow4WSummaryHolder;
 import com.pf.mr.R;
 import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.datamodel.D_Portfolio;
@@ -63,11 +62,13 @@ public class PortfolioU_Activity_RV_Adapter extends RecyclerView.Adapter<Portfol
         for (D_FundInfo fi: fundsAll) {
             boolean found = false;
             CheckBoxTextView cbtv = new CheckBoxTextView(false, fi._nameMS, fi._url);
-            for (String url: p._urls) {
-                if (url.equals(fi._url)) {
-                    cbtv._check = true;
-                    found = true;
-                    _funds.add(0, cbtv);
+            if (p != null && p._urls != null) {
+                for (String url : p._urls) {
+                    if (url.equals(fi._url)) {
+                        cbtv._check = true;
+                        found = true;
+                        _funds.add(0, cbtv);
+                    }
                 }
             }
             if (!found) {

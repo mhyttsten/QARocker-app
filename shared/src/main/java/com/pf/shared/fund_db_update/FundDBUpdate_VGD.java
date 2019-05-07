@@ -18,7 +18,7 @@ public class FundDBUpdate_VGD {
     public static String update(List<D_FundInfo> fisFiles,
                                 String fileName,
                                 byte[] data) throws Exception {
-        System.out.println("FundDBUpdate_VGD, entered with filename: " + fileName);
+        System.out.println("\nFundDBUpdate_VGD, entered with filename: " + fileName);
 
         // Go through each files HTML content
         List<D_FundInfo> fisFilesTestExtraction = new ArrayList<>();
@@ -38,12 +38,12 @@ public class FundDBUpdate_VGD {
             return "Parsing: " + fileName + "returned null as result\nDetailed debug:\n" + iw.getString();
         }
 
-        System.out.println("\nRead file: " + fileName + ", found: " + fis.size() + " entries");
+//        System.out.println("\nRead file: " + fileName + ", found: " + fis.size() + " entries");
         for (int i=0; i < fis.size(); i++) {
             D_FundInfo fi = fis.get(i);
-            System.out.println((i+1) + "/" + fis.size() + " Orig: " + fi._nameOrig + ", MS: " + fi._nameMS + ", " + fi._url);
+//            System.out.println((i+1) + "/" + fis.size() + " Orig: " + fi._nameOrig + ", MS: " + fi._nameMS + ", " + fi._url);
         }
-        System.out.println("...done reading file: " + fileName + "\n");
+//        System.out.println("...done reading file: " + fileName + "\n");
 
         fisFiles.addAll(fis);
         return null;

@@ -28,8 +28,8 @@ public class Constants {
     public static final String FUNDLIST_PPM = "backend/fundlist_ppm.txt";
 
     public static final String PORTFOLIO_DB_MASTER_BIN  = "backend/fundportfolio-db-master.bin";
-    public static final String FUNDINFO_DB_MASTER_BIN  = "backend/fundinfo-db-master.bin";
-    public static final String FUNDINFO_DB_TEST_JSP      = "backend/fundinfo-db-test-jsp";
+    public static final String FUNDINFO_DB_MASTER_BIN_APP           = "fundinfo-db-master-app.bin";
+    public static final String FUNDINFO_DB_MASTER_BIN               = "backend/fundinfo-db-master.bin";
     public static final String FUNDINFO_LOGS_EXTRACT_MASTER_TXT = "backend/fundinfo-logs-extract-master.txt";
     public static final String PREFIX_FUNDINFO_DB      = "backend/historic/fundinfo-db-date-";
     public static final String PREFIX_WHISTORIC_FUNDINFO_LOGS_DEBUG   = "backend/historic/fundinfo-logs-debug-day-";

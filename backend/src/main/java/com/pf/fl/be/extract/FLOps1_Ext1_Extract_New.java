@@ -142,8 +142,11 @@ public class FLOps1_Ext1_Extract_New {
             iwdetails.push();
             ExtractFromHTML_Helper eh = new ExtractFromHTML_Helper();
             int errorCode = eh.extractFundDetails(fi, iwdetails);
+            fi._dateYYMMDD_Update_Attempted = eh._dateNow_YYMMDD;
 
             if (errorCode == ExtractFromHTML_Helper.RC_SUCCESS) {
+                fi._isValid = true;
+                fi._errorCode = D_FundInfo.IC_NO_ERROR;
                 _iwd.println("...SUCCESS: " + fi.getOneLiner());
                 if (_debugSuccessful) {
                     _iwd.println(iwdetails.getString());

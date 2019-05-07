@@ -1,11 +1,6 @@
 package com.pf.fl.analysis;
 
 
-import com.pf.shared.utils.IndentWriter;
-
-import java.util.ArrayList;
-import java.util.List;
-
 public class MasterTrend  {
     /*
     private static final String TAG = MasterTrend.class.getSimpleName();

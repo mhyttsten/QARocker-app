@@ -9,6 +9,7 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:largeHeap="true"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
@@ -42,6 +43,10 @@
             android:label="@string/title_activity_display_set_list_nvrv"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
+            android:name="com.pf.shared.TabLayoutActivity"
+            android:label="Tab Activity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
             android:name=".screens.settings.SettingsActivity"
             android:label="@string/title_activity_settings"
             android:parentActivityName=".screens.DisplaySetListNVRVActivity" />
@@ -65,7 +70,7 @@
             android:parentActivityName="com.pf.fl.screens.main.MainActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name="com.pf.fl.screens.extract.ViewExtractResultActivity"
+            android:name="com.pf.fl.screens.extract.DisplayStringActivity"
             android:label=""
             android:parentActivityName="com.pf.fl.screens.main.MainActivity"
             android:theme="@style/AppTheme.NoActionBar" />

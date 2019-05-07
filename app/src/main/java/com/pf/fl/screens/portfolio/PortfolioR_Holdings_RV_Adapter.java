@@ -1,12 +1,10 @@
 package com.pf.fl.screens.portfolio;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.pf.fl.datamodel.DB_FundInfo_UI;
 import com.pf.fl.screens.main.FLSingleton;
@@ -14,7 +12,6 @@ import com.pf.fl.screens.utils.MM_UIUtils;
 import com.pf.fl.screens.utils.RVRow4WSummaryHolder;
 import com.pf.mr.R;
 import com.pf.shared.analyze.DPSeries;
-import com.pf.shared.datamodel.DB_FundInfo;
 import com.pf.shared.datamodel.D_Portfolio;
 
 import java.util.ArrayList;

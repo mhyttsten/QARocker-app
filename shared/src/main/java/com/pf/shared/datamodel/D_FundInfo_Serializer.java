@@ -18,9 +18,11 @@ public class D_FundInfo_Serializer {
 
     //------------------------------------------------------------------------
     public static byte[] crunchFundList(List<D_FundInfo> l) {
+        return crunchFundList(l, true);
+    }
+    public static byte[] crunchFundList(List<D_FundInfo> l, boolean compress) {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         DataOutputStream dout = new DataOutputStream(bout);
-
 
         try {
             for (D_FundInfo fi : l) {
@@ -28,7 +30,9 @@ public class D_FundInfo_Serializer {
             }
             dout.flush();
             byte[] data = bout.toByteArray();
-            data = Compresser.dataCompress("FundList", data);
+            if (compress) {
+                data = Compresser.dataCompress("FundList", data);
+            }
             return data;
         } catch(IOException exc) {
             throw new AssertionError("IOException caught: " + exc + "\n" + MM.getStackTraceString(exc));

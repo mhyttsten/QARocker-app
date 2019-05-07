@@ -1,11 +1,7 @@
 package com.pf.mr.screens;
 
-import android.content.AsyncQueryHandler;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.pdf.PdfDocument;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -36,16 +32,10 @@ import com.pf.mr.execmodel.ECalculateStats;
 import com.pf.mr.execmodel.ESet;
 import com.pf.mr.screens.display_set_stats.RehearsalFinishedActivity;
 import com.pf.mr.screens.settings.SettingsActivity;
-import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.utils.Constants;
 import com.pf.mr.utils.Misc;
-import com.pf.mr.utils.TestYourBatchStuff;
-import com.pf.shared.extract.ExtractFromHTML_Helper;
-import com.pf.shared.utils.MM;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class DisplaySetListNVRVActivity extends AppCompatActivity
@@ -70,9 +60,19 @@ public class DisplaySetListNVRVActivity extends AppCompatActivity
         Log.i(TAG, "onCreate");
 
         Log.e(TAG, "DisplaySetListNVRVActivity.onCreate");
-        Misc.executedAtAppStart();
+        System.out.println("Before executedAtAppStart: " + new java.util.Date().toString());
+        Misc.executedAtAppStartInBackground(this);
+        System.out.println("After executedAtAppStart: " + new java.util.Date().toString());
 
         setContentView(R.layout.activity_display_set_list_nvrv);
+
+        Button b = (Button) findViewById(R.id.button);
+        b.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent i1 = new Intent(DisplaySetListNVRVActivity.this, com.pf.fl.screens.main.MainActivity.class);
+                startActivity(i1);
+            }
+        });
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);

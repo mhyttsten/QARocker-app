@@ -2,6 +2,7 @@ package com.pf.fl.datamodel;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -12,21 +13,21 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.pf.fl.screens.utils.ListImpl;
 import com.pf.shared.Constants;
 import com.pf.shared.analyze.DPSeries;
-import com.pf.shared.datamodel.D_FundInfo_Serializer;
-import com.pf.shared.datamodel.D_FundInfo_Validator;
-import com.pf.shared.datamodel.D_Portfolio;
 import com.pf.shared.datamodel.D_FundInfo;
+import com.pf.shared.datamodel.D_FundInfo_Serializer;
+import com.pf.shared.datamodel.D_Portfolio;
 import com.pf.shared.utils.Compresser;
-import com.pf.shared.utils.D_Utils;
 import com.pf.shared.utils.MM;
+import com.pf.shared.utils.Timer;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +37,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class DB_FundInfo_UI {
     public static final String TAG = DB_FundInfo_UI.class.getSimpleName();
@@ -84,8 +84,45 @@ public class DB_FundInfo_UI {
     }
 
     //------------------------------------------------------------------------
+    public static void initializeDB_Master(AppCompatActivity activity) {
+        try {
+            initializeDB_MasterImpl(activity);
+        } catch(IOException exc) {
+            Log.e(TAG, exc.getLocalizedMessage() + "\n" + MM.getStackTraceString(exc));
+        }
+    }
+    private static void initializeDB_MasterImpl(AppCompatActivity activity) throws IOException {
+//        long start = System.currentTimeMillis();
+        File file = new File(activity.getApplicationContext().getFilesDir(), Constants.FUNDINFO_DB_MASTER_BIN_APP);
+        FileInputStream fin = new FileInputStream(file);
+        byte[] data = MM.readData(fin);
+        ByteArrayInputStream bin = new ByteArrayInputStream(data);
+        DataInputStream din = new DataInputStream(bin);
+        List<D_FundInfo> l = new ArrayList<>();
+        while (din.available() > 0) {
+            D_FundInfo fi = D_FundInfo_Serializer.decrunch_D_FundInfo(din);
+            l.add(fi);
+        }
+        Collections.sort(l, new Comparator<D_FundInfo>() {
+            @Override
+            public int compare(D_FundInfo lh, D_FundInfo rh) {
+                return lh._nameMS.compareTo(rh._nameMS);
+            }
+        });
+        DB_FundInfo_UI.initialize_Funds(l);
+
+//        long end = System.currentTimeMillis();
+//        System.out.println("New startup time: " + (end - start));
+    }
+
+    //------------------------------------------------------------------------
+    public static Timer _timeInit = new Timer();
     public static void initializeDB(final String fileName, final DB_FundInfo_UI_Callback cb) {
         Log.i(TAG, "initializeDB, fileName: " + fileName + ",  time: " + System.currentTimeMillis());
+        if (fileName.equals(Constants.FUNDINFO_DB_MASTER_BIN)) {
+            _timeInit.start();
+        }
+
         FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference sr = storage.getReference(fileName);
         Task<byte[]> t = sr.getBytes(20 * 1024 * 1024);
@@ -93,36 +130,43 @@ public class DB_FundInfo_UI {
                 new OnCompleteListener<byte[]>() {
                     @Override
                     public void onComplete(@NonNull Task<byte[]> task) {
-                        Log.i(TAG, "...initializeDB loaded file, time: " + System.currentTimeMillis());
+                        Log.e(TAG, "...initializeDB loaded file, time: " + System.currentTimeMillis());
                         boolean isError = false;
                         String errorMessage = null;
                         if (!task.isSuccessful()) {
                             isError = true;
                             errorMessage = task.getException().getMessage();
-                            Log.i(TAG, "...initializeDB, fileName: " + fileName + ", error: " + errorMessage);
+                            Log.e(TAG, "...initializeDB, fileName: " + fileName + ", error: " + errorMessage);
                             cb.callback(true, errorMessage, null);
                         } else {
                             try {
                                 byte[] data = task.getResult();
-                                Log.i(TAG, "...initializeDB, fileName: " + fileName + ", success: " + data.length + ", time: " + System.currentTimeMillis());
-                                if (fileName.equals(com.pf.shared.Constants.FUNDINFO_DB_MASTER_BIN)) {
-                                    data = Compresser.dataUncompress(data);
-                                    ByteArrayInputStream bin = new ByteArrayInputStream(data);
-                                    DataInputStream din = new DataInputStream(bin);
-                                    List<D_FundInfo> l = new ArrayList<>();
-                                    while (din.available() > 0) {
-                                        D_FundInfo fi = D_FundInfo_Serializer.decrunch_D_FundInfo(din);
-                                        l.add(fi);
-                                    }
-                                    Collections.sort(l, new Comparator<D_FundInfo>() {
-                                        @Override
-                                        public int compare(D_FundInfo lh, D_FundInfo rh) {
-                                            return lh._nameMS.compareTo(rh._nameMS);
-                                        }
-                                    });
-                                    Log.i(TAG, "...initializeDB, fileName: " + fileName + ", done entries : " + l.size() + ", time: " + System.currentTimeMillis());
-                                    cb.callback(false, null, l);
-                                    return;
+                                Log.e(TAG, "...initializeDB, fileName: " + fileName + ", success: " + data.length + ", time: " + System.currentTimeMillis());
+                                if (fileName.equals(Constants.FUNDINFO_DB_MASTER_BIN)) {
+                                    throw new AssertionError("Was not supposed to get MASTER DB THIS WAY");
+//                                    Log.e(TAG, "...initializeDB, processing master");
+//                                    _timeInit.mark("Read file successfully: " + data.length + " bytes");
+//                                    data = Compresser.dataUncompress(data);
+//                                    _timeInit.mark("Uncompressed complete");
+//                                    ByteArrayInputStream bin = new ByteArrayInputStream(data);
+//                                    DataInputStream din = new DataInputStream(bin);
+//                                    List<D_FundInfo> l = new ArrayList<>();
+//                                    _timeInit.mark("Now starting to decrunch funds");
+//                                    while (din.available() > 0) {
+//                                        D_FundInfo fi = D_FundInfo_Serializer.decrunch_D_FundInfo(din);
+//                                        l.add(fi);
+//                                    }
+//                                    _timeInit.mark("Done: " + l.size() + " decrunched");
+//                                    Collections.sort(l, new Comparator<D_FundInfo>() {
+//                                        @Override
+//                                        public int compare(D_FundInfo lh, D_FundInfo rh) {
+//                                            return lh._nameMS.compareTo(rh._nameMS);
+//                                        }
+//                                    });
+//                                    Log.e(TAG, "...initializeDB, fileName: " + fileName + ", done entries : " + l.size() + ", time: " + System.currentTimeMillis());
+//                                    Log.e(TAG, "...timer info\n" + _timeInit.toString());
+//                                    cb.callback(false, null, l);
+//                                    return;
                                 } else if (fileName.equals(com.pf.shared.Constants.PORTFOLIO_DB_MASTER_BIN)) {
                                     Log.i(TAG, "...processing portfolio DB");
                                     data = Compresser.dataUncompress(data);
@@ -158,16 +202,20 @@ public class DB_FundInfo_UI {
 
     //------------------------------------------------------------------------
     public static void initialize_Funds(List<D_FundInfo> fis) {
-        Log.i(TAG, "*** initialize1: " + fis.size());
+        Log.i(TAG, "*** initialize_Funds entered: " + fis.size());
 
         // Validate funds and set min/max friday
-        D_FundInfo_Validator fiv = new D_FundInfo_Validator(fis);
-        fiv.process();
-        if (fiv._error) {
-            throw new AssertionError(fiv._iwErrors.toString());
-        }
-        _fridayMax = fiv._fridayMax_YYMMDD;
-        _fridayMin = fiv._fridayMin_YYMMDD;
+        // This takes a lot of time, and it's already done in extraction phase, so let's not do this
+//        D_FundInfo_Validator fiv = new D_FundInfo_Validator(fis);
+//        fiv.process();
+//        if (fiv._error) {
+//            throw new AssertionError(fiv._iwErrors.toString());
+//        }
+//        _fridayMax = fiv._fridayMax_YYMMDD;
+//        _fridayMin = fiv._fridayMin_YYMMDD;
+
+        Log.i(TAG, "...initialize_Funds 1");
+        _funds = fis;
 
         // Funds by type & URL
         for (D_FundInfo fi: fis) {
@@ -183,6 +231,8 @@ public class DB_FundInfo_UI {
             }
             typeFIs.add(fi);
         }
+        Log.i(TAG, "...initialize_Funds 2");
+
 
         // Sort each respective type fund lists
         Iterator<String> iter = _fundsByType.keySet().iterator();
@@ -195,6 +245,7 @@ public class DB_FundInfo_UI {
                 }
             });
         }
+        Log.i(TAG, "...initialize_Funds exited: " + fis.size());
     }
 
     //------------------------------------------------------------------------
@@ -237,7 +288,8 @@ public class DB_FundInfo_UI {
         List<D_FundInfo> r = new ArrayList<>();
         D_Portfolio p = _portfoliosHM.get(name);
         for (String url: p._urls) {
-            r.add(_fundsByTypeAndURL.get(getKeyForTypeAndURL(name, url)));
+            String keyForTypeAndURL = getKeyForTypeAndURL(name, url);
+            r.add(_fundsByTypeAndURL.get(keyForTypeAndURL));
         }
         return r;
     }
@@ -245,11 +297,12 @@ public class DB_FundInfo_UI {
     // ***********************************************************************
 
     public static boolean _initialized;
-    public static String _fridayMin = null;
-    public static String _fridayMax = null;
+//    public static String _fridayMin = null;
+//    public static String _fridayMax = null;
     public static String _extractStatistics;
 
     // Data structures
+    public static List<D_FundInfo> _funds;
     public static Map<String, List<D_FundInfo>> _fundsByType = new HashMap<>();
     public static Map<String, D_FundInfo> _fundsByTypeAndURL = new HashMap<>();
 

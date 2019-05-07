@@ -158,7 +158,7 @@ public class D_FundInfo implements Cloneable {
         }
         D_FundDPDay dpd = _dpDays.get(index);
         String r1w = dpd._r1w == D_FundDPDay.FLOAT_NULL ? "null" : String.format("%.2f", dpd._r1w);
-        String r1m = dpd._r1m== D_FundDPDay.FLOAT_NULL ? "null" : String.format("%.2f", dpd._r1m);
+        String r1m = dpd._r1m == D_FundDPDay.FLOAT_NULL ? "null" : String.format("%.2f", dpd._r1m);
         return dpd._dateYYMMDD + "," + dpd._dateYYMMDD_Actual + "," + r1w + "," + r1m;
     }
     public String getDPDOneLiner() {

@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 
 public class DedupsMain_Compare {
@@ -170,13 +171,14 @@ public class DedupsMain_Compare {
 		// Initiate remove for each duplicate
 		 createFileRM(_rmScriptFileName);
 		_m.L.info("Generating remove script");
-		fileRMOut("#!/bin/sh");
-		fileRMOut("# Remove duplicates script - generated at: " + new java.util.Date());
-		fileRMOut("#!/bin/sh");
+		_fileRM.write("#!/bin/sh\n".getBytes());
+		_fileRM.write(("# Remove duplicates script - generated at: " + new java.util.Date() + "\n").getBytes());
+		_fileRM.write("#!/bin/sh".getBytes());
 		Iterator<String> origDirsIter = _hmOrigDir.keySet().iterator();
 		DeltaReporter drRMScript = new DeltaReporter();
 		drRMScript.setInterval("Files", 1000, "Bytes", 500*1024*1024, "Time", 60);
 		HashMap<String, Void> hmDupsRemoved = new HashMap<String, Void>();
+		List<String> l = new ArrayList<>();
 		while(origDirsIter.hasNext()) {
 			String origDir = origDirsIter.next();
 			ArrayList<PFFileData> origs = _hmOrigDir.get(origDir);
@@ -186,7 +188,7 @@ public class DedupsMain_Compare {
 					for (PFFileData dup: orig.getDuplicates()) {
 						String fnDup = dup.getRelativeFilenamePath();
 						if (!hmDupsRemoved.containsKey(fnDup)) {
-							fileRMOut("rm -f " + fnDup + " # " + orig.getRelativeFilenamePath());
+							l.add(("rm -f " + fnDup + " # " + orig.getRelativeFilenamePath()) + "\n");
 							hmDupsRemoved.put(fnDup,  null);
 						}
 					}
@@ -196,9 +198,16 @@ public class DedupsMain_Compare {
 		for (PFFileData dup: dupsValues) {
 			if (dup.getFileName().equals(".DS_Store") || dup.getFileName().equals("Thumbs.db")) {
 				String fnDup = dup.getRelativeFilenamePath();
-				fileRMOut("rm -f '" + fnDup + "'");
+				_fileRM.write(("rm -f '" + fnDup + "'").getBytes());
 			}
 		}
+
+		Collections.sort(l);
+		StringBuffer strb2 = new StringBuffer();
+		for (String s : l) {
+			strb2.append(s);
+		}
+		_fileRM.write(strb2.toString().getBytes());
 		
 		_m.L.info("Remove script generated");
 	}
@@ -306,12 +315,7 @@ public class DedupsMain_Compare {
 		}
 		return _fileRM;
 	}
-	
-	private void fileRMOut(String message) throws Exception {
-		message += "\n";
-		_fileRM.write(message.getBytes());
-	}
-	
+
 	private void deinitialize() {
 		try {
 			if (_fileRM != null) {

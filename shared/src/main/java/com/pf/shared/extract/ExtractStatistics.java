@@ -100,10 +100,9 @@ public class ExtractStatistics {
                 }
             }
 
-            if (fi._isValid) {
-                if (i == 0) iw.println("Extractable");
-                _fiExtractable++;
-            }
+            // We always try to extract everything.
+            _fiExtractable++;
+
             if (fi._isValid && fi._errorCode != D_FundInfo.IC_NO_ERROR) {
                 if (i == 0) iw.println("Errors");
                 _fiErrors.add(fi);
@@ -114,7 +113,9 @@ public class ExtractStatistics {
                 if (i == 0) iw.println("Invalid");
                 _fiInvalids.add(fi);
             }
-            else if (dpdAlreadyThere != null) {
+
+            // We still try to extract non-valids or error funds
+            if (dpdAlreadyThere != null) {
                 _fiExtracted.add(fi);
                 if (i == 0) iw.println("Extracted");
                 String thu = MM.tgif_getPrevWeekday(_fridayLastYYMMDD, Calendar.THURSDAY);
@@ -155,6 +156,10 @@ public class ExtractStatistics {
         }
 
         for (D_FundInfo fi: _fiNotExtracted_1F) {
+            if (!fi._isValid) {
+                continue;
+            }
+
             for(D_FundDPDay dpd: fi._dpDays) {
                 if (dpd._r1w != D_FundDPDay.FLOAT_NULL) {
                     if (dpd._dateYYMMDD.equals(_fridayLastYYMMDD)) {

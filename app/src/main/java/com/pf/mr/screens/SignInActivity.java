@@ -12,39 +12,20 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.OptionalPendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.firebase.auth.FirebaseAuth;
+import com.pf.fl.screens.main.MainActivity;
 import com.pf.mr.R;
 import com.pf.mr.SingletonMR;
-import com.pf.mr.utils.Constants;
-
-
-import android.content.Intent;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.pf.mr.utils.Misc;
@@ -72,8 +53,6 @@ public class SignInActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
-
-        Misc.executedAtAppStart();
 
         // Button listeners
         findViewById(R.id.sign_in_button).setOnClickListener(this);
@@ -229,7 +208,10 @@ public class SignInActivity extends AppCompatActivity implements
             System.out.println("*** User UID:   " + user.getUid());
             SingletonMR.mFirebaseUser = user;
             SingletonMR.mUserToken = user.getUid();
-            Intent i =  new Intent(this, DisplaySetListNVRVActivity.class);
+            Intent i =  new Intent(this, MainActivity.class);
+//            Intent i =  new Intent(this, DisplaySetListNVRVActivity.class);
+//            Intent i =  new Intent(this, TabLayoutActivity.class);
+//            Intent i =  new Intent(this, ButtonMainActivity.class);
             startActivity(i);
         } else {
             // User signed out
@@ -250,12 +232,12 @@ public class SignInActivity extends AppCompatActivity implements
             case R.id.sign_in_button:
                 signIn();
                 break;
-            case R.id.sign_out_button:
-                signOut();
-                break;
-            case R.id.disconnect_button:
-                revokeAccess();
-                break;
+//            case R.id.sign_out_button:
+//                signOut();
+//                break;
+//            case R.id.disconnect_button:
+//                revokeAccess();
+//                break;
         }
     }
 

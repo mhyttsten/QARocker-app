@@ -180,11 +180,11 @@ public class ExtractFromHTML_Morningstar {
 
 		// Return (daily, month, 3m, 6m, 1y)
 		iwd.println("Parsing Avkastning");
+		iwd.push();
 		findTagLoc = "Avkastning %";
-		findAfter = "<table class=\"alternatedtoplist\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">";
+		findAfter = "<table class=\"alternatedtoplist\" cellspacing=\"0\" cellpadding=\"0\">";
 		findTo = "</table>";
 		String recentReturnTable = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
-		iwd.push();
 		int dpd_rv = processRecentReturnsTable(iwd, fi, dpd, recentReturnTable);
 		iwd.pop();
 		if (dpd_rv != ExtractFromHTML_Helper.RC_SUCCESS) {
@@ -196,7 +196,7 @@ public class ExtractFromHTML_Morningstar {
 		// Returns: Date of last recorded data point
 		iwd.println("Avkastning %");
 		findTagLoc = "Avkastning %";
-		findAfter = "<table class=\"alternatedtoplist\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">";
+		findAfter = "<table class=\"alternatedtoplist\" cellspacing=\"0\" cellpadding=\"0\">";
 		findTo = "</html>";
 		result = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
 		findTagLoc = "<b>Kursdatum";
@@ -220,6 +220,11 @@ public class ExtractFromHTML_Morningstar {
 			String recentReturnTable) throws Exception {
 		iwd.println("processRecentReturnsTable");
 
+		if (recentReturnTable == null) {
+			iwd.println("Recent returns table was no, no dpday found");
+			return ExtractFromHTML_Helper.RC_WARNING_NO_DPDAY_FOUND;
+		}
+
 		/*
 		<tr>
 		   <th>&nbsp;</th>
@@ -239,15 +244,9 @@ public class ExtractFromHTML_Morningstar {
 		*/
 
 		String rrTable = "null";
-		if (recentReturnTable != null) {
-			rrTable = "length: " + String.valueOf(recentReturnTable.trim().length());
-			int ioTR = recentReturnTable.indexOf("<tr");
-			rrTable = ", indexOf: " + ioTR;
-		}
-		if (recentReturnTable == null) {
-			iwd.println("Recent returns table was no, no dpday found");
-			return ExtractFromHTML_Helper.RC_WARNING_NO_DPDAY_FOUND;
-		}
+		rrTable = "length: " + String.valueOf(recentReturnTable.trim().length());
+		int ioTR = recentReturnTable.indexOf("<tr");
+		rrTable = ", indexOf: " + ioTR;
 
 		List<D_FundDPDay> dpds = new ArrayList<>();
 		List<String> entries = MM.getTagValues(recentReturnTable, "<tr");
@@ -370,6 +369,7 @@ public class ExtractFromHTML_Morningstar {
   	    // </tr>
 
 		// First get each individual TR tag
+		iwd.println("Now parsing tags");
 		List<String> trTags = new ArrayList<>();
 		found = true;
 		OTuple2G<String, String> otTR = new OTuple2G<>(null, table);
@@ -383,24 +383,30 @@ public class ExtractFromHTML_Morningstar {
 				trTags.add(trTag);
 			}
 		} while(found);
+		iwd.println("...done, size: " + trTags.size());
 
 		// Then parse all TDs within the TR
 		int errorCode = ExtractFromHTML_Helper.RC_SUCCESS;
 		for(int i=0; i < trTags.size(); i++) {
+			iwd.println("Now processing tag: " + i);
 			String trTag = trTags.get(i);
 			OTuple2G<String, String> otTDs = new OTuple2G<>(null, trTag);
 
 			MM.assignAndReturnNextTagValue(otTDs, "<td");
 			String yearStr = (String) otTDs._o1.trim();
+			iwd.println("...yearStr: " + yearStr);
 
 			MM.assignAndReturnNextTagValue(otTDs, "<td");
 			String fundStr = (String) otTDs._o1.trim();
+			iwd.println("...fundStr: " + fundStr);
 
 			MM.assignAndReturnNextTagValue(otTDs, "<td");
 			String categoryStr = (String) otTDs._o1.trim();
+			iwd.println("...categoryStr: " + categoryStr);
 
 			MM.assignAndReturnNextTagValue(otTDs, "<td");
 			String indexStr = (String) otTDs._o1.trim();
+			iwd.println("...indexStr: " + indexStr);
 
 			D_FundDPYear dpy = new D_FundDPYear();
 			short year = -1;
@@ -410,6 +416,7 @@ public class ExtractFromHTML_Morningstar {
 				fi._errorCode = D_FundInfo.IC_HTML_MS_YEARLY_TABLE_YEAR;
 				return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
 			} else if (yearStr.startsWith("I ")) {
+				iwd.println("...yearStr started with I , setting to 9999");
 				year = 9999;
 			} else if (yearStr.length() != 4) {
 				iwd.println("Year is incorrect, was not Y2D and did not have length 4: " + yearStr);
@@ -452,23 +459,25 @@ public class ExtractFromHTML_Morningstar {
 			dpy._resultIndex = rv._o2;
 
 			if (dpy.isYearToDate()) {
+				iwd.println("...it's y2d");
 				dpd._rYTDFund = dpy._resultFund;
 				dpd._rYTDCategory = dpy._resultCategory;
 				dpd._rYTDIndex = dpy._resultIndex;
 			} else {
+				iwd.println("...it's not y2d");
 				boolean foundYear = false;
 				for (D_FundDPYear dpyO : fi._dpYears) {
 					if (dpyO._year == dpy._year) {
 						foundYear = true;
+						// If we have a year e.g. 2018 already recorded already
+						// And extracted one differs, then that is a bit weird
+						// But this has actually happened, so this error management code has been removed with a warning
 						if (dpyO._resultFund != dpy._resultFund ||
 								dpyO._resultCategory != dpy._resultCategory ||
 								dpyO._resultIndex != dpy._resultIndex) {
-							iwd.println("FundDPYear, existing D_FundInfo differed from extracted. Keeping extracted.");
-							iwd.push();
-							iwd.println("Existing:  " + dpyO.toString());
-							iwd.println("Extracted: " + dpy.toString());
-							iwd.pop();
-							errorCode = ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
+							log.warning("FundDPYear, existing D_FundInfo differed from extracted\n" +
+									"Existing:  " + dpyO.toString() + "\n" +
+									"Extracted: " + dpy.toString());
 						}
 						// Use the new one anyhow!
 						dpyO._resultFund = dpy._resultFund;

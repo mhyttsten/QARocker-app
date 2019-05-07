@@ -26,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -826,7 +827,7 @@ public class MM {
 	}
 
 	//-------------------------------------------------------------------------------------
-	public static void fileWrite(String fileName, byte[] data) throws Exception {
+	public static void fileWrite(String fileName, byte[] data) throws IOException {
 		FileOutputStream fout = new FileOutputStream(fileName);
 		fout.write(data);
 		fout.close();
@@ -1061,7 +1062,7 @@ public class MM {
 				{ "&ouml;",   "������" },
 				{ "&#246;",   "������" },
 				{ "&nbsp;",   " " },
-				{ "&amp"  ,   "&" }
+				{ "&amp;"  ,   "&" }
 		};
 		boolean found = true;
 		while(found) {
@@ -1514,7 +1515,24 @@ public class MM {
     	}
     	return d;
     }
-    
+
+	//------------------------------------------------------------------------
+	public static String getYYMMDDFromDate(java.util.Date d) {
+		GregorianCalendar c = new GregorianCalendar();
+		c.setTime(d);
+		String yy = String.valueOf(c.get(GregorianCalendar.YEAR)-2000);
+		String mm = String.valueOf(c.get(GregorianCalendar.MONTH)+1);
+		String dd = String.valueOf(c.get(GregorianCalendar.DAY_OF_MONTH));
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		PrintStream ps = new PrintStream(bout);
+		ps.format("%02d%02d%02d",
+				c.get(Calendar.YEAR)-2000,
+				c.get(Calendar.MONTH) + 1,
+				c.get(Calendar.DAY_OF_MONTH));
+		String s = new String(bout.toByteArray());
+		return s;
+	}
+
     //------------------------------------------------------------------------
     public static java.util.Date getDateFrom_YYMMDD(IndentWriter iw, String yymmdd) {
     	if (iw == null) {

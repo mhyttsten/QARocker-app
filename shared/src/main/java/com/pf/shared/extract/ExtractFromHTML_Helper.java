@@ -19,7 +19,6 @@ public class ExtractFromHTML_Helper {
     public static final int RC_SUCCESS = 0;
     public static final int RC_SUCCESS_BUT_DATA_WAS_UPDATED = 1;
     public static final int RC_ERROR_INVALID_FUND = 3;
-//    public static final int RC_ERROR_KEEP_FUND = 4;
     public static final int RC_WARNING_NO_DPDAY_FOUND = 5;
 
     private IndentWriter _iwd = new IndentWriter();

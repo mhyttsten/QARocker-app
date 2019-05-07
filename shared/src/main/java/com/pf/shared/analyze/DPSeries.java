@@ -55,6 +55,13 @@ public class DPSeries {
         DPSeries r = new DPSeries();
         r._name = name;
 
+        if (dpss == null) {
+            return null;
+        }
+        if (dpss.size() == 0) {
+            return r;
+        }
+
         boolean first = true;
         String[] fridays = null;
         float[] value = null;

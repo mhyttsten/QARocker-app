@@ -5,9 +5,9 @@ import android.util.Log;
 import com.pf.mr.datamodel.QLSet;
 import com.pf.mr.datamodel.StatTermForUser;
 import com.pf.mr.utils.Constants;
-import com.pf.shared.utils.IndentWriter;
 import com.pf.mr.utils.MPair;
 import com.pf.mr.utils.Misc;
+import com.pf.shared.utils.IndentWriter;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,6 +1,10 @@
-- Make sure we always store DP even if it doesnt have r1w
-- Retry extractions for all with r1w == null
+- Backend: Have a parameter that indicates if we're coming from cron job (or from button)
+- Create service to clear attempted today flag
+- Extend report to indicate successrate per fund type
+- When getting funds to extract, go on !friday and !today or friday && null combo
 
++ Ok now we have this local file filled with deduced dates and nulls
+- App: At background job, calculate FundRank sequence
 
 - App: Add FundRank winner in Portfolio screen + scrollbar to change time window
 - App: Verify FundRank numbers
@@ -9,16 +13,17 @@
 - App: Create startup screen with MemoryRocker & FundLifter split screen (as TAB)
 - Backend: Send mail on extraction each morning (PST)
 - Backend: Send notification on extraction status (and your fund status) each morning (PST)
-- App: Cache DB always
-- Fix invalids
+
 - Update SEB, PPM, VGD, SPP fundlists + provide yearly process
+
+- Thursday fix: Change extract time to when those turn into Friday + also mobile cache considerations
 
 Cosmetics
 - App: Display Portfolio: Fund name gets truncated (should not) + show orig fundname when swiping over it
 
 --------
-
-- Work with indexes? A lot to potentially do here
+- Android Studio error: Cannot find activity when installing on phone: Go to settings on phone and remove the app
+- Work with fund indexes? A lot to potentially do here
 - Main screen: Show Rank winners per index/region/category ?
 Ryssland
 China
@@ -35,7 +40,6 @@ Indien
 BRIC
 Asien ex Japan
 Japan
-
 
 ------------------------------------------------------------------------------
 VBO Buy and Sell

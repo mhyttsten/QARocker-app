@@ -1,39 +1,39 @@
 package com.pf.fl.screens.portfolio;
 
-import android.app.Activity;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.pf.fl.datamodel.DB_FundInfo_UI;
 import com.pf.fl.screens.main.FLSingleton;
 import com.pf.fl.screens.utils.MM_UIUtils;
 import com.pf.mr.R;
 import com.pf.shared.analyze.FLAnalyze_Analyze;
+import com.pf.shared.datamodel.D_Analyze_FundRank;
 import com.pf.shared.datamodel.D_FundInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class PortfolioR_Leaders_RV_Adapter extends RecyclerView.Adapter<PortfolioR_Leaders_RV_Holder> {
-    private List<FLAnalyze_Analyze.FundRank> _leaders = new ArrayList<>();
+    private String _type;
+    private D_Analyze_FundRank _leaders;
     private PortfolioR_Activity _parentActivity;
     private PortfolioR_Leaders _fragment;
-    private FLAnalyze_Analyze _flAnalyze;
 
     public PortfolioR_Leaders_RV_Adapter(PortfolioR_Activity parentActivity,
                                          PortfolioR_Leaders fragment,
-                                         List<D_FundInfo> fis) {
+                                         String type) {
         _parentActivity = parentActivity;
         _fragment = fragment;
-        _flAnalyze = new FLAnalyze_Analyze(fis);
+        _type = type;
     }
 
     public void setRange(int weekCount) {
-        _flAnalyze.setRange(weekCount);  // 4 is also the default of the textfield
-        _flAnalyze.analyze(null);
-        _leaders = _flAnalyze._frSummary;
+        Map<String, D_Analyze_FundRank.D_Analyze_FundRankElement[]> m =
+                FLSingleton._type2Matrix.get(_type);
+        _leaders = FLAnalyze_Analyze.analyze(_type, weekCount, m);
     }
 
     @Override
@@ -53,15 +53,18 @@ public class PortfolioR_Leaders_RV_Adapter extends RecyclerView.Adapter<Portfoli
 
     @Override
     public void onBindViewHolder(PortfolioR_Leaders_RV_Holder holder, int position) {
-        FLAnalyze_Analyze.FundRank fr = _leaders.get(position);
-        holder._name.setText(fr._fi._nameMS);
-        MM_UIUtils.setTextViewInformation(_parentActivity, holder._return_acc, fr._r1w, fr._countMissing);
-        holder._position.setText(fr.getAverageRank_2F());
+
+        D_Analyze_FundRank.D_Analyze_FundRankElement fre = _leaders._frSummaryForAllFridays.get(position);
+        holder._name.setText(fre._fi._nameMS);
+        MM_UIUtils.setTextViewInformation(
+                _parentActivity,
+                holder._return_acc, fre._r1w, fre._countMissing);
+        holder._position.setText(fre.getAverageRank_2F());
         holder._misc1.setText("m1");
         holder._misc2.setText("m2");
         holder._misc3.setText("m3");
     }
 
     @Override
-    public int getItemCount() { return _leaders.size(); }
+    public int getItemCount() { return _leaders._frSummaryForAllFridays.size(); }
 }

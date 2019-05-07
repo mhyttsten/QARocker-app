@@ -5,10 +5,64 @@ import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.utils.D_Utils;
 import com.pf.shared.utils.IndentWriter;
 import com.pf.shared.utils.MM;
+import com.pf.shared.utils.OTuple2G;
 
 import java.util.List;
 
 public class FLAnalyze_DataPreparation {
+
+    //------------------------------------------------------------------------
+//    public static OTuple2G<String, List<D_FundInfo>> prepareDataSlice(List<D_FundInfo> fis, int dpCount) {
+//        OTuple2G<String, List<D_FundInfo>> r = new OTuple2G<>(null, null);
+//
+//        List<D_FundInfo> fisClone = D_FundInfo.cloneList(fis);
+//
+//        // Fill in and extrapolate any missing values
+//        fillVoids(null, fisClone);
+//        if (fisClone.size() == 0) {
+//            r._o1 = "Cloned list was funds had size 0";
+//            return r;
+//        }
+//
+//        // Only keep dpCount, cut the trailing part
+//        String[] fridays = D_Utils.getRecentDates(dpCount);
+//        for (D_FundInfo fi: fisClone) {
+//            List<D_FundDPDay> dpds = fi._dpDays;
+//            List<D_FundDPDay> dpds = fi._dpDays;
+//            while (dpds.size() > dpCount) {
+//                dpds.remove(dpds.size()-1);
+//            }
+//            if (fridays.length > dpds.size()) {
+//                r._o1 = "Could not find enought fridays for: " + fi.getOneLiner();
+//                return r;
+//            }
+//
+//            for (int i=0; i < fridays.length; i++) {
+//                if (!fridays[i].equals(dpds.get(i)._dateYYMMDD)) {
+//                    // This is just error message code
+//                    StringBuffer strb = new StringBuffer();
+//                    strb.append("Error, did not find expected friday sequence for fund: " + fi.getOneLiner() + "\n");
+//                    strb.append("The error was at index: " + i + "\n");
+//                    strb.append("Fridays:    " );
+//                    for (int j=0; j < fridays.length; j++) {
+//                        strb.append(fridays[j] + ", ");
+//                    }
+//                    strb.append("\nDP Fridays: ");
+//                    for (int j=0; j < fridays.length; j++) {
+//                        strb.append(dpds.get(j)._dateYYMMDD + ", ");
+//                    }
+//                    r._o1 = strb.toString();
+//                    return r;
+//                }
+//            }
+//        }
+//        r._o2 = fisClone;
+//        return r;
+//    }
+
+    // ***********************************************************************
+    // ***********************************************************************
+    // ***********************************************************************
 
     //------------------------------------------------------------------------
     public static void fillVoids(IndentWriter iw, List<D_FundInfo> fis) {
@@ -19,7 +73,11 @@ public class FLAnalyze_DataPreparation {
         String fridayOldest = D_Utils.getOldestFriday(fis);
 
         for (D_FundInfo fi: fis) {
-            insertNullMonths(fi._dpDays, D_Utils.getLastExtractedFriday(), fridayOldest);
+            if (fi.getTypeAndName().startsWith("PPM.BMO F")) {
+                System.out.println("Catcher statement");
+            }
+            String lastExtractedFriday = D_Utils.getLastExtractedFriday();
+            insertNullMonths(fi._dpDays, lastExtractedFriday, fridayOldest);
         }
 
         List<D_FundDPDay> dpds = null;
@@ -27,11 +85,10 @@ public class FLAnalyze_DataPreparation {
             dpds = fi._dpDays;
             insertMissingDPs(iw, dpds);
         }
-//        System.out.println("Done with: " + _countFunds + ", r1w fixed: " + _countR1WFixed + ", r1m fixed: " + _countR1MFixed);
     }
 
     //------------------------------------------------------------------------
-    public static void insertMissingDPs(IndentWriter iw, List<D_FundDPDay> dpds) {
+    static void insertMissingDPs(IndentWriter iw, List<D_FundDPDay> dpds) {  // Only not-private for _Test to use it
         boolean modified = true;
         while (modified) {
             modified = true;
@@ -156,6 +213,18 @@ public class FLAnalyze_DataPreparation {
     public static void insertNullMonths(List<D_FundDPDay> dpds,
                                         String fridayStart,
                                         String fridayEnd) {
+
+        // If it's empty, then just fill everything in there
+        if (dpds.size() == 0) {
+            String curr = fridayStart;
+            while (curr.compareTo(fridayEnd) >= 0) {
+                D_FundDPDay newDPD = new D_FundDPDay();
+                newDPD._dateYYMMDD = curr;
+                newDPD._dateYYMMDD_Actual = curr;
+                dpds.add(newDPD);
+                curr = MM.tgif_getLastFridayTodayExcl(curr);
+            }
+        }
 
         // This loop ensure the dpds sequence is continuous
         String fridayExpected = fridayStart;  // We start by expecting latest extraction

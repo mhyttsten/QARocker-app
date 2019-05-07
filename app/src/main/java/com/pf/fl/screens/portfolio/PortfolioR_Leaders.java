@@ -20,7 +20,6 @@
 
 package com.pf.fl.screens.portfolio;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -91,17 +90,16 @@ public class PortfolioR_Leaders extends Fragment {
             }
         });
 
-        List<D_FundInfo> fis = DB_FundInfo_UI._fundsByType.get(FLSingleton._portfolioName);
-        setupRecyclerView(view, v, fis);
+        setupRecyclerView(view, v, FLSingleton._portfolioName);
     }
 
-// *************************************************************
+    // *************************************************************
     // RecyclerView setup
 
     private PortfolioR_Leaders_RV_Adapter _rvAdapter;
 
-    private void setupRecyclerView(View v, int weekCount, List<D_FundInfo> fis) {
-        _rvAdapter = new PortfolioR_Leaders_RV_Adapter(_parentActivity, this, fis);
+    private void setupRecyclerView(View v, int weekCount, String type) {
+        _rvAdapter = new PortfolioR_Leaders_RV_Adapter(_parentActivity, this, type);
         _rvAdapter.setRange(weekCount);
         RecyclerView recyclerView = (RecyclerView)v.findViewById(R.id.recycler_view_fl);
         recyclerView.setLayoutManager(new LinearLayoutManager(_parentActivity, LinearLayoutManager.VERTICAL, false));

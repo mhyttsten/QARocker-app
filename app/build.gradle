@@ -11,7 +11,9 @@ android {
                     'src/main/res-screens/settings',
                     'src/main/res-screens/display-set-stats',
                     'src/main/res-screens/five-vertical-bars',
-                    'src/main/res-screens/fundlifter'
+                    'src/main/res-screens/fundlifter',
+                    'src/main/res-screens/shared',
+                    'src/main/res-screens/shared_mainactivity'
             ]
         }
     }
@@ -33,7 +35,7 @@ android {
 
     defaultConfig {
         applicationId "com.pf.mr"
-        minSdkVersion 17
+        minSdkVersion 26
         targetSdkVersion 28
         versionCode 37
         versionName "37"
@@ -47,6 +49,9 @@ android {
 }
 
 dependencies {
+    def work_version = "1.0.0-rc02"
+    implementation "android.arch.work:work-runtime:$work_version"
+
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.12'
 

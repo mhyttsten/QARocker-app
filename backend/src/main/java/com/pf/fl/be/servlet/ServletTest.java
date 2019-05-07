@@ -7,6 +7,7 @@ import com.pf.shared.datamodel.D_FundDPDay;
 import com.pf.shared.datamodel.D_FundInfo_Serializer;
 import com.pf.shared.datamodel.D_FundInfo_Validator;
 import com.pf.shared.extract.ExtractFromHTML_Helper;
+import com.pf.shared.utils.Compresser;
 import com.pf.shared.utils.HtmlRetriever;
 import com.pf.shared.utils.IndentWriter;
 import com.pf.shared.utils.MM;
@@ -59,18 +60,21 @@ public class ServletTest extends HttpServlet {
         byte[] fundInfoBA = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
         DB_FundInfo.initialize(fundInfoBA, true);
         List<D_FundInfo> fis = DB_FundInfo.getAllFundInfos();
-
-//        int count = 0;
-//        for (D_FundInfo fi : fis) {
-//            if (fi._errorCode != D_FundInfo.IC_NO_ERROR) {
-//                fi._isValid = false;
-//            }
+        int count = 0;
+        for (D_FundInfo fi : fis) {
 //            count++;
-//        }
-//        byte[] data = D_FundInfo_Serializer.crunchFundList(fis);
-//        GCSWrapper.gcsWriteFile(Constants.FUNDINFO_DB_MASTER_BIN, data);
-//        log.info("*** processFund done, updated: " + count);
+        }
+        byte[] data = D_FundInfo_Serializer.crunchFundList(fis);
+        GCSWrapper.gcsWriteFile(Constants.FUNDINFO_DB_MASTER_BIN, data);
+
+        log.info("*** processFund done, updated: " + count);
     }
+
+//    public void setValidAndLastExtractionAttemptedToLastFriday(D_FundInfo fi) throws Exception {
+//        String date = MM.getNowAs_YYMMDD()
+//        fi._dateYYMMDD_Update_Attempted = MM.tgif_getLastFridayTodayIncl()
+//
+//    }
 
     public void processVGDNameChange() throws Exception {
         log.info("*** processFund started");

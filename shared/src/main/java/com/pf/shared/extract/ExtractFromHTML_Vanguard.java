@@ -51,7 +51,7 @@ public class ExtractFromHTML_Vanguard {
         if (io == -1) {
             fi._errorCode = D_FundInfo.IC_HTML_VG_DATE_NOT_FOUND;
             iwd.println("Error, Could not find date for Vanguard MF: " + isMutualFund + ", or ETF: " + isETF);
-            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
+            return ExtractFromHTML_Helper.RC_WARNING_NO_DPDAY_FOUND;
         } else {
             int index = io + searchDateString.length();
             String dateMMSDDSYYYY = pageContent.substring(index, index + 10);
