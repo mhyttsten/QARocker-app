@@ -346,7 +346,7 @@ public class ExtractFromHTML_Morningstar {
 			fi._errorCode = D_FundInfo.IC_HTML_MS_DAILY_SEK_CURRENCY;
 			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
 		} else {
-			iwd.println("Adding result to fi._dpDays at index 0");
+			iwd.println("Adding result to fi._dpDays at index 0: " + r);
 			fi._dpDays.add(0, r);
 		}
 

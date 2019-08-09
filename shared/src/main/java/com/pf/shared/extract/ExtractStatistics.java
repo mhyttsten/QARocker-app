@@ -8,6 +8,9 @@ import com.pf.shared.utils.MM;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import java.util.ArrayList;
@@ -33,16 +36,20 @@ public class ExtractStatistics {
     public List<D_FundInfo> _fiExtracted_Mon = new ArrayList<>();
     public List<D_FundInfo> _fiExtracted_Tue = new ArrayList<>();
     // These are the non-extracted stats for all valid and non-errored funds
-    public List<D_FundInfo> _fiNotExtracted_1F = new ArrayList<>();
-    public List<D_FundInfo> _fiLastExtracted_2F = new ArrayList<>();
-    public List<D_FundInfo> _fiLastExtracted_3F = new ArrayList<>();
-    public List<D_FundInfo> _fiLastExtracted_GT3F = new ArrayList<>();
+    public List<D_FundInfo> _fiMissedExtractions = new ArrayList<>();
+    public List<D_FundInfo> _fiWeeksWithoutExtract_1F = new ArrayList<>();
+    public List<D_FundInfo> _fiWeeksWithoutExtract_2F = new ArrayList<>();
+    public List<D_FundInfo> _fiWeeksWithoutExtract_3F = new ArrayList<>();
+    public List<D_FundInfo> _fiWeeksWithoutExtract_GT3F = new ArrayList<>();
+    public Map<String, Integer> _fiWeeksWithoutExtract_1F_Type = new HashMap<>();
+    public Map<String, Integer> _fiMissedExtractions_Type = new HashMap<>();
 
     public String _nowYYMMDD;
     public String _nowYYMMDD_HHMMSS;
     public String _fridayLastYYMMDD;
     public String _fridayLast2YYMMDD;
     public String _fridayLast3YYMMDD;
+    public String _fridayLast4YYMMDD;
 
     //----------------------------------------------------------------------
     public ExtractStatistics(List<D_FundInfo> fiAllFunds) {
@@ -52,30 +59,8 @@ public class ExtractStatistics {
         _fridayLastYYMMDD = MM.tgif_getLastFridayTodayExcl(_nowYYMMDD);
         _fridayLast2YYMMDD = MM.tgif_getLastFridayTodayExcl(_fridayLastYYMMDD);
         _fridayLast3YYMMDD = MM.tgif_getLastFridayTodayExcl(_fridayLast2YYMMDD);
+        _fridayLast4YYMMDD = MM.tgif_getLastFridayTodayExcl(_fridayLast3YYMMDD);
         _fiAllFunds = fiAllFunds;
-    }
-
-    //----------------------------------------------------------------------
-    private void reset() {
-        _fiExtractable = 0;
-
-        _fiToExtract = new ArrayList<>();
-        _fiExtractAttemptedToday = new ArrayList<>();
-
-        // Mutually exclusive
-        _fiInvalids = new ArrayList<>();
-        _fiErrors = new ArrayList<>();
-
-        _fiExtracted = new ArrayList<>();
-        _fiExtracted_Thu = new ArrayList<>();
-        _fiExtracted_Fri = new ArrayList<>();
-        _fiExtracted_Mon = new ArrayList<>();
-        _fiExtracted_Tue = new ArrayList<>();
-        // These are the non-extracted stats for all valid and non-errored funds
-        _fiNotExtracted_1F = new ArrayList<>();
-        _fiLastExtracted_2F = new ArrayList<>();
-        _fiLastExtracted_3F = new ArrayList<>();
-        _fiLastExtracted_GT3F = new ArrayList<>();
     }
 
     //----------------------------------------------------------------------
@@ -91,6 +76,7 @@ public class ExtractStatistics {
 
             if (i == 0) iw.println("Doing fund: " + fi.getTypeAndName());
 
+            // Filter out Funds for which we already have a valid R1W
             D_FundDPDay dpdAlreadyThere = null;
             if (fi._dpDays.size() > 0) {
                 D_FundDPDay dpd = fi._dpDays.get(0);
@@ -103,18 +89,22 @@ public class ExtractStatistics {
             // We always try to extract everything.
             _fiExtractable++;
 
+            // Error fund
             if (fi._isValid && fi._errorCode != D_FundInfo.IC_NO_ERROR) {
                 if (i == 0) iw.println("Errors");
                 _fiErrors.add(fi);
             }
 
-            // Obs, error funds should still be attempted to be extracted
+            // Invalid fund
             if (!fi._isValid) {
                 if (i == 0) iw.println("Invalid");
                 _fiInvalids.add(fi);
             }
 
-            // We still try to extract non-valids or error funds
+            // We still try to extract error or invalid funds
+
+            // If we've already extracted this fund with a valid R1W
+            // Assign stats to which day it was extracted
             if (dpdAlreadyThere != null) {
                 _fiExtracted.add(fi);
                 if (i == 0) iw.println("Extracted");
@@ -135,16 +125,27 @@ public class ExtractStatistics {
                     _fiExtracted_Tue.add(fi);
                 }
             }
-            else if (fi._dateYYMMDD_Update_Attempted.compareTo(_nowYYMMDD) < 0) {
+
+            // We have not attempted to extract fund today
+            // So let's try to extract it
+            else if (fi._dateYYMMDD_Update_Attempted == null
+                    || fi._dateYYMMDD_Update_Attempted.compareTo(_nowYYMMDD) < 0) {
                 if (i == 0) iw.println("To Extract");
                 _fiToExtract.add(fi);
-                _fiNotExtracted_1F.add(fi);
+                _fiMissedExtractions.add(fi);
+                incrementCount(_fiMissedExtractions_Type, fi);
             }
+
+            // We've already tried to extract fund today
+            // So let's not try again
             else if (fi._dateYYMMDD_Update_Attempted.compareTo(_nowYYMMDD) == 0) {
                 if (i == 0) iw.println("Already Attempted Today");
                 _fiExtractAttemptedToday.add(fi);
-                _fiNotExtracted_1F.add(fi);
+                _fiMissedExtractions.add(fi);
+                incrementCount(_fiMissedExtractions_Type, fi);
             }
+
+            // Error state
             else {
                 throw new AssertionError("Weird state for fund, "
                         + "\nnow: " + _nowYYMMDD
@@ -155,26 +156,33 @@ public class ExtractStatistics {
             }
         }
 
-        for (D_FundInfo fi: _fiNotExtracted_1F) {
-            if (!fi._isValid) {
-                continue;
+        // Now analyze how many weeks missing
+        for (D_FundInfo fi: _fiMissedExtractions) {
+
+            // Let's interpret this as we've never really tried to extract the fund
+            if (fi._dpDays.size() == 0) {
+                _fiWeeksWithoutExtract_1F.add(fi);
             }
 
-            for(D_FundDPDay dpd: fi._dpDays) {
-                if (dpd._r1w != D_FundDPDay.FLOAT_NULL) {
-                    if (dpd._dateYYMMDD.equals(_fridayLastYYMMDD)) {
-                        throw new AssertionError("We should not have last friday in this list");
-                    }
-                    else if (dpd._dateYYMMDD.equals(_fridayLast2YYMMDD)) {
-                        _fiLastExtracted_2F.add(fi);
-                    }
-                    else if (dpd._dateYYMMDD.equals(_fridayLast3YYMMDD)) {
-                        _fiLastExtracted_3F.add(fi);
-                    }
-                    else if (dpd._dateYYMMDD.compareTo(_fridayLast3YYMMDD) < 0) {
-                        _fiLastExtracted_GT3F.add(fi);
-                    }
-                    break;
+            else {
+
+                // Sanity check, we should not have anything for 1F
+                if (hasDPFor(_fridayLastYYMMDD, fi)) {
+                    throw new AssertionError("We should not have last friday in this list");
+                }
+
+                if (hasDPFor(_fridayLast2YYMMDD, fi)) {
+                    _fiWeeksWithoutExtract_1F.add(fi);
+                    incrementCount(_fiWeeksWithoutExtract_1F_Type, fi);
+                }
+                else if (hasDPFor(_fridayLast3YYMMDD, fi)) {
+                    _fiWeeksWithoutExtract_2F.add(fi);
+                }
+                else if (hasDPFor(_fridayLast4YYMMDD, fi)) {
+                    _fiWeeksWithoutExtract_3F.add(fi);
+                }
+                else {
+                    _fiWeeksWithoutExtract_GT3F.add(fi);
                 }
             }
         }
@@ -183,15 +191,29 @@ public class ExtractStatistics {
     }
 
     //--------------------------------------------------------------------------------------------
+    private static boolean hasDPFor(String yymmdd, D_FundInfo fi) {
+        D_FundDPDay dpd = fi._dpDays.get(0);
+       return dpd._dateYYMMDD.equals(yymmdd) && dpd._r1w != D_FundDPDay.FLOAT_NULL;
+    }
+
+    //--------------------------------------------------------------------------------------------
+    private static void incrementCount(Map<String, Integer> counter, D_FundInfo fi) {
+        int count = 1;
+        if (counter.containsKey(fi._type)) {
+            count = counter.get(fi._type) + 1;
+        }
+        counter.put(fi._type, count);
+    }
+
+    //--------------------------------------------------------------------------------------------
     public static String getExtractSummary(
             IndentWriter iw,
-            boolean includeFullLists,
+            int limitThursday,  // put -1 for all
+            int limitNotExtracted,
             String extractStart_YYMMDD_HHMMSS,
-            List<D_FundInfo> fiNow) {
+            List<D_FundInfo> fiAll) {
 
-//        log.info("ExtractStatistics, entries in: " + fiNow.size());
-//        log.info("...includeFullLists: " + includeFullLists);
-        ExtractStatistics es_now = new ExtractStatistics(fiNow);
+        ExtractStatistics es_now = new ExtractStatistics(fiAll);
         es_now.extractStats();
 
         if (extractStart_YYMMDD_HHMMSS == null) {
@@ -210,11 +232,28 @@ public class ExtractStatistics {
         iw.println("...Friday:   " + es_now._fiExtracted_Fri.size());
         iw.println("...Monday:   " + es_now._fiExtracted_Mon.size());
         iw.println("...Tuesday:  " + es_now._fiExtracted_Tue.size());
-        iw.println("Not Extracted last F: " + es_now._fiNotExtracted_1F.size());
-        iw.println("...But extracted 2F:  " + es_now._fiLastExtracted_2F.size());
-        iw.println("...But extracted 3F:  " + es_now._fiLastExtracted_3F.size());
-        iw.println("...But extracted >3F: " + es_now._fiLastExtracted_GT3F.size());
-        iw.println("...Attempted today: " + es_now._fiExtractAttemptedToday.size());
+
+        iw.println("Missed extractions");
+        iw.println("...Only last Friday: " + es_now._fiWeeksWithoutExtract_1F.size());
+        for (String type: D_FundInfo.TYPES) {
+            int counter = 0;
+            if (es_now._fiWeeksWithoutExtract_1F_Type.containsKey(type)) {
+                counter = es_now._fiWeeksWithoutExtract_1F_Type.get(type);
+            }
+            iw.println("......" + type + ": " + counter);
+        }
+        iw.println("...Last 2 Fridays:   " + es_now._fiWeeksWithoutExtract_2F.size());
+        iw.println("...Last 3 Fridays:   " + es_now._fiWeeksWithoutExtract_3F.size());
+        iw.println("...>3 Fridays:       " + es_now._fiWeeksWithoutExtract_GT3F.size());
+        iw.println("...Total affected:   " + es_now._fiMissedExtractions.size());
+        for (String type: D_FundInfo.TYPES) {
+            int counter = 0;
+            if (es_now._fiMissedExtractions_Type.containsKey(type)) {
+                counter = es_now._fiMissedExtractions_Type.get(type);
+            }
+            iw.println("......" + type + ": " + counter);
+        }
+        iw.println("...Attempted today:  " + es_now._fiExtractAttemptedToday.size());
 
         iw.println();
         printListStr(iw, "Invalids", es_now._fiInvalids, 10000);
@@ -225,27 +264,33 @@ public class ExtractStatistics {
         }
         printListStr(iw, "Errors", es_now._fiErrors, 10000);
 
-        int limit = 4;
-        if (includeFullLists) {
-            limit = 10000;
+        if (limitThursday == -1) {
+            limitThursday = 10000;
+        }
+        if (limitNotExtracted == -1) {
+            limitNotExtracted = 10000;
         }
 
         iw.println();
         iw.println("...Thursday: " + es_now._fiExtracted_Thu.size());
-        printListStr(iw, "Thursday", es_now._fiExtracted_Thu, limit);
+        printListStr(iw, "Thursday", es_now._fiExtracted_Thu, limitThursday);
         iw.println();
-        printListStr(iw, "Not Extracted (1F)", es_now._fiNotExtracted_1F, limit);
+        printListStr(iw, "Missed last Friday", es_now._fiWeeksWithoutExtract_1F, limitNotExtracted);
         iw.println();
-        printListStr(iw, "But extracted 2F", es_now._fiLastExtracted_2F, limit);
+        printListStr(iw, "Missed last 2 Fridays", es_now._fiWeeksWithoutExtract_2F, limitNotExtracted);
         iw.println();
-        printListStr(iw, "But extracted 3F", es_now._fiLastExtracted_3F, limit);
+        printListStr(iw, "Missed last 3 Fridays", es_now._fiWeeksWithoutExtract_3F, limitNotExtracted);
         iw.println();
-        printListStr(iw, "But extracted >3F", es_now._fiLastExtracted_GT3F, limit);
+        printListStr(iw, "Missed >3 Fridays", es_now._fiWeeksWithoutExtract_GT3F, limitNotExtracted);
 
         iw.println();
         return "";
     }
 
+
+    // ***********************************************************************
+
+    //----------------------------------------------------------------------
     private static String printListStr(IndentWriter iw, String header, List<D_FundInfo> l, int limit) {
         if (iw == null) {
             iw = new IndentWriter();
@@ -268,6 +313,19 @@ public class ExtractStatistics {
             }
 
             iw.push();
+            iw.print("Latest DPD. ");
+            if (fi._dpDays.size() ==0) {
+                iw.println("None");
+            } else {
+                D_FundDPDay dpd = fi._dpDays.get(0);
+                iw.print("Updated: " + dpd._dateYYMMDD + ", attempted: " + dpd._dateYYMMDD_Actual);
+                if (dpd._r1w == D_FundDPDay.FLOAT_NULL) {
+                    iw.println(", r1w: NULL");
+                } else {
+                    iw.println(", r1w: " + String.format("%.2f", dpd._r1w));
+                }
+            }
+
             try {
                 iw.println(URLEncoder.encode(fi._type + "." + fi._nameMS, Constants.ENCODING_FILE_WRITE));
             } catch(UnsupportedEncodingException exc) {
@@ -281,6 +339,30 @@ public class ExtractStatistics {
             iw.pop();
         }
         return iw.getString();
+    }
+
+    //----------------------------------------------------------------------
+    private void reset() {
+        _fiExtractable = 0;
+
+        _fiToExtract = new ArrayList<>();
+        _fiExtractAttemptedToday = new ArrayList<>();
+
+        // Mutually exclusive
+        _fiInvalids = new ArrayList<>();
+        _fiErrors = new ArrayList<>();
+
+        _fiExtracted = new ArrayList<>();
+        _fiExtracted_Thu = new ArrayList<>();
+        _fiExtracted_Fri = new ArrayList<>();
+        _fiExtracted_Mon = new ArrayList<>();
+        _fiExtracted_Tue = new ArrayList<>();
+        // These are the non-extracted stats for all valid and non-errored funds
+        _fiMissedExtractions = new ArrayList<>();
+        _fiWeeksWithoutExtract_1F = new ArrayList<>();
+        _fiWeeksWithoutExtract_2F = new ArrayList<>();
+        _fiWeeksWithoutExtract_3F = new ArrayList<>();
+        _fiWeeksWithoutExtract_GT3F = new ArrayList<>();
     }
 }
 

@@ -2,13 +2,16 @@ package com.pf.shared;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.pf.fl.datamodel.DB_FundInfo_UI_Callback;
+import com.pf.fl.screens.main.MainActivity;
 import com.pf.shared.analyze.FLAnalyze_DataPreparation;
 import com.pf.shared.datamodel.D_FundInfo;
 import com.pf.shared.datamodel.D_FundInfo_Serializer;
@@ -88,7 +91,7 @@ public class BackgroundWorker extends Worker {
             _iw.println("SNow: " + snow + ", SFile: " + sfile);
             if (sfile.compareTo(snow) < 0) {
                 _iw.println("Reinitializing DB");
-                initializeDB(_iw, getApplicationContext());
+                initializeDB(true, _iw, getApplicationContext());
             }
         } else {
             _iw.println("Will NOT reinitialize DB");
@@ -104,7 +107,15 @@ public class BackgroundWorker extends Worker {
     }
 
     //------------------------------------------------------------------------
-    public static void initializeDB(IndentWriter iw, final Context context) {
+    private static boolean _isInInitialized = false;
+    public synchronized static void initializeDB(final boolean fromBackground, IndentWriter iw, final Context context) {
+        if (_isInInitialized) {
+            return;
+        }
+        _isInInitialized = true;
+        initializeDBImpl(fromBackground, iw, context);
+    }
+    public synchronized static void initializeDBImpl(final boolean fromBackground, IndentWriter iw, final Context context) {
         final String fileName = Constants.FUNDINFO_DB_MASTER_BIN;
         if (iw == null) {
             iw = new IndentWriter();
@@ -122,17 +133,21 @@ public class BackgroundWorker extends Worker {
                     public void onComplete(@NonNull Task<byte[]> task) {
                         MM.sleepInMS(1000);
                         IndentWriter iw = new IndentWriter();
-                        iw.println("************************");
+                        iw.println("****************************************************");
                         iw.println("Aynchronous callback at: " + MM.getNowAs_YYMMDD_HHMMSS(null));
                         Log.e(TAG, "...initializeDB loaded file, time: " + System.currentTimeMillis());
                         boolean isError = false;
                         String errorMessage = null;
                         if (!task.isSuccessful()) {
+                            Toast.makeText(context, "Error loading DB: " + errorMessage
+                                    + "\nfromBackground: " + fromBackground, Toast.LENGTH_LONG).show();
                             isError = true;
                             errorMessage = task.getException().getMessage();
                             Log.e(TAG, "...initializeDB, fileName: " + fileName + ", error: " + errorMessage);
                             iw.println("ERROR: " + task.getException().getMessage());
                         } else {
+                            Toast.makeText(context, "Suceess loading DB"
+                                    + "\nfromBackground: " + fromBackground, Toast.LENGTH_LONG).show();
                             iw.println("SUCCESS");
                             byte[] data = task.getResult();
                             iw.println("Number of bytes: " + data.length);

@@ -6,7 +6,7 @@ package com.pf.shared;
 
 public class Constants {
 
-    public static final long TIMEINS_BEFORE_DEADLINE = 8*60;
+    public static final long TIMEINS_BEFORE_DEADLINE = 7*60;
 
     public static final String TIMEZONE_STOCKHOLM = "Europe/Stockholm";
     public static final String TIMEZONE_NEW_YORK  = "America/New_York";
@@ -31,6 +31,7 @@ public class Constants {
     public static final String FUNDINFO_DB_MASTER_BIN_APP           = "fundinfo-db-master-app.bin";
     public static final String FUNDINFO_DB_MASTER_BIN               = "backend/fundinfo-db-master.bin";
     public static final String FUNDINFO_LOGS_EXTRACT_MASTER_TXT = "backend/fundinfo-logs-extract-master.txt";
+    public static final String FUNDINFO_LOGS_EXTRACT_LAST_TXT   = "backend/fundinfo-logs-extract-last-";
     public static final String PREFIX_FUNDINFO_DB      = "backend/historic/fundinfo-db-date-";
     public static final String PREFIX_WHISTORIC_FUNDINFO_LOGS_DEBUG   = "backend/historic/fundinfo-logs-debug-day-";
     public static final String PREFIX_WHISTORIC_FUNDINFO_LOGS_EXTRACT = "backend/historic/fundinfo-logs-extract-day-";

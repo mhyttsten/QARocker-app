@@ -26,15 +26,6 @@
     </servlet-mapping>
 
     <servlet>
-        <servlet-name>servletTest</servlet-name>
-        <servlet-class>com.pf.fl.be.servlet.ServletTest</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>servletTest</servlet-name>
-        <url-pattern>/servletTest</url-pattern>
-    </servlet-mapping>
-
-    <servlet>
         <servlet-name>cronWorkServlet</servlet-name>
         <servlet-class>com.pf.mr.be.CronWorkServlet</servlet-class>
     </servlet>

@@ -6,6 +6,7 @@ import com.pf.shared.Constants;
 import com.pf.shared.datamodel.DB_FundInfo;
 import com.pf.shared.datamodel.D_FundDPDay;
 import com.pf.shared.datamodel.D_FundInfo;
+import com.pf.shared.datamodel.D_FundInfo_Serializer;
 import com.pf.shared.extract.ExtractStatistics;
 import com.pf.shared.utils.FundList_Validator;
 import com.pf.shared.utils.IndentWriter;
@@ -24,10 +25,13 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static com.pf.fl.be.servlet.CronExtractServlet_New.P_doPostProcessing;
+
 public class JSP_Helper {
     private static final Logger log = Logger.getLogger(JSP_Helper.class.getName());
     private static final String TAG = MM.getClassName(JSP_Helper.class.getName());
 
+    //-----------------------------------------------------------------------
     public static boolean _isInitialized;
     public static void initialize() throws IOException {
         log.info("JSP_Helper.initialize");
@@ -41,6 +45,49 @@ public class JSP_Helper {
         DB_FundInfo.initialize(data, false);
         _isInitialized = true;
     }
+
+    //-----------------------------------------------------------------------
+    public static final String OP_NAME = "op_name";
+    public static final String OP_DO_THING = "doThing";
+    public static final String OP_REWIND_ATTEMPTED = "rewindAttempted";
+    public static String operation(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        initialize();
+        String p = req.getParameter(OP_NAME);
+        if (p.trim().toLowerCase().equals(OP_DO_THING)) {
+            return op_do_thing(req, resp);
+        }
+        if (p.trim().toLowerCase().equals(OP_REWIND_ATTEMPTED)) {
+            return op_rewindAttemptedDate(req, resp);
+        }
+        return "No such operation: " + p;
+    }
+
+    private static String op_do_thing(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        List<D_FundInfo> fis = DB_FundInfo.getAllFundInfos();
+        int count = 0;
+        for (D_FundInfo fi : fis) {
+//            count++;
+        }
+//        byte[] data = D_FundInfo_Serializer.crunchFundList(fis);
+//        GCSWrapper.gcsWriteFile(Constants.FUNDINFO_DB_MASTER_BIN, data);
+        return "Number of funds: " + fis.size();
+    }
+
+    private static String op_rewindAttemptedDate(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        List<D_FundInfo> fis = DB_FundInfo.getAllFundInfos();
+
+        // Rewind attempted date to 2 days before today
+        String date = MM.getNowAs_YYMMDD(null);
+        date = MM.tgif_adjustByDayCount(-2, date);
+        for (D_FundInfo fi : fis) {
+            fi._dateYYMMDD_Update_Attempted = date;
+        }
+        byte[] data = D_FundInfo_Serializer.crunchFundList(fis);
+        GCSWrapper.gcsWriteFile(Constants.FUNDINFO_DB_MASTER_BIN, data);
+        return "Rewinded attempted date to: " + date;
+    }
+
+    // **********************************************************************
 
     //-----------------------------------------------------------------------
     public static String jsp_displayFundDB(HttpServletRequest req, HttpServletResponse resp) throws Exception {
@@ -58,8 +105,8 @@ public class JSP_Helper {
             fundTypeAndName = URLDecoder.decode(fundTypeAndName, Constants.ENCODING_FILE_READ);
         }
 
-        byte[] fundInfoBA = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
-        DB_FundInfo.initialize(fundInfoBA, false);
+        initialize();
+
         List<D_FundInfo> fis = new ArrayList<>();
         if (fundTypeAndName != null && fundTypeAndName.trim().length() > 0) {
             D_FundInfo fi = DB_FundInfo.getFundInfosByTypeDotName(fundTypeAndName);
@@ -93,6 +140,13 @@ public class JSP_Helper {
         iwd.setIndentChar('.');
         iwd.println("Starting extraction debugger");
 
+        boolean doPostProcessing = false;
+        String s = req.getParameter(P_doPostProcessing);
+        if (s != null && s.trim().toLowerCase().equals("true"))  {
+            doPostProcessing = true;
+        }
+        log.info("Do post processing: " + doPostProcessing);
+
         String fundTypeAndName = req.getParameter(JSP_Constants.PARAM2_TYPEDOTNAME_);
         if (fundTypeAndName == null || fundTypeAndName.trim().length() == 0) {
             iwd.println("Error, missing parameter: " + JSP_Constants.PARAM2_TYPEDOTNAME_);
@@ -121,7 +175,7 @@ public class JSP_Helper {
         FLOps1_Ext1_Extract_New extract = new FLOps1_Ext1_Extract_New(
                 fiToExtract,
                 true,
-                false,
+                doPostProcessing,
                 iwd,
                 true);
         extract.doIt();
@@ -138,10 +192,14 @@ public class JSP_Helper {
         iw.generateHTML();
         String debug = ExtractStatistics.getExtractSummary(
                 iw,
-                true,
+                -1,
+                -1,
                 fridayLast,
                 fis);
-        return iw.getString().replace("&", "&amp;");
+        String s = iw.getString().replace("&", "&amp;");
+        return "*** Report for friday: " + fridayLast + "<br>"
+                + s
+                + "<br>*** DEBUG" + debug;
     }
 
     public static String validateFunds(String type) throws IOException {

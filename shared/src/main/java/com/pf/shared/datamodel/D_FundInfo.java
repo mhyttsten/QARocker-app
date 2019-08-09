@@ -126,6 +126,7 @@ public class D_FundInfo implements Cloneable {
                 dpd.dumpInfo(iw);
                 iw.println();
             }
+            iw.println("...");
             D_FundDPDay dpd = _dpDays.get(_dpDays.size()-1);
             dpd.dumpInfo(iw);
             iw.println();

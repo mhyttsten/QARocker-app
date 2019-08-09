@@ -34,17 +34,17 @@ public class D_FundDPDay implements Cloneable {
 	public void dumpInfo(IndentWriter iw) {
 		iw.print(_dateYYMMDD + ", act: " + _dateYYMMDD_Actual + ", " +_currency + ": ");
 		iw.print("[" + f2s(_r1d));
-		iw.print("," + f2s(_r1w));
-		iw.print("," + f2s(_r1m));
-		iw.print("," + f2s(_r3m));
-		iw.print("," + f2s(_r6m));
-		iw.print("," + f2s(_r1y));
-		iw.print("," + f2s(_r3y));
-		iw.print("," + f2s(_r5y));
-		iw.print("," + f2s(_r10y));
-		iw.print("," + f2s(_rYTDFund));
-		iw.print("," + f2s(_rYTDCategory));
-		iw.print("," + f2s(_rYTDIndex));
+		iw.print(", " + f2s(_r1w));
+		iw.print(", " + f2s(_r1m));
+		iw.print(", " + f2s(_r3m));
+		iw.print(", " + f2s(_r6m));
+		iw.print(", " + f2s(_r1y));
+		iw.print(", " + f2s(_r3y));
+		iw.print(", " + f2s(_r5y));
+		iw.print(", " + f2s(_r10y));
+		iw.print(", " + f2s(_rYTDFund));
+		iw.print(", " + f2s(_rYTDCategory));
+		iw.print(", " + f2s(_rYTDIndex));
 		iw.print("]");
 	}
 

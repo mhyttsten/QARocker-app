@@ -55,12 +55,17 @@
   %>
   Is initialized: <%=JSP_Helper._isInitialized%>
 
-  <h1>These are the available alternatives</h1>
+  <h1>Available alternatives 190512</h1>
   <a href="JSP_Main.jsp?reinitialize=true">Reinitialize DB</a><br>
   <br>
   <a href="JSP_Report_LastFriday.jsp">Report Last Friday</a><br>
-  <a href="JSP_ExtractDebugger.jsp?p2_typedotname_=">ExtractDebugger</a><br>
+  <a href="JSP_ExtractDebugger.jsp?doPostProcessing=false&p2_typedotname_=">ExtractDebugger</a><br>
   <a href="JSP_Index_DisplayAll.jsp">Show Indexes</a><br>
+  <br>
+  <a href="JSP_Operation.jsp?op_name=doThing">Do Thing</a><br>
+  <a href="JSP_Operation.jsp?op_name=rewindAttempted">Clear Attempted Date</a><br>
+  <a href="cronExtractNew?doPostProcessing=false&ignoreSchedule=true">Execute cron extract (ignoreSchedule, !doPostProcessing)</a><br>
+
   <br>
   <a href="JSP_Funds_Display.jsp">DB: Show All Funds as OneLiners</a><br>
   <a href="JSP_DisplayFundDB.jsp">DB: Show All Funds in detail</a><br>

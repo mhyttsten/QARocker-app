@@ -5,24 +5,32 @@ import com.pf.shared.analyze.FLAnalyze_Analyze;
 import com.pf.shared.datamodel.D_Analyze_FundRank;
 import com.pf.shared.datamodel.D_FundInfo;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class FLSingleton {
     public static String _portfolioName;
     public static Map<
             String,
-            Map<String, D_Analyze_FundRank.D_Analyze_FundRankElement[]>> _type2Matrix;
+            Map<String, D_Analyze_FundRank.D_Analyze_FundRankElement[]>> _type2Matrix
+            = new HashMap<>();
 
     //------------------------------------------------------------------------
     public static void initialize() {
         // Initialize all the fund rank ranges for all fund types
+
         for (String type: D_FundInfo.TYPES) {
-            _type2Matrix.put(
+
+            List<D_FundInfo> fundsByType = DB_FundInfo_UI._fundsByType.get(type);
+
+            Map<String, D_Analyze_FundRank.D_Analyze_FundRankElement[]> r = null;
+            r = FLAnalyze_Analyze.setMaxRange(
                     type,
-                    FLAnalyze_Analyze.setMaxRange(
-                            type,
-                            DB_FundInfo_UI._fundsByType.get(type),
-                            16));
+                    fundsByType,
+                    16);
+
+            _type2Matrix.put(type, r);
         }
     }
 }

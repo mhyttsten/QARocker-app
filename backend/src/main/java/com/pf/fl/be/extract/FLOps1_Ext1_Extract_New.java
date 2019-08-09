@@ -17,16 +17,25 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Properties;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
+
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 public class FLOps1_Ext1_Extract_New {
     private static final Logger log = Logger.getLogger(FLOps1_Ext1_Extract_New.class.getName());
     private static final String TAG = MM.getClassName(FLOps1_Ext1_Extract_New.class.getName());
 
     private IndentWriter _iwd = new IndentWriter();
-    private boolean _debugSuccessful;
+    private boolean _iwdAddSuccessful;
     private boolean _ignoreSchedule;
     private boolean _doPostProcessing = true;
 
@@ -43,7 +52,7 @@ public class FLOps1_Ext1_Extract_New {
                                    boolean ignoreSchedule,
                                    boolean doPostProcessing,
                                    IndentWriter iwd,
-                                   boolean debugSuccessful) {
+                                   boolean iwdAddSuccessful) {
         _argFIToExtract = argFIToExtract;
         _ignoreSchedule = ignoreSchedule;
         _doPostProcessing = doPostProcessing;
@@ -54,7 +63,7 @@ public class FLOps1_Ext1_Extract_New {
         if (iwd != null) {
             _iwd.println("This is a manual execution, iwd came in from constructor");
         }
-        _debugSuccessful = debugSuccessful;
+        _iwdAddSuccessful = iwdAddSuccessful;
     }
 
     public void doIt() throws IOException {
@@ -112,7 +121,7 @@ public class FLOps1_Ext1_Extract_New {
         if (_argFIToExtract != null && _argFIToExtract.size() > 0) {
             _fiToExtract = _argFIToExtract;
         } else {
-            ExtractStatistics.getExtractSummary(_iwd, false, _nowYYMMDD_HHMMSS, fiAllFunds);
+            ExtractStatistics.getExtractSummary(_iwd, -1, -1, _nowYYMMDD_HHMMSS, fiAllFunds);
             ExtractStatistics es = new ExtractStatistics(fiAllFunds);
             es.extractStats();
             _fiToExtract = es._fiToExtract;
@@ -148,7 +157,7 @@ public class FLOps1_Ext1_Extract_New {
                 fi._isValid = true;
                 fi._errorCode = D_FundInfo.IC_NO_ERROR;
                 _iwd.println("...SUCCESS: " + fi.getOneLiner());
-                if (_debugSuccessful) {
+                if (_iwdAddSuccessful) {
                     _iwd.println(iwdetails.getString());
                 }
             } else {
@@ -229,19 +238,7 @@ public class FLOps1_Ext1_Extract_New {
             return;
         }
 
-        // Get end summary
-        IndentWriter iwExtract = new IndentWriter();
-        ExtractStatistics.getExtractSummary(iwExtract, false, _nowYYMMDD_HHMMSS, fiAllFunds);
-        log.info("Done extracting, summary info:\n" + iwExtract.getString());
-        _iwd.println("\n Done extracting, summary info:\n" + iwExtract.getString());
-
-        // Write extract file (used by the mobile app)
-        log.info("Writing extract master file: " + Constants.FUNDINFO_LOGS_EXTRACT_MASTER_TXT);
-        byte[] extractBA = iwExtract.getString().getBytes(Constants.ENCODING_FILE_WRITE);
-        GCSWrapper.gcsWriteFile(Constants.FUNDINFO_LOGS_EXTRACT_MASTER_TXT, extractBA);
-        log.info("...Done writing extract master file, total bytes: " + extractBA.length);
-
-        // Write fund DB files
+        // Write fund DB master
         log.info("Writing master DB: " + Constants.FUNDINFO_DB_MASTER_BIN);
         byte[] fundListBA = D_FundInfo_Serializer.crunchFundList(fiAllFunds);
         GCSWrapper.gcsWriteFile(Constants.FUNDINFO_DB_MASTER_BIN, fundListBA);
@@ -263,26 +260,48 @@ public class FLOps1_Ext1_Extract_New {
         GCSWrapper.gcsWriteFile(Constants.PREFIX_WHISTORIC_FUNDINFO_LOGS_DEBUG + _fridayLastYYMMDD + Constants.EXT_TXT, logfileContentBA);
         GCSWrapper.gcsDeleteFiles(Constants.PREFIX_FUNDINFO_LOGS_DEBUG, _fridayLastYYMMDD);  // Delete old files
 
-        // Write Extract Summary File
-        log.info("Writing extract details files");
-        byte[] thisRound = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
-        List<D_FundInfo> fiNow = D_FundInfo_Serializer.decrunchFundList(thisRound);
-        IndentWriter iwextract = new IndentWriter();
-        ExtractStatistics.getExtractSummary(iwextract, false, _nowYYMMDD_HHMMSS, fiNow);
-        String logFridayFilename = Constants.PREFIX_FUNDINFO_LOGS_EXTRACT + _fridayLastYYMMDD + Constants.EXT_TXT;
-        byte[] fridayLogContent = GCSWrapper.gcsReadFile(logFridayFilename);
-        String fridayLogContentStr = "";
-        if (fridayLogContent != null) {
-            fridayLogContentStr = new String(fridayLogContent, Constants.ENCODING_FILE_READ);
+        // We only emit statistics once this entire day is finished
+        // Finished meaning we've extracted or attempted extraction of all funds
+        if (_fiToExtract.size() == 0) {
+            log.info("Writing extract details files");
+            byte[] thisRound = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
+            List<D_FundInfo> fiNow = D_FundInfo_Serializer.decrunchFundList(thisRound);
+            IndentWriter iwextract = new IndentWriter();
+            ExtractStatistics.getExtractSummary(iwextract, 2, -1, _nowYYMMDD_HHMMSS, fiNow);
+            String logFridayFilename = Constants.PREFIX_FUNDINFO_LOGS_EXTRACT + _fridayLastYYMMDD + Constants.EXT_TXT;
+            byte[] fridayLogContentBA = GCSWrapper.gcsReadFile(logFridayFilename);
+            String fridayLogContentStr = "";
+            if (fridayLogContentBA != null) {
+                fridayLogContentStr = new String(fridayLogContentBA, Constants.ENCODING_FILE_READ);
+                fridayLogContentStr = "----------------\n" + fridayLogContentStr;
+            }
+            fridayLogContentStr = iwextract.getString() + fridayLogContentStr;
+            fridayLogContentBA = fridayLogContentStr.getBytes(Constants.ENCODING_FILE_WRITE);
+            GCSWrapper.gcsWriteFile(Constants.PREFIX_FUNDINFO_LOGS_EXTRACT + _fridayLastYYMMDD + Constants.EXT_TXT, fridayLogContentBA);
+            GCSWrapper.gcsWriteFile(Constants.PREFIX_WHISTORIC_FUNDINFO_LOGS_EXTRACT + _fridayLastYYMMDD + Constants.EXT_TXT, fridayLogContentBA);
+            GCSWrapper.gcsDeleteFiles(Constants.PREFIX_FUNDINFO_LOGS_EXTRACT, _fridayLastYYMMDD);  // Delete old files
+            sendMail(_fridayLastYYMMDD, fridayLogContentStr);
+            log.info("...Done writing extract details files");
         }
-        fridayLogContentStr = "-------------------------------------------------------------------\n" + iwextract.getString() + fridayLogContentStr;
-        byte[] fridayLogContentBA = fridayLogContentStr.getBytes(Constants.ENCODING_FILE_WRITE);
-        GCSWrapper.gcsWriteFile(Constants.PREFIX_FUNDINFO_LOGS_EXTRACT + _fridayLastYYMMDD + Constants.EXT_TXT, fridayLogContentBA);
-        GCSWrapper.gcsWriteFile(Constants.PREFIX_WHISTORIC_FUNDINFO_LOGS_EXTRACT + _fridayLastYYMMDD + Constants.EXT_TXT, fridayLogContentBA);
-        GCSWrapper.gcsDeleteFiles(Constants.PREFIX_FUNDINFO_LOGS_EXTRACT, _fridayLastYYMMDD);  // Delete old files
-
         log.info("Returning successfully from extract processing");
         MM.sleepInMS(4000);
+    }
+
+    private static void sendMail(String dpday, String content) {
+        Properties props = new Properties();
+        Session session = Session.getDefaultInstance(props, null);
+        try {
+            Message msg = new MimeMessage(session);
+            msg.setFrom(new InternetAddress("extractor@ql-magnushyttsten.appspotmail.com", "Mother"));
+            msg.addRecipient(Message.RecipientType.TO,
+                    new InternetAddress("magnus.hyttsten@gmail.com", "Master"));
+            msg.setSubject("Your extraction report for: " + dpday);
+            msg.setText(content);
+            Transport.send(msg);
+        } catch (Exception exc) {
+            log.severe("Could not send mail, exception: " + exc.getMessage());
+        }
+
     }
 }
 

@@ -72,25 +72,27 @@ public class Misc {
         s += "\nFundDB: ";
         if (f2.exists()) {
             s += new java.util.Date(f2.lastModified()).toString();
+            Toast.makeText(a, "Version [2019-02-26 13:06:00]\n" + s, Toast.LENGTH_LONG).show();
         } else {
             s += "Not found";
 
             // Get the DB file
-            System.out.println("Creating thread to get the file");
+            System.out.println("*************************************************************");
+            System.out.println("**** LOCAL DB FILE NOT FOUND, Creating thread to get the file");
             final AppCompatActivity a2 = a;
-            @SuppressLint("StaticFieldLeak") AsyncTask<URL, Integer, Long> at = new AsyncTask<URL, Integer, Long>() {
-                protected Long doInBackground(URL... urls) {
-                    System.out.println("We are in the thread");
-                    BackgroundWorker.initializeDB(null, a2.getApplicationContext());
-                    System.out.println("Retrieved the DB file");
-                    return 0L;
-                }
-                protected void onProgressUpdate(Integer... progress) { }
-                protected void onPostExecute(Long result) { }
-            }.execute();
+            Toast.makeText(a, "No DB found, now fetching it", Toast.LENGTH_LONG).show();
+            BackgroundWorker.initializeDB(false,null, a2.getApplicationContext());
+//            @SuppressLint("StaticFieldLeak") AsyncTask<URL, Integer, Long> at = new AsyncTask<URL, Integer, Long>() {
+//                protected Long doInBackground(URL... urls) {
+//                    System.out.println("We are in the thread");
+//                    BackgroundWorker.initializeDB(null, a2.getApplicationContext());
+//                    return 0L;
+//                }
+//                protected void onProgressUpdate(Integer... progress) { }
+//                protected void onPostExecute(Long result) { }
+//            }.execute();
         }
 
-        Toast.makeText(a, "Version [2019-02-26 13:06:00]\n" + s, Toast.LENGTH_LONG).show();
         System.out.println("*** DEBUG file\n" + s);
 
         PeriodicWorkRequest wr = new PeriodicWorkRequest.Builder(

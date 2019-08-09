@@ -76,6 +76,7 @@ public class FLAnalyze_Analyze {
         }
 
         // Strip out DPDs outside our friday range
+        int fcount = 0;
         for (D_FundInfo fi: fundsToAnalyze) {
             List<D_FundDPDay> dpds = fi._dpDays;
             int idx = 0;
@@ -92,9 +93,15 @@ public class FLAnalyze_Analyze {
             for (int i=0; i < dpds.size(); i++) {
                 String dpdf = dpds.get(i)._dateYYMMDD;
                 if (!dpdf.equals(fridayList.get(i))) {
-                    throw new AssertionError("DP: " + dpdf + " != " + fridayList.get(i) + ", at index: " + i);
+                    IndentWriter iwdbg = new IndentWriter();
+                    fi.dumpInfo(iwdbg);
+                    if (fcount > 0) {
+                        throw new AssertionError(fi.getTypeAndName() + ", DP: " + dpdf + " != " + fridayList.get(i) + ", at index: " + i
+                                + "\nWe have processed: " + fcount + " funds successfully prior to this one\n" + iwdbg.getString());
+                    }
                 }
             }
+            fcount++;
         }
 
         // Create the matrix: typeAndName -> List<FRE> for each friday

@@ -83,10 +83,12 @@ public class PortfolioR_Leaders extends Fragment {
             @Override
             public void onClick(View v) {
                 int oldV = MM_UIUtils.getTextViewAsInt(tv);
-                oldV++;
-                tv.setText(String.valueOf(oldV));
-                _rvAdapter.setRange(oldV);
-                _rvAdapter.notifyDataSetChanged();
+                if (oldV < 16) {
+                    oldV++;
+                    tv.setText(String.valueOf(oldV));
+                    _rvAdapter.setRange(oldV);
+                    _rvAdapter.notifyDataSetChanged();
+                }
             }
         });
 

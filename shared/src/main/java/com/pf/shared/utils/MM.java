@@ -139,8 +139,13 @@ public class MM {
 	//------------------------------------------------------------------------
     public static void main(String[] args) {
         try {
-            System.out.println("Date diff: " + tgif_dayCountDiff("180318", "180318"));
-        } catch (Exception exc) {
+        	String date = MM.getNowAs_YYMMDD(null);
+        	System.out.println("Date now is: " + date);
+        	System.out.println("Date +2 is: " + tgif_adjustByDayCount(2, date));
+			System.out.println("Date -2 is: " + tgif_adjustByDayCount(-2, date));
+			System.out.println("Date +7 is: " + tgif_adjustByDayCount(7, date));
+			System.out.println("Date -25 is: " + tgif_adjustByDayCount(-25, date));
+       } catch (Exception exc) {
             System.out.println("Exception: " + exc);
             exc.printStackTrace();
         }
@@ -330,9 +335,6 @@ public class MM {
     }
 
 
-    /**
-     *
-     */
     public static String tgif_getNextFridayTodayExcl(String dateYYMMDD) {
         java.util.Date d = getDateFrom_YYMMDD(null, dateYYMMDD);
         GregorianCalendar gc = new GregorianCalendar();
@@ -350,6 +352,16 @@ public class MM {
         }
     }
 
+	public static String tgif_adjustByDayCount(int dayCount, String dateYYMMDD) {
+		java.util.Date d = getDateFrom_YYMMDD(null, dateYYMMDD);
+		GregorianCalendar gc = new GregorianCalendar();
+		gc.setTime(d);
+
+		gc.add(Calendar.DAY_OF_MONTH, dayCount);
+		d = gc.getTime();
+		SimpleDateFormat f = new SimpleDateFormat("yyMMdd");
+		return f.format(d);
+	}
 
     /**
      *

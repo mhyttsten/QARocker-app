@@ -1,22 +1,15 @@
-- Backend: Have a parameter that indicates if we're coming from cron job (or from button)
-- Create service to clear attempted today flag
-- Extend report to indicate successrate per fund type
-- When getting funds to extract, go on !friday and !today or friday && null combo
+Backend:
+- Thursday fix: Change extract time to when those turn into Friday + also mobile cache considerations
+- Install latest AppEngine SDK
 
+App:
 + Ok now we have this local file filled with deduced dates and nulls
-- App: At background job, calculate FundRank sequence
-
 - App: Add FundRank winner in Portfolio screen + scrollbar to change time window
 - App: Verify FundRank numbers
 - App: Add extraction info on main screen (after portfolio, at least with fridayYYMMDD and #total/#extracted/#left)
 
 - App: Create startup screen with MemoryRocker & FundLifter split screen (as TAB)
-- Backend: Send mail on extraction each morning (PST)
-- Backend: Send notification on extraction status (and your fund status) each morning (PST)
-
 - Update SEB, PPM, VGD, SPP fundlists + provide yearly process
-
-- Thursday fix: Change extract time to when those turn into Friday + also mobile cache considerations
 
 Cosmetics
 - App: Display Portfolio: Fund name gets truncated (should not) + show orig fundname when swiping over it

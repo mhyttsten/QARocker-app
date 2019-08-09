@@ -67,7 +67,7 @@ public class ExtractFromHTML_Helper {
         if (fi._dpDays != null && fi._dpDays.size() > 0) {
             dpd1 = fi._dpDays.get(0);
             if (dpd1._dateYYMMDD.equals(_dateLastFriday_YYMMDD)) {
-                _iwd.println("Found dpd matching last friday: " + _dateLastFriday_YYMMDD);
+                _iwd.println("Found dpd matching last friday: " + dpd1);
                 // Are we already done?
                 if (dpd1._r1w != D_FundDPDay.FLOAT_NULL) {
                     _iwd.println("...it was not null, so extraction has already been done");
@@ -184,7 +184,7 @@ public class ExtractFromHTML_Helper {
                 || dpd2._dateYYMMDD_Actual.equals(dateLastSunday_YYMMDD)
                 || dpd2._dateYYMMDD_Actual.equals(dateLastMonday_YYMMDD)
                 || dpd2._dateYYMMDD_Actual.equals(dateLastTuesday_YYMMDD)) {
-            _iwd.println("Success, lastest DPDay had valid _dateYYMMDD_Actual: " + dpd2._dateYYMMDD_Actual);
+            _iwd.println("Success, lastest DPDay was valid: " + dpd2);
             dpd2._dateYYMMDD = dateLastFriday_YYMMDD;
             fi._dpDays.add(0, dpd2);
             fi._dateYYMMDD_Updated = _dateLastFriday_YYMMDD;
