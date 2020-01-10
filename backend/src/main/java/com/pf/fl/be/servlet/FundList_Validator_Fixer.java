@@ -107,7 +107,7 @@ public class FundList_Validator_Fixer {
 
             for (D_FundInfo fi: fis) {
                 if (fi._type.equals(type) &&
-                        (fi._nameMS.equals(ln) || fi._nameOrig.equals(ln) || fi._url.equals(lu))) {
+                        (fi.getNameMS().equals(ln) || fi.getNameOrig().equals(ln) || fi._url.equals(lu))) {
                     throw new AssertionError("Such fund already existed"
                             + "\nln: " + ln + ", lu: " + lu
                             + "\n" + fi.toString());
@@ -115,8 +115,8 @@ public class FundList_Validator_Fixer {
             }
             D_FundInfo fi = new D_FundInfo();
             fi._type = type;
-            fi._nameMS = ln;
-            fi._nameOrig = ln;
+            fi.setNameMS(ln);
+            fi.setNameOrig(ln);
             fi._url = lu;
             fis.add(fi);
             total_inserted++;
@@ -160,7 +160,7 @@ public class FundList_Validator_Fixer {
             while (index2 < fis.size()) {
                 D_FundInfo fi = fis.get(index2);
                 if (fi._type.equals(D_FundInfo.TYPE_PPM)
-                        && fi._nameOrig.equals(dn)
+                        && fi.getNameOrig().equals(dn)
                         && fi._url.equals(du)) {
                     log.info("*** Deleting 2: " + fi.getTypeAndName()
                             + "\n...old (DB) URL: " + fi._url
@@ -224,7 +224,7 @@ public class FundList_Validator_Fixer {
             while (index2 < fis.size()) {
                 D_FundInfo fi = fis.get(index2);
                 if (fi._type.equals(D_FundInfo.TYPE_PPM)
-                        && fi._nameOrig.equals(ln)
+                        && fi.getNameOrig().equals(ln)
                         && fi._url.equals(du)) {
                     log.info("*** Updating: " + fi.getTypeAndName()
                             + "\n...old (DB) URL: " + fi._url
@@ -234,7 +234,7 @@ public class FundList_Validator_Fixer {
                     total_updated++;
                     break;
                 } else if (fi._type.equals(D_FundInfo.TYPE_PPM)
-                        && fi._nameOrig.equals(ln)
+                        && fi.getNameOrig().equals(ln)
                         && !fi._url.equals(du)) {
                     log.info("*** MISMATCH ONLY BY URL: " + fi.getTypeAndName()
                             + "\n...old (DB) URL: " + fi._url

@@ -1,4 +1,12 @@
+- Add extraction report after extraction at top of debug file
+- Add clear tags for each section
+
 Backend:
+- Harden logging policies of FLOps1_Ext1_Extract_Now
+  What is logged
+  What is detailed (and what is that used for, a master log file?)
+
+
 - Thursday fix: Change extract time to when those turn into Friday + also mobile cache considerations
 - Install latest AppEngine SDK
 

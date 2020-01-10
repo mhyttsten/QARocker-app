@@ -35,11 +35,11 @@ public class D_FundInfo_Validator {
         List<D_FundDPDay> dpds = fi._dpDays;
         if (dpds == null || dpds.size() == 0) return;
 
-        if (fi._nameMS == null) {
+        if (fi.getNameMS() == null) {
             _iwErrors.println("*** Field _nameMS became null");
             _error = true;
         }
-        if (fi._nameMS.toLowerCase().contains("ett fel uppstod")) {
+        if (fi.getNameMS().toLowerCase().contains("ett fel uppstod")) {
             _iwErrors.println("*** Field _nameMS became \"ett fel uppstod\"");
             _error = true;
         }

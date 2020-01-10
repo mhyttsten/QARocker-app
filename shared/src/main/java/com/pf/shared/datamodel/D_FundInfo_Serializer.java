@@ -101,14 +101,14 @@ public class D_FundInfo_Serializer {
         dout.writeInt(fi._errorCode);
         dout.writeUTF(fi._lastExtractInfo);
         dout.writeUTF(fi._type);
-        dout.writeUTF(fi._nameMS);
-        dout.writeUTF(fi._nameOrig);
+        dout.writeUTF(fi.getNameMS());
+        dout.writeUTF(fi.getNameOrig());
         dout.writeUTF(fi._dateYYMMDD_Updated);
         dout.writeUTF(fi._dateYYMMDD_Update_Attempted);
         dout.writeInt(fi._msRating);
         dout.writeUTF(fi._ppmNumber);
-        dout.writeUTF(fi._categoryName);
-        dout.writeUTF(fi._indexName);
+        dout.writeUTF(fi.getCategoryName());
+        dout.writeUTF(fi.getIndexName());
         dout.writeUTF(fi._currencyName);
 
         for (D_FundDPYear dpy : fi._dpYears) {
@@ -188,14 +188,14 @@ public class D_FundInfo_Serializer {
         fi._errorCode = din.readInt();
         fi._lastExtractInfo = din.readUTF();
         fi._type = din.readUTF();
-        fi._nameMS = din.readUTF();
-        fi._nameOrig = din.readUTF();
+        fi.setNameMS(din.readUTF());
+        fi.setNameOrig(din.readUTF());
         fi._dateYYMMDD_Updated = din.readUTF();
         fi._dateYYMMDD_Update_Attempted = din.readUTF();
         fi._msRating = din.readInt();
         fi._ppmNumber = din.readUTF();
-        fi._categoryName = din.readUTF();
-        fi._indexName = din.readUTF();
+        fi.setCategoryName(din.readUTF());
+        fi.setIndexName(din.readUTF());
         fi._currencyName = din.readUTF();
 
         while (true) {

@@ -56,7 +56,7 @@ public class DB_FundInfo {
             }
             _fisByTypeHM.get(fi._type).add(fi);
 
-            String in = fi._indexName;
+            String in = fi.getIndexName();
             if (in == null || in.trim().length() == 0) {
                 in = "-";
             }
@@ -223,7 +223,7 @@ public class DB_FundInfo {
         fis.sort(new Comparator<D_FundInfo>() {
             @Override
             public int compare(D_FundInfo o1, D_FundInfo o2) {
-                return o1._nameMS.compareTo(o2._nameMS);
+                return o1.getNameMS().compareTo(o2.getNameMS());
             }
         });
     }
@@ -232,7 +232,7 @@ public class DB_FundInfo {
     public static D_FundInfo getFundInfosByTypeDotName(String typeDotName) throws IOException {
         List<D_FundInfo> l = _fis;
         for (D_FundInfo fi: l) {
-            if ((fi._type + "." + fi._nameMS).equals(typeDotName)) {
+            if ((fi._type + "." + fi.getNameMS()).equals(typeDotName)) {
                 return fi;
             }
         }
@@ -243,9 +243,9 @@ public class DB_FundInfo {
     public static D_FundInfo getFundInfosByTypeAndName(String type, String name, boolean useNameOrig) {
         List<D_FundInfo> l = _fisByTypeHM.get(type);
         for (D_FundInfo fi: l) {
-            if (!useNameOrig && fi._nameMS.equals(name)) {
+            if (!useNameOrig && fi.getNameMS().equals(name)) {
                 return fi;
-            } else if (useNameOrig && fi._nameOrig.equals(name)) {
+            } else if (useNameOrig && fi.getNameMS().equals(name)) {
                 return fi;
             }
         }

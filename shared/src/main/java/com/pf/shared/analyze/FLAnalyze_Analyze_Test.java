@@ -142,8 +142,8 @@ public class FLAnalyze_Analyze_Test {
     private static D_FundInfo create_D_FundInfo(String type, String name, int weekCount, float[] r1ws) {
         D_FundInfo fi = new D_FundInfo();
         fi._type = type;
-        fi._nameMS = name;
-        fi._nameOrig = name;
+        fi.setNameMS(name);
+        fi.setNameOrig(name);
 
         String[] fridays = D_Utils.getRecentDates(weekCount);
         for (int i=0; i < fridays.length; i++) {

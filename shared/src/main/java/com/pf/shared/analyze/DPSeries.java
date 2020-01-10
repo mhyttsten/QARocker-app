@@ -138,7 +138,7 @@ public class DPSeries {
         }
 
         DPSeries r = new DPSeries();
-        r._name = fi._nameMS;
+        r._name = fi.getNameMS();
         for (String f: fridays) {
             List<D_FundDPDay> dpds = fi._dpDays;
             float r1w = D_FundDPDay.FLOAT_NULL;

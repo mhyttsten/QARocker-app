@@ -61,7 +61,7 @@ public class PortfolioU_Activity_RV_Adapter extends RecyclerView.Adapter<Portfol
         _funds.clear();
         for (D_FundInfo fi: fundsAll) {
             boolean found = false;
-            CheckBoxTextView cbtv = new CheckBoxTextView(false, fi._nameMS, fi._url);
+            CheckBoxTextView cbtv = new CheckBoxTextView(false, fi.getNameMS(), fi._url);
             if (p != null && p._urls != null) {
                 for (String url : p._urls) {
                     if (url.equals(fi._url)) {

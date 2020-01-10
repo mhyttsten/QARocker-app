@@ -264,16 +264,17 @@ public class ExtractStatistics {
         }
         printListStr(iw, "Errors", es_now._fiErrors, 10000);
 
-        if (limitThursday == -1) {
-            limitThursday = 10000;
-        }
+//        if (limitThursday == -1) {
+//            limitThursday = 10000;
+//        }
         if (limitNotExtracted == -1) {
             limitNotExtracted = 10000;
         }
 
         iw.println();
-        iw.println("...Thursday: " + es_now._fiExtracted_Thu.size());
-        printListStr(iw, "Thursday", es_now._fiExtracted_Thu, limitThursday);
+        iw.println("Thursday: " + es_now._fiExtracted_Thu.size());
+        iw.println("...Will not list those in detail, see ExtractStatistics to enable this code again");
+//        printListStr(iw, "Thursday", es_now._fiExtracted_Thu, limitThursday);
         iw.println();
         printListStr(iw, "Missed last Friday", es_now._fiWeeksWithoutExtract_1F, limitNotExtracted);
         iw.println();
@@ -303,7 +304,7 @@ public class ExtractStatistics {
             }
             D_FundInfo fi = l.get(i);
             iw.print("[" + i + "]: "
-                    + fi._type + "." + fi._nameMS
+                    + fi._type + "." + fi.getNameMS()
                     + ", updated: " + fi._dateYYMMDD_Updated
                     + ", attempted: " + fi._dateYYMMDD_Update_Attempted);
             if (fi._errorCode != D_FundInfo.IC_NO_ERROR) {
@@ -326,11 +327,7 @@ public class ExtractStatistics {
                 }
             }
 
-            try {
-                iw.println(URLEncoder.encode(fi._type + "." + fi._nameMS, Constants.ENCODING_FILE_WRITE));
-            } catch(UnsupportedEncodingException exc) {
-                throw new AssertionError("Unsupported encoding: " + exc.toString());
-            }
+            iw.println(fi.getTypeAndNameURLEncoded());
             if (iw._generateHTML) {
                 iw.println     ("<a href=\"" + fi._url + "\" target=\"_blank\">" + fi._url + "</a>");
             } else {

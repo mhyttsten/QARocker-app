@@ -106,7 +106,7 @@ public class DB_FundInfo_UI {
         Collections.sort(l, new Comparator<D_FundInfo>() {
             @Override
             public int compare(D_FundInfo lh, D_FundInfo rh) {
-                return lh._nameMS.compareTo(rh._nameMS);
+                return lh.getNameMS().compareTo(rh.getNameMS());
             }
         });
         DB_FundInfo_UI.initialize_Funds(l);
@@ -241,7 +241,7 @@ public class DB_FundInfo_UI {
             Collections.sort(tmp, new Comparator<D_FundInfo>() {
                 @Override
                 public int compare(D_FundInfo o1, D_FundInfo o2) {
-                    return o1._nameMS.compareTo(o2._nameMS);
+                    return o1.getNameMS().compareTo(o2.getNameMS());
                 }
             });
         }

@@ -17,9 +17,12 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -1339,7 +1342,33 @@ public class MM {
         return -1;
     }
 
-    //------------------------------------------------------------------------
+	//------------------------------------------------------------------------
+	public static String htmlEntitiesRemove(String s) {
+    	String r = HtmlManipulator.replaceHtmlEntities(s);
+    	try {
+			r = URLDecoder.decode(r, Constants.ENCODING_FILE_READ);
+		} catch(UnsupportedEncodingException exc) {
+    		throw new AssertionError(exc.toString() + "\n" + MM.getStackTraceString(exc));
+		} catch(java.lang.IllegalArgumentException exc2) {
+		}
+
+    	return r;
+	}
+
+	//------------------------------------------------------------------------
+	public static String htmlEntitiesAdd(String s) {
+		String r = HtmlManipulator.quoteHtml(s);
+		try {
+			r = URLEncoder.encode(r, Constants.ENCODING_FILE_READ);
+		} catch(UnsupportedEncodingException exc) {
+			throw new AssertionError(exc.toString() + "\n" + MM.getStackTraceString(exc));
+		} catch(java.lang.IllegalArgumentException exc2) {
+		}
+		return r;
+	}
+
+
+	//------------------------------------------------------------------------
     public static String bytesToHexDumpString(byte[] data, String newline) {
     	byte[] ascii_data = new byte[16];
     	StringBuffer strb = new StringBuffer();

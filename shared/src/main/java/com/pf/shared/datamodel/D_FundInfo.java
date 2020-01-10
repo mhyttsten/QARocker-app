@@ -1,11 +1,16 @@
 package com.pf.shared.datamodel;
 
+import com.pf.shared.Constants;
 import com.pf.shared.utils.IndentWriter;
+import com.pf.shared.utils.MM;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,21 +82,36 @@ public class D_FundInfo implements Cloneable {
     public String _lastExtractInfo = "<No Info>";
 
     public String _type = "";
-    public String _nameMS = "";
+    private String _nameMS = "";
+    public void setNameMS(String s) { _nameMS = MM.htmlEntitiesRemove(s); }
+    public String getNameMS() { return MM.htmlEntitiesRemove(_nameMS); }
+
     public String _url = "";
-    public String _nameOrig = "";
+    private String _nameOrig = "";
+    public void setNameOrig(String s) { _nameOrig = MM.htmlEntitiesRemove(s); }
+    public String getNameOrig() { return MM.htmlEntitiesRemove(_nameOrig); }
     public String _dateYYMMDD_Updated = "";
     public String _dateYYMMDD_Update_Attempted = "";
     public int _msRating = -1;
     public String _ppmNumber = "";
-    public String _categoryName = "";
-    public String _indexName = "";
+    private String _categoryName = "";
+    public void setCategoryName(String s) { _categoryName = MM.htmlEntitiesRemove(s); }
+    public String getCategoryName() { return  MM.htmlEntitiesRemove(_categoryName); }
+    private String _indexName = "";
+    public void setIndexName(String s) { _indexName = MM.htmlEntitiesRemove(s); }
+    public String getIndexName() { return MM.htmlEntitiesRemove(_indexName); }
     public String _currencyName = "";
     public List<D_FundDPDay>  _dpDays = new ArrayList<>();
     public List<D_FundDPYear> _dpYears = new ArrayList<>();
 
-    public String getTypeAndName() { return _type + "." + _nameMS; }
-
+    public String getTypeAndName() { return _type + "." + getNameMS(); }
+    public String getTypeAndNameURLEncoded() {
+        try {
+            return URLEncoder.encode(_type + "." + _nameMS, Constants.ENCODING_FILE_WRITE);
+        } catch(UnsupportedEncodingException exc) {
+            throw new AssertionError("Unsupported encoding: " + exc.toString());
+        }
+    }
     public void dumpInfo(IndentWriter iw) {
         iw.println("Fund: " + _type + "." + _nameMS);
         iw.push();
@@ -100,14 +120,14 @@ public class D_FundInfo implements Cloneable {
         iw.println("ec: " + _errorCode);
         iw.println("lastExtractInfo: " + _lastExtractInfo);
         iw.println("t: " + _type);
-        iw.println("nMS: " + _nameMS);
-        iw.println("nOrig: " + _nameOrig);
+        iw.println("nMS: " + getNameMS());
+        iw.println("nOrig: " + getNameOrig());
         iw.println("updated: " + _dateYYMMDD_Updated);
         iw.println("updateAttempted: " + _dateYYMMDD_Update_Attempted);
         iw.println("rating: " + _msRating);
         iw.println("ppm: " + _ppmNumber);
-        iw.println("category: " + _categoryName);
-        iw.println("index: " + _indexName);
+        iw.println("category: " + getCategoryName());
+        iw.println("index: " + getIndexName());
         iw.println("currency: " + _currencyName);
 
         iw.println("DPYears, length: " + _dpYears.size());
@@ -173,7 +193,8 @@ public class D_FundInfo implements Cloneable {
                 + ", iv: " + _isValid
                 + ", du: " + _dateYYMMDD_Updated
                 + ", dua: " + _dateYYMMDD_Update_Attempted
-                + ", on: " + _nameOrig
+                + ", mn: " + getNameMS()
+                + ", on: " + getNameOrig()
                 + ", mr: " + _msRating
                 + ", p#: " + _ppmNumber
                 + ", cur: " + _currencyName
@@ -181,8 +202,8 @@ public class D_FundInfo implements Cloneable {
                 + ", 2:" + dpday(1)
                 + ", 3:" + dpday(2)
                 + ", 4:" + dpday(3)
-                + ", in: " + _indexName
-                + ", cn: " + _categoryName);
+                + ", in: " + getIndexName()
+                + ", cn: " + getCategoryName());
         return strb.toString();
     }
 

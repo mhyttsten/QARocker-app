@@ -48,8 +48,8 @@ public class JSP_Helper {
 
     //-----------------------------------------------------------------------
     public static final String OP_NAME = "op_name";
-    public static final String OP_DO_THING = "doThing";
-    public static final String OP_REWIND_ATTEMPTED = "rewindAttempted";
+    public static final String OP_DO_THING = "dothing";
+    public static final String OP_REWIND_ATTEMPTED = "rewindattempted";
     public static String operation(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         initialize();
         String p = req.getParameter(OP_NAME);
@@ -65,12 +65,16 @@ public class JSP_Helper {
     private static String op_do_thing(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         List<D_FundInfo> fis = DB_FundInfo.getAllFundInfos();
         int count = 0;
+        StringBuffer strb = new StringBuffer();
         for (D_FundInfo fi : fis) {
+//                strb.append("ms: " + fi.getNameMS() + ", orig: " + fi.getNameMS() + "<br>");
 //            count++;
         }
+
 //        byte[] data = D_FundInfo_Serializer.crunchFundList(fis);
 //        GCSWrapper.gcsWriteFile(Constants.FUNDINFO_DB_MASTER_BIN, data);
-        return "Number of funds: " + fis.size();
+        return strb.toString();
+//        return "Number of funds: " + fis.size();
     }
 
     private static String op_rewindAttemptedDate(HttpServletRequest req, HttpServletResponse resp) throws Exception {
@@ -176,6 +180,7 @@ public class JSP_Helper {
                 fiToExtract,
                 true,
                 doPostProcessing,
+                30,
                 iwd,
                 true);
         extract.doIt();
@@ -245,7 +250,7 @@ public class JSP_Helper {
         iw.println("<br>");
         iw.println("In DB but not in List<br>");
         for (int i=0; i < v._fiInDBButNotList.size(); i++) {
-            iw.println("\"" + v._fiInDBButNotList.get(i)._nameOrig
+            iw.println("\"" + v._fiInDBButNotList.get(i).getNameOrig()
                     + "\",\"" + v._fiInDBButNotList.get(i)._url
                     + "\",<br>");
         }
@@ -257,7 +262,7 @@ public class JSP_Helper {
             OTuple2G<String, String> e = v._fiNameMatchURLMismatch.get(i);
             iw.println("[" + i + "] List name: " + e._o1 + ", url: " + e._o2 + "<br>");
             D_FundInfo fi = DB_FundInfo.getFundInfosByTypeAndName(type, e._o1, false);
-            iw.println("...DB name: " + fi._nameOrig + ", url: " + fi._url + "<br>");
+            iw.println("...DB name: " + fi.getNameOrig() + ", url: " + fi._url + "<br>");
         }
 
         iw.println("<br>");
@@ -266,7 +271,7 @@ public class JSP_Helper {
             OTuple2G<String, String> e = v._fiURLMatchNameMismatch.get(i);
             iw.println("[" + i + "] List name: " + e._o1 + ", url: " + e._o2 + "<br>");
             D_FundInfo fi = DB_FundInfo.getFundInfosByTypeAndURL(type, e._o2);
-            iw.println("...DB name: " + fi._nameOrig + ", url: " + fi._url + "<br>");
+            iw.println("...DB name: " + fi.getNameOrig() + ", url: " + fi._url + "<br>");
         }
 
         iw.println("<br>");
@@ -280,8 +285,8 @@ public class JSP_Helper {
         iw.println("All FIS<br>");
         for (int i=0; i < v._fis.size(); i++) {
             iw.println("[" + i + "] DB name: "
-                    + v._fis.get(i)._nameOrig
-                    + ", ms: " + v._fis.get(i)._nameMS
+                    + v._fis.get(i).getNameOrig()
+                    + ", ms: " + v._fis.get(i).getNameMS()
                     + ", url: " + v._fis.get(i)._url
                     + "<br>");
         }
@@ -322,7 +327,8 @@ public class JSP_Helper {
                 D_FundDPDay dpd = fi._dpDays.get(0);
                 dpdStr = dpd.toString();
             }
-            sb.append(fi._nameMS + ", " + fi._nameOrig + ", " + fi._url + ", " + dpdStr + "<br>");
+            sb.append(fi.getNameMS() + ", " + fi.getNameOrig() + ", " + fi._url + ", " + dpdStr + "<br>");
+            sb.append("..." + fi.getTypeAndNameURLEncoded() + "<br>");
         }
     }
 
@@ -474,16 +480,16 @@ public class JSP_Helper {
             s.append("<a href=\"" + nameMSURL + "\" target=\"_blank\">"
                     + cfi._type
                     + ":&nbsp;"
-                    + cfi._nameMS + "</a>");
+                    + cfi.getNameMS() + "</a>");
             if (cfi._ppmNumber != null && cfi._ppmNumber.trim().length() > 0) {
                 s.append("&nbsp;(" + String.valueOf(cfi._ppmNumber) + ")");
             }
             String indexName = "-";
-            if (cfi._indexName == null) {
-                log.info(cfi._type + "." + cfi._nameMS + ": Had null as index");
+            if (cfi.getIndexName() == null) {
+                log.info(cfi._type + "." + cfi.getNameMS() + ": Had null as index");
                 s.append("&nbsp;(-)");
             } else {
-                indexName = cfi._indexName;
+                indexName = cfi.getIndexName();
                 if (indexName == null || indexName.trim().equals("-")) {
                     s.append("&nbsp;(-)");
                 } else {
@@ -500,7 +506,7 @@ public class JSP_Helper {
             List<D_FundDPDay> dpws = null;
             if (cfi != null) {
                 dpws = cfi._dpDays;
-                dpws = getDPWeeks(cfi._type + "." + cfi._nameMS, dates, dpws);
+                dpws = getDPWeeks(cfi._type + "." + cfi.getNameMS(), dates, dpws);
             }
 
             // Monthlys

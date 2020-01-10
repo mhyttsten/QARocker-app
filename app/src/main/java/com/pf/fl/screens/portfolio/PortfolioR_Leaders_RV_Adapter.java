@@ -55,7 +55,7 @@ public class PortfolioR_Leaders_RV_Adapter extends RecyclerView.Adapter<Portfoli
     public void onBindViewHolder(PortfolioR_Leaders_RV_Holder holder, int position) {
 
         D_Analyze_FundRank.D_Analyze_FundRankElement fre = _leaders._frSummaryForAllFridays.get(position);
-        holder._name.setText(fre._fi._nameMS);
+        holder._name.setText(fre._fi.getNameMS());
         MM_UIUtils.setTextViewInformation(
                 _parentActivity,
                 holder._return_acc, fre._r1w, fre._countMissing);

@@ -192,7 +192,7 @@ public class BackgroundWorker extends Worker {
         Collections.sort(l, new Comparator<D_FundInfo>() {
             @Override
             public int compare(D_FundInfo lh, D_FundInfo rh) {
-                return lh._nameMS.compareTo(rh._nameMS);
+                return lh.getNameMS().compareTo(rh.getNameMS());
             }
         });
         System.out.println("...number of funds: " + l.size());

@@ -64,8 +64,8 @@
   <br>
   <a href="JSP_Operation.jsp?op_name=doThing">Do Thing</a><br>
   <a href="JSP_Operation.jsp?op_name=rewindAttempted">Clear Attempted Date</a><br>
-  <a href="cronExtractNew?doPostProcessing=false&ignoreSchedule=true">Execute cron extract (ignoreSchedule, !doPostProcessing)</a><br>
-
+  <a href="cronExtractNew?doPostProcessing=false&ignoreSchedule=true&timeInSBeforeDeadline=30">Execute cron extract (ignoreSchedule, !doPostProcessing)</a><br>
+  <a href="cronExtractNew?doPostProcessing=true&ignoreSchedule=true&timeInSBeforeDeadline=30">Execute cron extract (ignoreSchedule, doPostProcessing)</a><br>
   <br>
   <a href="JSP_Funds_Display.jsp">DB: Show All Funds as OneLiners</a><br>
   <a href="JSP_DisplayFundDB.jsp">DB: Show All Funds in detail</a><br>

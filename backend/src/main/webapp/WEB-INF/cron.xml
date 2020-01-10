@@ -7,40 +7,42 @@
         <!--<schedule>every day 10:05</schedule>-->
         <!--<timezone>America/Los_Angeles</timezone>-->
     <!--</cron>-->
+    <!--<cron>-->
+    <!--<url>/cronExtractNew</url>-->
+    <!--<description>Cron_Extract_New</description>-->
+    <!--<schedule>every 10 minutes from 11:20 to 12:20</schedule>-->
+    <!--<timezone>America/Los_Angeles</timezone>-->
+    <!--</cron>-->
 
+    <!-- Below are the standard ones -->
     <cron>
         <url>/cronWork</url>
         <description>Cron_Work</description>
         <schedule>every 1 hours from 09:00 to 11:00</schedule>
         <timezone>America/Los_Angeles</timezone>
     </cron>
-
     <cron>
-        <url>/cronExtractNew?ignoreSchedule=false&amp;doPostProcessing=true</url>
+        <url>/cronExtractNew?ignoreSchedule=false&amp;doPostProcessing=true&amp;timeInSBeforeDeadline=500</url>
         <description>Cron_Extract_New</description>
         <schedule>every 10 minutes from 06:00 to 08:30</schedule>
         <timezone>Europe/Stockholm</timezone>
     </cron>
 
-    <cron>
-        <url>/cronExtractNew?ignoreSchedule=true&amp;doPostProcessing=false</url>
-        <description>Cron_Extract_New_Manual1</description>
-        <schedule>1 of jan 10:00</schedule>
-        <timezone>Europe/Stockholm</timezone>
-    </cron>
+<!--    <schedule>every 10 minutes from 06:00 to 08:30</schedule>-->
 
-    <cron>
-        <url>/cronExtractNew?ignoreSchedule=true&amp;doPostProcessing=true</url>
-        <description>Cron_Extract_New_Manual2</description>
-        <schedule>1 of jan 10:00</schedule>
-        <timezone>Europe/Stockholm</timezone>
-    </cron>
+    <!-- What are these used for? -->
+<!--    <cron>-->
+<!--        <url>/cronExtractNew?ignoreSchedule=true&amp;doPostProcessing=false</url>-->
+<!--        <description>Cron_Extract_New_Manual1</description>-->
+<!--        <schedule>1 of jan 10:00</schedule>-->
+<!--        <timezone>Europe/Stockholm</timezone>-->
+<!--    </cron>-->
+<!--    <cron>-->
+<!--        <url>/cronExtractNew?ignoreSchedule=true&amp;doPostProcessing=true</url>-->
+<!--        <description>Cron_Extract_New_Manual2</description>-->
+<!--        <schedule>1 of jan 10:00</schedule>-->
+<!--        <timezone>Europe/Stockholm</timezone>-->
+<!--    </cron>-->
 
-    <!--<cron>-->
-        <!--<url>/cronExtractNew</url>-->
-        <!--<description>Cron_Extract_New</description>-->
-        <!--<schedule>every 10 minutes from 11:20 to 12:20</schedule>-->
-        <!--<timezone>America/Los_Angeles</timezone>-->
-    <!--</cron>-->
 
 </cronentries>

@@ -129,8 +129,8 @@ public class FundDBUpdate_VGD {
             String url = url_getVanguard(name, ticker);
             D_FundInfo fi = new D_FundInfo();
             fi._type = D_FundInfo.TYPE_VANGUARD;
-            fi._nameOrig = name + " (" + ticker + ")";
-            fi._nameMS = fi._nameOrig;
+            fi.setNameOrig(name + " (" + ticker + ")");
+            fi.setNameMS(fi.getNameOrig());
             fi._url = url;
             fi._msRating = -1;
             fi._ppmNumber = "";

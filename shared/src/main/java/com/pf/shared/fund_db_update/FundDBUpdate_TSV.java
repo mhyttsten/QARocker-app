@@ -34,8 +34,8 @@ public class FundDBUpdate_TSV {
             String[] items = line.split("\t");
             D_FundInfo fi = new D_FundInfo();
             fi._type = type;
-            fi._nameOrig = items[2];
-            fi._nameMS = items[0];
+            fi.setNameOrig(items[2]);
+            fi.setNameMS(items[0]);
             fi._url = items[1];
             fi._msRating = -1;
             fi._ppmNumber = "";

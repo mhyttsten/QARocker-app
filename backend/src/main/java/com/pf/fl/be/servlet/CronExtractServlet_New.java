@@ -17,6 +17,7 @@ public class CronExtractServlet_New extends HttpServlet {
     private static final Logger log = Logger.getLogger(CronExtractServlet_New.class.getSimpleName());
     private static final String TAG = CronExtractServlet_New.class.getSimpleName();
 
+    //------------------------------------------------------------------------
     @Override
     public void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
@@ -31,6 +32,7 @@ public class CronExtractServlet_New extends HttpServlet {
 //                iw.println("..." + p + ": " + req.getParameter(p));
 //            }
 //            log.info(iw.getString());
+
             doExtract(req, resp);
         } catch(Exception exc) {
             log.severe("Exception caught: " + exc.getMessage());
@@ -38,12 +40,16 @@ public class CronExtractServlet_New extends HttpServlet {
         }
     }
 
+    //------------------------------------------------------------------------
     public static final String P_ignoreSchedule = "ignoreSchedule";
     public static final String P_doPostProcessing = "doPostProcessing";
+    public static final String P_timeInSBeforeDeadline = "timeInSBeforeDeadline";
+
     public static void doExtract(HttpServletRequest req, HttpServletResponse resp) throws Exception {
 
         boolean ignoreSchedule = false;
         boolean doPostProcessing = false;
+        int timeInSBeforeDeadline = 0;
 
         String s = req.getParameter(P_ignoreSchedule);
         if (s != null && s.trim().toLowerCase().equals("true"))  {
@@ -53,10 +59,20 @@ public class CronExtractServlet_New extends HttpServlet {
         if (s != null && s.trim().toLowerCase().equals("true"))  {
             doPostProcessing = true;
         }
+        s = req.getParameter(P_timeInSBeforeDeadline);
+        if (s != null)  {
+            try {
+                timeInSBeforeDeadline = Integer.parseInt(s);
+            } catch(Exception exc) {
+                log.severe("timeInSBeforeDeadline could not be converted to int: " + s);
+                return;
+            }
+        }
 
         log.info("Parameters being passed");
         log.info("...ignoreSchedule: " + ignoreSchedule);
         log.info("...doPostProcessing: " + doPostProcessing);
+        log.info("...timeInSBeforeDeadline: " + timeInSBeforeDeadline);
 
         if (ignoreSchedule) {
             String date = MM.getNowAs_YYMMDD(null);
@@ -74,6 +90,7 @@ public class CronExtractServlet_New extends HttpServlet {
                 null,
                 ignoreSchedule,
                 doPostProcessing,
+                timeInSBeforeDeadline,
                 null,
                 false);
         extract.doIt();

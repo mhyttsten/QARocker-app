@@ -48,11 +48,11 @@ public class ExtractFromHTML_Morningstar {
 			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
 		}
 		iwd.println("...Done, fundName: " + fundName);
-		if (!fi._nameMS.equals(fundName)) {
-			iwd.println("Warning: Fund changed name, before: " + fi._nameMS + ", now: " + fundName);
+		if (!fi.getNameMS().equals(fundName)) {
+			iwd.println("Warning: Fund changed name, before: " + fi.getNameMS() + ", now: " + fundName);
 			returnCode = ExtractFromHTML_Helper.RC_SUCCESS_BUT_DATA_WAS_UPDATED;
 		}
-		fi._nameMS = fundName;
+		fi.setNameMS(fundName);
 
 		// MS Category
 		iwd.println("Finding category name");
@@ -74,12 +74,12 @@ public class ExtractFromHTML_Morningstar {
 		findTo = "</a>";
 		String msCategoryText = MM.getRegExp(null, ahref, findTagLoc, findAfter, findTo, true);
 		msCategoryText = MM.htmlReplaceHTMLCodes(msCategoryText);
-		if (!fi._categoryName.equals(msCategoryText)) {
-			iwd.println("Warning, Fund category changed, before: " + fi._categoryName + ", now: " + msCategoryText);
+		if (!fi.getCategoryName().equals(msCategoryText)) {
+			iwd.println("Warning, Fund category changed, before: " + fi.getCategoryName() + ", now: " + msCategoryText);
 			returnCode = ExtractFromHTML_Helper.RC_SUCCESS_BUT_DATA_WAS_UPDATED;
 		}
-		fi._categoryName = msCategoryText;
-		iwd.println("...Done, categoryName: " + fi._categoryName);
+		fi.setCategoryName(msCategoryText);
+		iwd.println("...Done, categoryName: " + fi.getCategoryName());
 
 		// MS Rating
 		// <span class="quicktakecolContainer" title="Morningstar Rating"
@@ -161,7 +161,7 @@ public class ExtractFromHTML_Morningstar {
 		findAfter = "</b>:";
 		findTo = "<br />";
 		String indexCompare = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
-		fi._indexName = indexCompare;
+		fi.setIndexName(indexCompare);
 		iwd.println("...Done, indexName: " + indexCompare);
 
 		// Get currency in which NAV is measured

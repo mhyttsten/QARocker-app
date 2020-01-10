@@ -3,6 +3,7 @@ package com.pf.fl.be.jsphelper;
 import com.pf.shared.datamodel.DB_FundInfo;
 import com.pf.fl.be.extract.GCSWrapper;
 import com.pf.shared.Constants;
+import com.pf.shared.utils.HtmlManipulator;
 import com.pf.shared.utils.IndentWriter;
 import com.pf.shared.utils.MM;
 import com.pf.shared.utils.OTuple2G;
@@ -144,41 +145,73 @@ public class JSP_Helper_fundURLData {
             }
 
             D_FundInfo fi = null;
+            // Updating fund
             if (v_idStr != null) {
                 v_idStr = URLDecoder.decode(v_idStr, Constants.ENCODING_FILE_READ);
+
                 int io = v_idStr.indexOf(".");
                 String tstr = v_idStr.substring(0, io);
                 String nstr = v_idStr.substring(io+1);
                 fi = DB_FundInfo.getFundInfosByTypeAndName(tstr, nstr, false);
+
+
+                log.info("Updating fund, v_idStr: " + v_idStr);
+                log.info("tstr: " + tstr + ", nstr: " + nstr);
+                log.info("v_type: " + v_type);
+                log.info("v_name: " + v_name);
+                log.info("v_url: " + v_url);
+                log.info("fi: " + fi);
+                log.info("FI.name: " + fi.getNameMS());
+                log.info("FI.name decoded: " + HtmlManipulator.replaceHtmlEntities(fi.getNameMS()));
+
                 if (fi._type.equals(v_type)
-                        && fi._nameMS.equals(v_name)
+                        && HtmlManipulator.replaceHtmlEntities(fi.getNameMS()).equals(v_name)
                         && fi._url.equals(v_url)
                         && v_delete == null
                         && v_setvalid == null) {
                     continue;
+                } else {
+                    log.info("Updating fund, v_idStr: " + v_idStr);
+                    log.info("tstr: " + tstr + ", nstr: " + nstr);
+                    log.info("v_type: " + v_type);
+                    log.info("v_name: " + v_name);
+                    log.info("v_url: " + v_url);
+                    log.info("fi: " + fi);
+                    log.info("FI.name: " + fi.getNameMS());
+                    log.info("FI.name decoded: " + HtmlManipulator.replaceHtmlEntities(fi.getNameMS()));
+                    if (!fi._type.equals(v_type)) {
+                        log.info("v_type differed, from HTML: " + v_type + ", DB: " + fi._type);
+                    }
+                    if (!fi.getNameMS().equals(v_name)) {
+                        log.info("v_name differed, from HTML: " + v_name + ", DB: " + fi.getNameMS());
+                    }
+                    if (!fi._url.equals(v_url)) {
+                        log.info("v_url differed, from HTML: " + v_url + ", DB: " + fi._url);
+                    }
                 }
 
                 if (isVerify) {
                     fi = new D_FundInfo();
-                    fi._nameMS = v_name;
-                    fi._nameOrig = v_name;
+                    fi.setNameMS(v_name);
+                    fi.setNameOrig(v_name);
                     fi._url = v_url;
                 } else {
-                    fi._nameMS = v_name;
-                    fi._nameOrig = v_name;
+                    fi.setNameMS(v_name);
+                    fi.setNameOrig(v_name);
                     fi._url = v_url;
                 }
 
                 log.info("Updating v_idStr to:\n" + fi.toString());
             }
+            // Inserting fund
             else {
                 if (v_type.length() <= 0 || v_name.length() <= 0 || v_url.length() <= 0) {
                     continue;
                 }
                 fi = new D_FundInfo();
                 fi._type = v_type;
-                fi._nameMS = v_name;
-                fi._nameOrig = v_name;
+                fi.setNameMS(v_name);
+                fi.setNameOrig(v_name);
                 fi._url = v_url;
                 log.info("Inserting new fund:\n" + fi.toString());
             }
@@ -201,7 +234,7 @@ public class JSP_Helper_fundURLData {
             // This is a new fund
             if (v_idStr == null) {
                 if (isVerify) {
-                    D_FundInfo fiDB1 = DB_FundInfo.getFundInfosByTypeAndName(fi._type, fi._nameMS, false);
+                    D_FundInfo fiDB1 = DB_FundInfo.getFundInfosByTypeAndName(fi._type, fi.getNameMS(), false);
                     D_FundInfo fiDB2 = DB_FundInfo.getFundInfosByTypeAndURL(fi._type, fi._url);
                     if (fiDB1 != null || fiDB2 != null) {
                         String text = "";
@@ -211,7 +244,7 @@ public class JSP_Helper_fundURLData {
                             text = "Type.URL combination exists will not insert: ";
                         }
                         strb.append("<tr bgcolor=\"#FF0000\"><td colspan=\"5\">");
-                        strb.append(text + fi._type + "." + fi._nameMS);
+                        strb.append(text + fi._type + "." + fi.getNameMS());
                         strb.append("</td></tr>\n");
                     } else {
                         urlControl_DisplayFund(
@@ -270,15 +303,15 @@ public class JSP_Helper_fundURLData {
                 }
                 else {
                     if (isDelete) {
-                        log.warning("Will now delete entity: " + fi._type + "." + fi._nameMS);
+                        log.warning("Will now delete entity: " + fi._type + "." + fi.getNameMS());
                         DB_FundInfo.deleteFundInfo(fi);
                         log.warning("...delete performed");
                     } else if (isValid) {
                         fi._isValid = true;
                         fi._errorCode = D_FundInfo.IC_NO_ERROR;
-                        log.info("Will now set entity to valid: " + fi._type + "." + fi._nameMS);
+                        log.info("Will now set entity to valid: " + fi._type + "." + fi.getNameMS());
                     } else {
-                        log.info("Will update entity: " + fi._type + "." + fi._nameMS + ", url: " + fi._url);
+                        log.info("Will update entity: " + fi._type + "." + fi.getNameMS() + ", url: " + fi._url);
                     }
                     needsSaving = true;
                 }
@@ -301,7 +334,7 @@ public class JSP_Helper_fundURLData {
             boolean hiddenSetValid,
             boolean hiddenDelete,
             StringBuilder strb,
-            int mode,
+            int mode,   // FL_MODE_FILL_EXISTING, FL_MODE_FILL_EMPTIES
             String idToUse,
             D_FundInfo elem,
             int count, // count controls the index of the parameters
@@ -392,28 +425,34 @@ public class JSP_Helper_fundURLData {
         String fundURL = "";
         String readOnly = "";
         if (mode == FL_MODE_FILL_EXISTING) {
-            fundName = elem._nameMS;
+            fundName = elem.getNameMS();
             fundURL = elem._url;
         }
 
+        // Fund Name
         strb.append("<td width=\"300\">" +
                 "<input style=\"width:300px;\" type=\"text\"" +
                 " name=\"" + JSP_Constants.PARAM2_NAME_ + String.valueOf(count) + "\"" +
                 " value=\"" + fundName + "\"" +
                 " size=\"150\"></td>\n");
 
+        // Fund URL
         strb.append("<td width=\"600\">" +
                 "<input style=\"width:600px;\" type=\"text\"" +
                 " name=\"" + JSP_Constants.PARAM2_URL_ + String.valueOf(count) + "\"" +
                 " value=\"" + fundURL + "\"" +
                 " size=\"150\"></td>\n");
 
+        // Morning star URL written out
+        // "ms" URL
+        // "us" URL
         if (mode == FL_MODE_FILL_EXISTING) {
-            String href = "JSP_Report02_Weekly_Display.jsp" +
-                    "?" + JSP_Constants.PARAM_TYPE + "=" + JSP_Helper.WT_FILTER_FUND +
-                    "&" + JSP_Constants.PARAM_ID + "=" + elem.getTypeAndName().hashCode();
+            String href = "JSP_ExtractDebugger.jsp"
+                    + "?doPostProcessing=false"
+                    + "&p2_typedotname_=" + elem.getTypeAndNameURLEncoded();
+//            log.info("href is: " + href + ", for: " + elem.getTypeAndName() + ", url: " + elem._url);
             strb.append("<td><a href=\"" + elem._url + "\"" + " target=\"_blank\">ms</a></td>");
-            strb.append("<td><a href=\"" + href + "\"" + " target=\"_blank\">us</a></td>");
+            strb.append("<td><a href=\"" + href + "\"" + " target=\"_blank\">debug</a></td>");
 //            strb.append("<td><p style=\"font-size:11px\">[id:N/A]</p></td>");
         } else if (mode == FL_MODE_EMPTIES) {
             strb.append("<td width=\"20\"></td>");

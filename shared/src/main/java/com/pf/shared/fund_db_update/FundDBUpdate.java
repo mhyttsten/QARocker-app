@@ -6,6 +6,7 @@ import com.pf.shared.datamodel.D_FundInfo_Validator;
 import com.pf.shared.extract.ExtractFromHTML_Helper;
 import com.pf.shared.utils.IndentWriter;
 import com.pf.shared.utils.MM;
+import com.pf.shared.utils.OTuple2G;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +18,7 @@ import java.util.List;
 public class FundDBUpdate {
 
     /* Manual
-     1. Create /tmp2/funddbupdate and make sure it is empty
+     1. Create /tmp/funddbupdate and make sure it is empty
 
      2. Put your fund TSV, and HTML files here as per below (do one type at a time).
 
@@ -26,15 +27,17 @@ public class FundDBUpdate {
         Then download as TSV
         Filenames should be: seb_<index>.tsv, spp_<index>.tsv
 
-     b. PPM: TBD
+     b. PPM:
         Go to: https://www.morningstar.se/Funds/Quickrank.aspx?ppm=on&view=overview
         Order by name
-        Right click on each page table and do save as to filename: ppm_<xy>.html
+        Right click on each page table and do save as to filename: ppm<idx>.[something htm/html]
+        Move these files to /tmp/funddbupdate
 
      c. Vanguard is HTML
+        [Important note: Vanguards MS name is never updated while extracting, so name is what gets set in import]
         Go to each table on their HTML page and do 'Save As'
         Use filenames:
-           vgd_Vanguard_<index>.html  // For Vanguard funds
+           vgd_Vanguard_<index>.html  // For Vanguard funds, important it contains 'Vanguard'
            vgd_Aberdeen_<index>.html  // For non-Vanguard funds
            *** OBS: Important that non-Vanguard funds do not contain 'Vanguard' in filename
        List of Vanguard Mutual Funds (first entry: 500 Index Admiral Shares)
@@ -70,19 +73,20 @@ public class FundDBUpdate {
     }
 
     //------------------------------------------------------------------------
-    public static final String DIR = "/tmp2/funddbupdate";
+    public static final String DIR = "/tmp/funddbupdate";
     public static final String DB_ABSOLUTE_FILENAME = DIR + "/fundinfo-db-master.bin";
     public static final String FILE_TYPE_SEB = "seb_";
     public static final String FILE_TYPE_SPP = "spp_";
+    public static final String FILE_TYPE_VGD_VANGUARD = "vgd_vanguard";
     public static final String FILE_TYPE_VGD = "vgd_";
     public static final String FILE_TYPE_PPM = "ppm_";
 
     //------------------------------------------------------------------------
     public static void mainImpl(String[] args) throws Exception {
-//        doit(true, D_FundInfo.TYPE_SEB, FILE_TYPE_SEB);
-//        doit(true, D_FundInfo.TYPE_SPP, FILE_TYPE_SPP);
-//        doit(false, D_FundInfo.TYPE_PPM, FILE_TYPE_PPM);
-//        doit(true, D_FundInfo.TYPE_VANGUARD, FILE_TYPE_VGD);
+//        doit(true, true, D_FundInfo.TYPE_SEB, FILE_TYPE_SEB);
+//        doit(true, true, D_FundInfo.TYPE_SPP, FILE_TYPE_SPP);
+        doit(false, D_FundInfo.TYPE_PPM, FILE_TYPE_PPM);
+//        doit(false, D_FundInfo.TYPE_VANGUARD, FILE_TYPE_VGD);
     }
 
     //------------------------------------------------------------------------
@@ -103,6 +107,11 @@ public class FundDBUpdate {
             return;
         }
         System.out.println("Initialized from a valid fund DB file, number of bytes: " + fileDBDataBA.length);
+        System.out.println("Total funds (before updates from files): " + DB_FundInfo.getAllFundInfos().size());
+        System.out.println("...PPM: " + DB_FundInfo.getFundInfosByType(D_FundInfo.TYPE_PPM).size());
+        System.out.println("...SEB: " + DB_FundInfo.getFundInfosByType(D_FundInfo.TYPE_SEB).size());
+        System.out.println("...SPP: " + DB_FundInfo.getFundInfosByType(D_FundInfo.TYPE_SPP).size());
+        System.out.println("...VGD: " + DB_FundInfo.getFundInfosByType(D_FundInfo.TYPE_VANGUARD).size());
 
         // Get all the files to analyze
         List<File> tmpList = new ArrayList<>();
@@ -113,7 +122,7 @@ public class FundDBUpdate {
             return;
         }
         for (File f : tmpList) {
-            if (!f.getName().startsWith(filePrefix)) {
+            if (!f.getName().toLowerCase().startsWith(filePrefix)) {
                 continue;
             }
             fileList.add(f);
@@ -128,8 +137,10 @@ public class FundDBUpdate {
             System.out.println("Adding file for process: " + f.getName());
         }
         System.out.println("\n");
-        List<D_FundInfo> fisFiles = new ArrayList<>();
+
+        List<OTuple2G<Boolean, D_FundInfo>> fisFiles = new ArrayList<>();
         for (File f: fileList) {
+
             List<D_FundInfo> tmpFIS = new ArrayList<>();
             byte[] data = MM.fileReadFrom(f);
             String errorStr = null;
@@ -149,13 +160,42 @@ public class FundDBUpdate {
                 System.out.println("Received error string, will not overwrite existing Fund DB\n" + errorStr);
                 return;
             }
+
+            boolean vanguard = false;
+            boolean pureVanguard = false;
+            if (f.getName().toLowerCase().startsWith(FILE_TYPE_VGD)) {
+                vanguard = true;
+            }
+            if (f.getName().toLowerCase().startsWith(FILE_TYPE_VGD_VANGUARD)) {
+                pureVanguard = true;
+            }
+
+            List<OTuple2G<Boolean, D_FundInfo>> tmpFISPair = new ArrayList<>();
+            if (vanguard) {
+                for (D_FundInfo fiFile: tmpFIS) {
+                    if (pureVanguard) {
+                        if (!fiFile.getNameMS().startsWith("Vanguard ")) {
+                            fiFile.setNameMS("Vanguard " + fiFile.getNameMS());
+                        }
+                        if (!fiFile.getNameOrig().startsWith("Vanguard ")) {
+                            fiFile.setNameOrig("Vanguard " + fiFile.getNameOrig());
+                        }
+                    }
+                    tmpFISPair.add(new OTuple2G<>(false, fiFile));  // Update MS name
+                }
+            } else {
+                for (D_FundInfo fiFile: tmpFIS) {
+                    tmpFISPair.add(new OTuple2G<>(true, fiFile));  // Keep MS name
+                }
+            }
+
             System.out.println("Processed file: " + f.getName() + ", found: " + tmpFIS.size() + " entries");
-            if (tmpFIS.size() >= 1) {
-                D_FundInfo f1 = tmpFIS.get(0);
-                D_FundInfo f2 = tmpFIS.get(tmpFIS.size()-1);
-                System.out.println("...1/" + tmpFIS.size()                     + " Orig: " + f1._nameOrig + ", MS: " + f1._nameMS + ", " + f1._url);
-                System.out.println("..." + tmpFIS.size() + "/" + tmpFIS.size() + " Orig: " + f2._nameOrig + ", MS: " + f2._nameMS + ", " + f2._url);
-                fisFiles.addAll(tmpFIS);
+            if (tmpFISPair.size() >= 1) {
+                OTuple2G<Boolean, D_FundInfo> f1 = tmpFISPair.get(0);
+                OTuple2G<Boolean, D_FundInfo> f2 = tmpFISPair.get(tmpFIS.size()-1);
+                System.out.println("...1/" + tmpFIS.size()                     + " Orig: " + f1._o2.getNameOrig() + ", MS: " + f1._o2.getNameMS() + ", " + f1._o2._url);
+                System.out.println("..." + tmpFIS.size() + "/" + tmpFIS.size() + " Orig: " + f2._o2.getNameOrig() + ", MS: " + f2._o2.getNameMS() + ", " + f2._o2._url);
+                fisFiles.addAll(tmpFISPair);
             }
         }
         System.out.println("\nParsed: " + fisFiles.size() + " for type: " + type);
@@ -215,13 +255,14 @@ public class FundDBUpdate {
     private static int RC_SUCCESS_UNMODIFIED = 2;
     private static int RC_FAILURE = 3;
     private static int processFileFIs(boolean testHTMLExtraction,
-                                       String type,
-                                       List<D_FundInfo> fisFiles) {
+                                      String type,
+                                      List<OTuple2G<Boolean, D_FundInfo>> fisFiles) {
 
         int rc = RC_SUCCESS_UNMODIFIED;
 
         IndentWriter iwInfo = new IndentWriter();
-        IndentWriter iwUpdate = new IndentWriter();
+        IndentWriter iwUpdate1 = new IndentWriter();
+        IndentWriter iwUpdate2 = new IndentWriter();
         IndentWriter iwDelete = new IndentWriter();
         IndentWriter iwInsert = new IndentWriter();
 
@@ -230,39 +271,59 @@ public class FundDBUpdate {
         List<D_FundInfo> fisToAdd = new ArrayList<>();
         int countURLMatch = 0;
         int countNewFunds = 0;
-        for (D_FundInfo fiFile: fisFiles) {
+        for (OTuple2G<Boolean, D_FundInfo> fiFilePair: fisFiles) {
+            D_FundInfo fiFile =  fiFilePair._o2;
             D_FundInfo fiDB =  DB_FundInfo.getFundInfosByTypeAndURL(fiFile._type, fiFile._url);
+            boolean keepDBMSName = fiFilePair._o1;
+
             if (fiDB != null) {
                 if (!fiDB._isValid) {
-                    System.out.println("*** Error. Found match on URL, but the one in DB is invalid");
-                    System.out.println(fiDB.getOneLiner());
-                    return RC_FAILURE;
+                    System.out.println("*** Warning [UPDATE] Found match on URL, but the one in DB is invalid. Will set it to valid");
+                    System.out.println("..." + fiDB.getOneLiner());
+                    fiDB._isValid = true;
+//                    return RC_FAILURE;
                 }
-                if (!fiFile._nameOrig.equals(fiDB._nameOrig)) {
-                    iwUpdate.println("...[UPDATE] Original DB name is: " + fiDB._nameOrig + ", will be set to file: " + fiFile._nameOrig);
-                    fiDB._nameOrig = fiFile._nameOrig;
+                if (!fiFile.getNameOrig().equals(fiDB.getNameOrig())) {
+                    iwUpdate2.println("[UPDATE] Original DB name: " + fiDB.getNameOrig() + ", changes to: " + fiFile.getNameOrig());
+                    fiDB.setNameOrig(fiFile.getNameOrig());
                     rc = RC_SUCCESS_MODIFIED;
                 }
-                if (!fiFile._nameMS.equals(fiDB._nameMS)) {
-                    iwInfo.println("...[INFO] MS name differed, keeping existing in DB. DB: " + fiDB._nameMS + ", file: " + fiFile._nameMS);
+                if (!fiFile.getNameMS().equals(fiDB.getNameMS())) {
+                    if (keepDBMSName) {
+                        iwInfo.println("[INFO] MS name differed, keeping DB name: " + fiDB.getNameMS() + ", file: " + fiFile.getNameMS());
+                        iwInfo.println("       DB URL: " + fiDB._url);
+                        countURLMatch++;
+                    } else {
+                        iwUpdate1.println("[UPDATE] MS DB name: " + fiDB.getNameMS() + ", changes to: " + fiFile.getNameMS());
+                        fiDB.setNameMS(fiFile.getNameMS());
+                    }
+                    rc = RC_SUCCESS_MODIFIED;
                 }
-                countURLMatch++;
             } else {
-                fiDB = DB_FundInfo.getFundInfosByTypeAndName(fiFile._type, fiFile._nameOrig, true);
+                boolean didModification = false;
+                fiDB = DB_FundInfo.getFundInfosByTypeAndName(fiFile._type, fiFile.getNameOrig(), false);
                 if (fiDB != null) {
-                    System.out.println("*** Error. Did not find a match on URL but on _nameOrig");
+                    System.out.println("*** Warning [UPDATE] Did not find a match on URL but on _nameOrig");
                     System.out.println("...DB Entry:   " + fiDB.getOneLiner());
                     System.out.println("...File Entry: " + fiFile.getOneLiner());
-                    return RC_FAILURE;
+                    System.out.println("...--> Will change the DB URL to the file one");
+                    fiDB._url = fiFile._url;
+                    didModification = true;
+//                    return RC_FAILURE;
                 }
-                fiDB = DB_FundInfo.getFundInfosByTypeAndName(fiFile._type, fiFile._nameMS, false);
+                fiDB = DB_FundInfo.getFundInfosByTypeAndName(fiFile._type, fiFile.getNameMS(), true);
                 if (fiDB != null) {
-                    System.out.println("*** Error. Did not find a match on URL but on _nameMS");
+                    System.out.println("*** Warning [UPDATE] Did not find a match on URL but on _nameMS");
                     System.out.println("...DB Entry:   " + fiDB.getOneLiner());
                     System.out.println("...File Entry: " + fiFile.getOneLiner());
-                    return RC_FAILURE;
+                    System.out.println("...--> Will change the DB URL to the file one");
+                    fiDB._url = fiFile._url;
+                    didModification = true;
+//                    return RC_FAILURE;
                 }
-                fisToAdd.add(fiFile);
+                if (!didModification) {
+                    fisToAdd.add(fiFile);
+                }
             }
         }
 
@@ -298,7 +359,7 @@ public class FundDBUpdate {
         }
         for (D_FundInfo fi : fisToAdd) {
             countNewFunds++;
-            iwInsert.println("...[INSERT] Will insert new fund from file: " + fi.getTypeAndName());
+            iwInsert.println("[INSERT] Will insert new fund from file: " + fi.getTypeAndName());
         }
 
         // Checking which in DB did not have an entry in file
@@ -308,8 +369,8 @@ public class FundDBUpdate {
         int countOriginalInDB = fisDB.size();
         for (D_FundInfo fiDB: fisDB) {
             boolean found = false;
-            for (D_FundInfo fiFi: fisFiles) {
-                if (fiDB._url.equals(fiFi._url)) {
+            for (OTuple2G<Boolean, D_FundInfo> fiFi: fisFiles) {
+                if (fiDB._url.equals(fiFi._o2._url)) {
                     found = true;
                 }
             }
@@ -317,13 +378,14 @@ public class FundDBUpdate {
                 rc = RC_SUCCESS_MODIFIED;
                 DB_FundInfo.deleteFundInfoByTypeAndURL(type, fiDB._url);
                 countUniqueInDB++;
-                iwDelete.println("...[DELETE] Exist in DB but not in files: " + fiDB.getTypeAndName() + ": " + MM.getString(fiDB.getDPDOneLiner(), 40));
+                iwDelete.println("[DELETE] Exist in DB but not in files: " + fiDB.getTypeAndName() + ": " + MM.getString(fiDB.getDPDOneLiner(), 40));
             }
         }
 
         System.out.println("\nSynchronization Report");
         System.out.println(iwInfo.getString());
-        System.out.println(iwUpdate.getString());
+        System.out.println(iwUpdate1.getString());
+        System.out.println(iwUpdate2.getString());
         System.out.println(iwInsert.getString());
         System.out.println(iwDelete.getString());
 

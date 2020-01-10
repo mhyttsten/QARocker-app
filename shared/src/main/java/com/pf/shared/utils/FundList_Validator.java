@@ -211,11 +211,11 @@ public class FundList_Validator {
             for (int i=0; i < nameAndURLList.size(); i++) {
                 OTuple2G<String,String> nAu = nameAndURLList.get(i);
 
-                if (nAu._o2 != null && nAu._o2.equals(fi._url) && !nAu._o1.equals(fi._nameOrig)) {
+                if (nAu._o2 != null && nAu._o2.equals(fi._url) && !nAu._o1.equals(fi.getNameOrig())) {
                     log.info("*** n_n: " + nAu._o1 + ", url: " + nAu._o2);
-                    log.info("*** f_n: " + fi._nameOrig + ", url: " + fi._url);
+                    log.info("*** f_n: " + fi.getNameOrig() + ", url: " + fi._url);
 
-                    if (nAu._o1.equals(fi._nameOrig)) {
+                    if (nAu._o1.equals(fi.getNameOrig())) {
                         log.info("...equal");
                     } else  {
                         log.info("...not equal");
@@ -223,12 +223,12 @@ public class FundList_Validator {
 
                     _fiURLMatchNameMismatch.add(nAu);
                 }
-                else if (nAu._o2 != null && !nAu._o2.equals(fi._url) && nAu._o1.equals(fi._nameOrig)) {
+                else if (nAu._o2 != null && !nAu._o2.equals(fi._url) && nAu._o1.equals(fi.getNameOrig())) {
                     log.info("List name: " + nAu._o1 + ", url: " + nAu._o2
-                        + "Fi   name: " + fi._nameOrig + ", url: " + nAu._o2);
+                        + "Fi   name: " + fi.getNameOrig() + ", url: " + nAu._o2);
                     _fiNameMatchURLMismatch.add(nAu);
                 }
-                else if (nAu._o1.equals(fi._nameOrig)) {
+                else if (nAu._o1.equals(fi.getNameOrig())) {
                     nameAndURLList.remove(i);
                     found = true;
                     break;

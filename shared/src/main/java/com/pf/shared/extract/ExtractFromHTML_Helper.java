@@ -144,6 +144,7 @@ public class ExtractFromHTML_Helper {
         }
 
         D_FundDPDay dpd2 = fi._dpDays.remove(0);  // Lets look at the things just added
+        _iwd.println("Back in ExtractFromHTML_Helper after successful extract: " + dpd2._dateYYMMDD_Actual);
 
         // If we arrive here, then dpd1 may be a valid dateFriday, but r1w == NULL
         // See if we should keep dpd1?
