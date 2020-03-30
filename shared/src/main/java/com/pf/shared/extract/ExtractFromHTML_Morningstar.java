@@ -20,34 +20,46 @@ public class ExtractFromHTML_Morningstar {
 	private static final String TAG = "FL_MSExtractDetails";
 
 	//------------------------------------------------------------------------
-	public static int extractFundDetails(
-			IndentWriter iwd,
-			D_FundInfo fi,
-			String pageContent) throws Exception {
+	public static int extractFundDetails(IndentWriter iwd, D_FundInfo fi) throws Exception {
 
-		OTuple2G ot = null;
-		String findTagLoc = null;
-		String findAfter = null;
-		String findTo = null;
-		String result = null;
+		// Extract HTML information
+		StringBuffer pageContentSB = new StringBuffer();
+		OTuple2G<Integer, String> ec = ExtractFromHTML_Helper.htmlGet(pageContentSB, iwd, fi._url);
+		if (ec._o1 != D_FundInfo.IC_NO_ERROR) {
+			fi._errorCode = ec._o1;
+			fi._lastExtractInfo = ec._o2;
+			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
+		}
+
+		// *** MAIN HTML PAGE
+		String pageContent = pageContentSB.toString();
 		int returnCode = ExtractFromHTML_Helper.RC_SUCCESS;
 
-		iwd.println("Finding fund name");
-		ot = new OTuple2G<String, String>(null, pageContent);
-		String fundName = MM.assignAndReturnNextTagValue(ot, "<h2");
-		if(fundName == null || (fundName.startsWith("S") && fundName.endsWith("k Fonder"))) {
-			iwd.println("Invalid URL content encountered, indicating that the URL data is not the fund");
+		// URL cannot be served at all
+		if (pageContent.contains("404 - File or directory not found.")) {
+			iwd.println("Error: Received 404, this URL does not exist");
 			fi._errorCode = D_FundInfo.IC_INVALID_URL_IRRECOVERABLE;
 			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
 		}
 
-		fundName = MM.htmlReplaceHTMLCodes(fundName);
-		if (fundName.toLowerCase().startsWith("ett fel uppstod")) {
-			fi._errorCode = D_FundInfo.IC_INVALID_URL_IRRECOVERABLE;
-			iwd.println("Error for fund, it's name is not valid: \"Ett fel uppstod\"");
+//		iwd.println("*** Here is all the HTML");
+//		iwd.println(pageContent);
+
+		// Fund name
+		iwd.println("Finding fund name");
+		String fundName = MM.getRegExp(null, pageContent,
+				"<div class=\"snapshotTitleBox\"><h1>",
+				"",
+				"</h1>",
+				true);
+		if (fundName == null) {
+			iwd.println("Error: Could not find fundName in document");
+			fi._errorCode = D_FundInfo.IC_HTML_MS_FUNDNAME;
 			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
 		}
-		iwd.println("...Done, fundName: " + fundName);
+		fundName = MM.htmlReplaceHTMLCodes(fundName);
+
+		iwd.println("...Done, fundName: " + fundName + ", in DB: " + fi.getNameMS());
 		if (!fi.getNameMS().equals(fundName)) {
 			iwd.println("Warning: Fund changed name, before: " + fi.getNameMS() + ", now: " + fundName);
 			returnCode = ExtractFromHTML_Helper.RC_SUCCESS_BUT_DATA_WAS_UPDATED;
@@ -56,157 +68,142 @@ public class ExtractFromHTML_Morningstar {
 
 		// MS Category
 		iwd.println("Finding category name");
-		findTagLoc = "<span class=\"quicktakecolContainer\" title=\"Morningstar Kategori";
-		findAfter = ">";
-		findTo = "</span>";
-		String ahref = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
-		findTagLoc = "<a";
-		findAfter = "href=\"";
-		findTo = "\"";
-		if (ahref == null) {
+		String msCategory = MM.getRegExp(null, pageContent,
+				"Morningstar kategori:",
+				"<span class=\"value\">",
+				"</span>",
+				true);
+		if (msCategory == null) {
 			iwd.println("Error: Could not find category name ahref was null");
 			fi._errorCode = D_FundInfo.IC_HTML_MS_CATEGORY;
 			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
 		}
-		String msCategoryHTML = MM.getRegExp(null, ahref, findTagLoc, findAfter, findTo, true);
-		findTagLoc = ">";
-		findAfter = "";
-		findTo = "</a>";
-		String msCategoryText = MM.getRegExp(null, ahref, findTagLoc, findAfter, findTo, true);
-		msCategoryText = MM.htmlReplaceHTMLCodes(msCategoryText);
-		if (!fi.getCategoryName().equals(msCategoryText)) {
-			iwd.println("Warning, Fund category changed, before: " + fi.getCategoryName() + ", now: " + msCategoryText);
+		if (!fi.getCategoryName().equals(msCategory)) {
+			iwd.println("Warning, Fund category changed, before: " + fi.getCategoryName() + ", now: " + msCategory);
 			returnCode = ExtractFromHTML_Helper.RC_SUCCESS_BUT_DATA_WAS_UPDATED;
 		}
-		fi.setCategoryName(msCategoryText);
+		fi.setCategoryName(msCategory);
 		iwd.println("...Done, categoryName: " + fi.getCategoryName());
 
-		// MS Rating
-		// <span class="quicktakecolContainer" title="Morningstar Rating"
-		iwd.println("Finding MS Rating");
-		findTagLoc = "<span class=\"quicktakecolContainer\" title=\"Morningstar Rating";
-		findAfter = "class=\"";
-		findTo = "\"";
-		String msRatingHTML = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
-		msRatingHTML = MM.htmlReplaceHTMLCodes(msRatingHTML);
-		if (msRatingHTML != null && msRatingHTML.startsWith("section_separator")) {
-			msRatingHTML = "-";
-		}
-		String msRating = msRatingHTML.trim();
-		int rating = -1;
-		if (msRating != null && msRating.length() > 0) {
-			if (msRating.equals("stars1")) {
-				rating = 1;
-			} else if (msRating.equals("stars2")) {
-				rating = 2;
-			} else if (msRating.equals("stars3")) {
-				rating = 3;
-			} else if (msRating.equals("stars4")) {
-				rating = 4;
-			} else if (msRating.equals("stars5")) {
-				rating = 5;
-			} else if (msRating.equals("-")) {
-				rating = -1;
-			} else {
-				iwd.println("Error, FundInfo, rating could not be parsed: " + msRating);
-				fi._errorCode = D_FundInfo.IC_HTML_MS_RATING;
-				return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
-			}
-		} else {
-			iwd.println("Error, FundInfo, rating could not be parsed because it was null");
-			fi._errorCode = D_FundInfo.IC_HTML_MS_RATING;
+		// Morningstar Rating: Don't know how to extract this from HTML
+		fi._msRating = fi._msRating;
+
+		// PPM number: Don't know how to extract this from HTML
+		fi._ppmNumber = fi._ppmNumber;
+
+		// Currency
+		iwd.println("Finding currency");
+		String currency = MM.getRegExp(null, pageContent,
+				"Andelskurs ",
+				"<td class=\"line text\">",
+				"</td>",
+				true);
+		if (currency == null || currency.length() < 3) {
+			iwd.println("Error: Could not find currency field");
+			fi._errorCode = D_FundInfo.IC_HTML_MS_CURRENCY;
 			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
 		}
-		fi._msRating = rating;
-		iwd.println("...Done, rating: " + rating);
-
-		// PPM Number
-		iwd.println("Finding PPM Number");
-		findTagLoc = "<span class=\"quicktakecolContainer\" title=\"PPM-nummer\"";
-		findAfter = ">";
-		findTo = "</span>";
-		String ppmNumber = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
-		ppmNumber = MM.htmlReplaceHTMLCodes(ppmNumber).trim();
-        fi._ppmNumber = ppmNumber;
-		iwd.println("...Done, number: " + ppmNumber);
-
-        D_FundDPDay dpd = new D_FundDPDay();
-
-		iwd.println("Parsing Yearly return table");
-		// Yearly returns (table), I??r!!!
-		findTagLoc = "<th class=\"decimal\">Fond</th><th class=\"decimal\">Kategori</th><th class=\"decimal\">Index</th>";
-		findAfter = "</tr>";
-		findTo = "</table>";
-		String yearlyReturnTable = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
-		iwd.push();
-		int dpy_rc = processYearlyReturnTable(iwd, fi, dpd, yearlyReturnTable);
-		iwd.pop();
-		if (dpy_rc != ExtractFromHTML_Helper.RC_SUCCESS) {
-			iwd.println("...error when parsing yearly return table");
-			return dpy_rc;
-		}
-		iwd.println("...Done successfully parsing yearly return table");
-
-		iwd.println("Parsing Kursdatum");
-		findTagLoc = "<b>Kursdatum";
-		findAfter = "</b>:";
-		findTo = "<br />";
-		iwd.println("...Done");
-//		String yearlyReturnsLastUpdatedDate = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
-//		iwd.println("...Done, result length: " + yearlyReturnsLastUpdatedDate.length() + ", content: " + yearlyReturnsLastUpdatedDate);
-
-		// Comparison category
-		iwd.println("Parsing Index name");
-		findTagLoc = "<b>Kategorins j";
-		findAfter = "</b>:";
-		findTo = "<br />";
-		String indexCompare = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
-		fi.setIndexName(indexCompare);
-		iwd.println("...Done, indexName: " + indexCompare);
-
-		// Get currency in which NAV is measured
-		iwd.println("Parsing Senaste NAV");
-		findTagLoc = "<td>Senaste NAV</td>";
-		findAfter = "<td>";
-		findTo = "</td>";
-		result = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
-		result = getFromFirstLetter(result);
-		if (!fi._currencyName.equals(result)) {
-			iwd.println("Warning, Fund currency change, before: " + fi._currencyName + ", now: " + result);
+		currency = currency.substring(0, 3);
+		if (!fi._currencyName.equals(currency)) {
+			iwd.println("Warning, Fund currency changed, before: " + fi._currencyName + ", now: " + currency);
 			returnCode = ExtractFromHTML_Helper.RC_SUCCESS_BUT_DATA_WAS_UPDATED;
 		}
-		fi._currencyName = result;
-		iwd.println("...Done, currency: " + result);
+		fi._currencyName = currency;
+		iwd.println("...Done, currency: " + fi._currencyName);
 
-		// Return (daily, month, 3m, 6m, 1y)
-		iwd.println("Parsing Avkastning");
-		iwd.push();
-		findTagLoc = "Avkastning %";
-		findAfter = "<table class=\"alternatedtoplist\" cellspacing=\"0\" cellpadding=\"0\">";
-		findTo = "</table>";
-		String recentReturnTable = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
-		int dpd_rv = processRecentReturnsTable(iwd, fi, dpd, recentReturnTable);
-		iwd.pop();
-		if (dpd_rv != ExtractFromHTML_Helper.RC_SUCCESS) {
-			iwd.println("...error: " + dpd_rv);
+		iwd.println("Finding indexes");
+		String indexFund = null;
+		String indexMS = null;
+		String index = MM.getRegExp(null, pageContent,
+				">Morningstars index f",
+				"<td ",
+				"</tr>",
+				true);
+		boolean error = false;
+		if (index.indexOf(">") == -1 || index.indexOf("</td><td ") == -1) { error = true; }
+		else {
+			indexFund = index.substring(index.indexOf(">")+1, index.indexOf("</td>"));
+		}
+		index = index.substring(index.indexOf("</td><td ")+8);  // Move past those things
+		if (index.indexOf(">") == -1 || index.indexOf("</td>") == -1) { error = true; }
+		else {
+			indexMS = index.substring(index.indexOf(">")+1, index.indexOf("</td>"));
+		}
+		if (error) {
+			iwd.println("Error: Could not find indexes");
+			fi._errorCode = D_FundInfo.IC_HTML_MS_INDEX;
+			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
+		}
+		iwd.println("...Done indexes, " + "indexFund: " + indexFund + ", indexMS: " + indexMS);
+		fi.setIndexName(indexMS);
+
+		// *** HISTORY HTML PAGE
+		// Extract HTML information
+		pageContentSB = new StringBuffer();
+		ec = ExtractFromHTML_Helper.htmlGet(pageContentSB, iwd, fi._url + "&tab=1");
+		if (ec._o1 != D_FundInfo.IC_NO_ERROR) {
+			fi._errorCode = ec._o1;
+			fi._lastExtractInfo = ec._o2;
+			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
+		}
+		pageContent = pageContentSB.toString();
+		iwd.println("Size of history page: " + pageContent.length());
+
+		// "rlig avkastning "
+		String yearlyReturn = MM.getRegExp(null, pageContent,
+				"rlig avkastning",
+				"</tr>",
+				"</table>",
+				true);
+		if (yearlyReturn == null) {
+			iwd.println("Error: Yearly return could not find HTML table, null");
+			fi._errorCode = D_FundInfo.IC_HTML_MS_YEARLY_TABLE_NOT_FOUND;
+			fi._isValid = false;
+			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
+		}
+		iwd.println("Yearly return HTML table: " + yearlyReturn);
+        D_FundDPDay dpd = new D_FundDPDay();  // To fill in YearToDate
+		int dpy_rc = processYearlyReturnTable(iwd, fi, dpd, yearlyReturn);
+		if (dpy_rc != ExtractFromHTML_Helper.RC_SUCCESS) {
+			iwd.println("ERROR when parsing Yearly Return Table: " + dpy_rc);
+			return dpy_rc;
+		}
+
+		// Move past yearly table
+		int io = pageContent.indexOf("rlig avkastning");
+		pageContent = pageContent.substring(io);
+		pageContent = pageContent.substring(pageContent.indexOf("</table>"));
+		// Get the daily dp
+		String dpdTable = MM.getRegExp(null, pageContent,
+				"Avkastning ",
+				"</td>",
+				"</table>",
+				true);
+		iwd.println("DPDay return HTML table now processed"); // : " + dpdTable);
+		// Find todays date
+		io = dpdTable.indexOf(">");
+		int io2 = dpdTable.indexOf("</td>");
+		if (io == -1 || io2 == -1) {
+			iwd.println("Error: Could not find DPDay date");
+			fi._errorCode = D_FundInfo.IC_HTML_MS_DPDAY_NULLDATE;
+			fi._isValid = false;
+			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
+		}
+		String dpdDate = dpdTable.substring(io+1, io2);
+		iwd.println("Found dpd date: " + dpdDate);
+		String actualDate = MM.dateConvert_YYYYDMMDDD_To_YYMMDD(dpdDate);
+		dpd._dateYYMMDD_Actual = actualDate;
+		iwd.println("Setting the actual DPD date: " + actualDate);
+		io = dpdTable.indexOf("</tr>");
+		dpdTable = dpdTable.substring(io+5);
+		iwd.println("DPD will now process returns HTML table"); //  + dpdTable);
+		int dpd_rv = processRecentReturnsTable(iwd, fi, dpd, dpdTable);
+		if (dpy_rc != ExtractFromHTML_Helper.RC_SUCCESS) {
+			iwd.println("ERROR when parsing DPD Return Table: " + dpd_rv);
 			return dpd_rv;
 		}
-		iwd.println("...Done, recent returns");
+		iwd.println("Done with DPD table");
 
-		// Returns: Date of last recorded data point
-		iwd.println("Avkastning %");
-		findTagLoc = "Avkastning %";
-		findAfter = "<table class=\"alternatedtoplist\" cellspacing=\"0\" cellpadding=\"0\">";
-		findTo = "</html>";
-		result = MM.getRegExp(null, pageContent, findTagLoc, findAfter, findTo, true);
-		findTagLoc = "<b>Kursdatum";
-		findAfter = "</b>:";
-		findTo = "</div>";
-		String returnsLastDate = MM.getRegExp(null, result, findTagLoc, findAfter, findTo, true);
-		returnsLastDate = returnsLastDate.trim();
-		returnsLastDate = MM.dateConvert_YYYYDMMDDD_To_YYMMDD(returnsLastDate);
-		fi._dpDays.get(0)._dateYYMMDD_Actual = returnsLastDate;
-		iwd.println("...Done, avkastning %, returnsLastDate: " + returnsLastDate);
 		return ExtractFromHTML_Helper.RC_SUCCESS;
 	}
 
@@ -217,289 +214,299 @@ public class ExtractFromHTML_Morningstar {
 			IndentWriter iwd,
 			D_FundInfo fi,
 			D_FundDPDay dpdIn,
-			String recentReturnTable) throws Exception {
-		iwd.println("processRecentReturnsTable");
+			String table) throws Exception {
+		iwd.println("processRecentReturnsTable entered");
+		iwd.push();
+		int rc = processRecentReturnsTableImpl(iwd, fi, dpdIn, table);
+		iwd.println("Resulting DPD");
+		dpdIn.dumpInfo(iwd);
+		iwd.println();
+		iwd.pop();
+		iwd.println("processRecentReturnsTable exit");
+		return rc;
+	}
+	public static int processRecentReturnsTableImpl(
+			IndentWriter iwd,
+			D_FundInfo fi,
+			D_FundDPDay dpdIn,
+			String table) throws Exception {
 
-		if (recentReturnTable == null) {
-			iwd.println("Recent returns table was no, no dpday found");
-			return ExtractFromHTML_Helper.RC_WARNING_NO_DPDAY_FOUND;
-		}
+		//          Avkastning%   +/-Kategori    +/-Index
+		// 1 dag
+		// 1 vecka
+		// iwd.println("Returns table:\n" + table);
 
-		/*
-		<tr>
-		   <th>&nbsp;</th>
-		   <th class="decimal">GBP</th>
-		   <th class="decimal">SEK</th>
-		</tr>
-		<tr>
-			<td title="1 dag">1 dag</td>
-			<td title="-0,2" class="decimal">-0,2</td>
-			<td title="-0,4" class="decimal">-0,4</td>
-		</tr>
-		<tr class="alternate">
-			<td title="1 vecka">1 vecka</td>
-			<td title="-0,1" class="decimal">-0,1</td>
-			<td title="1,0" class="decimal">1,0</td>
-		</tr>		
-		*/
-
-		String rrTable = "null";
-		rrTable = "length: " + String.valueOf(recentReturnTable.trim().length());
-		int ioTR = recentReturnTable.indexOf("<tr");
-		rrTable = ", indexOf: " + ioTR;
-
-		List<D_FundDPDay> dpds = new ArrayList<>();
-		List<String> entries = MM.getTagValues(recentReturnTable, "<tr");
-
-		iwd.println("...entries: " + entries.size());
-
-		// Each column header is its separate currency
-		List<String> headers = MM.getTagValues(entries.get(0), "<th");
-		iwd.println("...headers: " + entries.size());
-		for(int i=1; i < headers.size(); i++) {
-			String header = headers.get(i);
-			D_FundDPDay dpd = new D_FundDPDay();
-			dpd._rYTDFund = dpdIn._rYTDFund;
-			dpd._rYTDCategory = dpdIn._rYTDCategory;
-			dpd._rYTDIndex = dpdIn._rYTDIndex;
-			dpd._currency = header.trim();
-			dpds.add(dpd);
-		}
-
-		// Get the daily for each currency (each currency is its separate column)
-		for(int i=1; i < entries.size(); i++) {
-			ArrayList<String> tdColumns = MM.getTagValues(entries.get(i), "<td");
-			for (String s: tdColumns) {
-				iwd.println("..." + s);
-			}
-
-			String timePeriod = tdColumns.get(0);
-			for(int j=1; j < tdColumns.size(); j++) {
-				D_FundDPDay dpd = dpds.get(j-1);
-
-				String returns = tdColumns.get(j);
-				returns = MM.replaceArgTo(returns, " ", "");
-				returns = MM.replaceArgTo(returns, "%", "");
-				returns = MM.replaceArgTo(returns, ",", ".");
-
-				OTuple2G<Boolean, Float> rv = ExtractFromHTML_Helper.validFloat(returns);
-				if (!rv._o1) {
-					iwd.println("Error, dpd, a result could not be converted to a number: " + returns);
-					fi._errorCode = D_FundInfo.IC_HTML_MS_DAILY_TABLE;
-					return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
-				}
-				float rfloat = D_FundDPDay.FLOAT_NULL;
-				if (rv._o2 != null) {
-					rfloat = rv._o2.floatValue();
-				}
-
-				if(Pattern.matches("1 dag", timePeriod)) {
-					dpd._r1d = rfloat;
-				}
-				else if(Pattern.matches("1 vecka", timePeriod)) {
-					dpd._r1w = rfloat;
-				}
-				else if(Pattern.matches("1 m.nad", timePeriod)) {
-					dpd._r1m = rfloat;
-				}
-				else if(Pattern.matches("3 m.nader", timePeriod)) {
-					dpd._r3m = rfloat;
-				}
-				else if(Pattern.matches("6 m.nader", timePeriod)) {
-					dpd._r6m = rfloat;
-				}
-				else if(Pattern.matches("1 .r", timePeriod)) {
-					dpd._r1y = rfloat;
-				}
-				else if(Pattern.matches("3 .r", timePeriod)) {
-					dpd._r3y = rfloat;
-				}
-				else if(Pattern.matches("5 .r", timePeriod)) {
-					dpd._r5y = rfloat;
-				}
-				else if(Pattern.matches("10 .r", timePeriod)) {
-					dpd._r10y = rfloat;
-				}
-			}
-		}
-
-		// Get the Swedish currency or error if there is no Swedish
-		D_FundDPDay r = null;
-		for (D_FundDPDay dpd: dpds) {
-			if (dpd._currency.equals("SEK")) {
-				iwd.println("Found SEK currency");
-				r = dpd;
-			}
-		}
-
-		if (r == null) {
-			IndentWriter iwt = new IndentWriter();
-			iwt.println("FundDPDay, could not find result in SEK currency");
-			iwt.println("Out of: " + dpds.size() + ", entries");
-			iwt.push();
-			for (D_FundDPDay dpd: dpds) {
-				dpd.dumpInfo(iwt);
-			}
-			iwt.pop();
-			String m = iwt.getString();
-			iwd.println(m);
-			fi._errorCode = D_FundInfo.IC_HTML_MS_DAILY_SEK_CURRENCY;
+		StringBuffer strb = new StringBuffer(table);
+		List<String> categories = getTDs(strb);
+		if (categories.size() != 4
+				|| !categories.get(1).toLowerCase().contains("avkastning")
+				|| !categories.get(2).toLowerCase().contains("kategori")
+				|| !categories.get(3).toLowerCase().contains("index")) {
+			fi._errorCode = D_FundInfo.IC_HTML_MS_DAILY_TABLE;
+			fi._isValid = false;
+			iwd.println("Error: categories row did not have 4 entries");
 			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
-		} else {
-			iwd.println("Adding result to fi._dpDays at index 0: " + r);
-			fi._dpDays.add(0, r);
 		}
 
+		boolean hasR1W = false;
+		while(true) {
+			List<String> v = getTDs(strb);
+			if (v == null || v.size() < 4) {
+				iwd.println("Encountered a row with <4 columns");
+				if (v == null) {
+					iwd.println("...got null for columns");
+				} else {
+					for (String s : v) {
+						iwd.println("...: " + s);
+					}
+				}
+				iwd.println("Done with all the rows, breaking");
+				break;
+			}
+
+			String title = v.get(0).toLowerCase();
+			OTuple2G<Boolean, Float> rv = ExtractFromHTML_Helper.validFloat(v.get(1));
+			iwd.println("Processing title: " + title + ", valid: " + rv._o1 + ", value: " + rv._o2);
+			if (!rv._o1) {
+				iwd.println("Invalid float: " + v.get(1) + " for column: " + title);
+				fi._errorCode = D_FundInfo.IC_HTML_MS_DAILY_TABLE;
+				fi._isValid = false;
+				return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
+			}
+
+			title = title.trim();
+			if (title.endsWith("*")) {
+				title = title.substring(0, title.length()-1);
+			}
+			if (title.startsWith("1 dag")) {
+				dpdIn._r1d = rv._o2;
+			}
+			else if (title.startsWith("1 vecka")) {
+				dpdIn._r1w = rv._o2;
+				if (dpdIn._r1w != D_FundDPDay.FLOAT_NULL) {
+					hasR1W = true;
+				}
+			}
+			else if (title.startsWith("1 m")) {
+				dpdIn._r1m = rv._o2;
+			}
+			else if (title.startsWith("3 m")) {
+				dpdIn._r3m = rv._o2;
+			}
+			else if (title.startsWith("6 m")) {
+				dpdIn._r6m = rv._o2;
+			}
+			else if (title.startsWith("1 ") && title.endsWith("r")) {
+				dpdIn._r1y = rv._o2;
+			}
+			else if (title.startsWith("3 ") && title.endsWith("r")) {
+				dpdIn._r3y = rv._o2;
+			}
+			else if (title.startsWith("5 ") && title.endsWith("r")) {
+				dpdIn._r5y = rv._o2;
+			}
+			else if (title.startsWith("10 ") && title.endsWith("r")) {
+				dpdIn._r10y = rv._o2;
+			}
+			else if (title.startsWith("i ") && title.endsWith("r")) {
+				// Nothing, we use yearly table for this...
+			}
+			else {
+				iwd.println("Unknown return column: " + title);
+				fi._errorCode = D_FundInfo.IC_HTML_MS_DAILY_TABLE;
+				fi._isValid = false;
+				return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
+			}
+		}
+
+		if (hasR1W) {
+			fi._dpDays.add(0, dpdIn);
+		} else {
+			iwd.println("Processed DPD table but could not find R1W so it's a no go");
+		}
 		return ExtractFromHTML_Helper.RC_SUCCESS;
 	}
-	
+
+	//------------------------------------------------------------------------
+	private static List<String> getTDs(StringBuffer strb) {
+		String all = strb.toString();
+		int io_start = all.indexOf("<tr>");
+		int io_end = all.indexOf("</tr>");
+		if (io_start == -1 || io_end == -1) {
+			return null;
+		}
+		String row = all.substring(io_start, io_end);
+		strb.delete(0, strb.length());
+		if (io_end+5 < all.length()) {
+			strb.append(all.substring(io_end+5));
+		}
+		List<String> l = new ArrayList<>();
+		io_start = row.indexOf("<td ");
+		while (io_start != -1) {
+			row = row.substring(io_start);
+			io_start = row.indexOf(">");
+			io_end = row.indexOf("</td>");
+			if (io_start == -1 || io_end == -1) return null;
+			l.add(row.substring(io_start+1, io_end).trim());
+			row = row.substring(io_end);
+			io_start = row.indexOf("<td ");
+		}
+		return l;
+	}
+
 	//------------------------------------------------------------------------
 	public static int processYearlyReturnTable(
 			IndentWriter iwd,
 			D_FundInfo fi,
 			D_FundDPDay dpd,
 			String table) throws Exception {
-		boolean found = true;
+		iwd.println("processYearlyReturnTable entered");
+		iwd.push();
+		int rc = processYearlyReturnTableImpl(iwd, fi, dpd, table);
+		iwd.println("Resulting dpys");
+		for (D_FundDPYear dpy: fi._dpYears) {
+			dpy.dumpInfo(iwd);
+			iwd.println();
+		}
+		iwd.pop();
+		iwd.println("processYearlyReturnTable exit");
+		return rc;
+	}
+	public static int processYearlyReturnTableImpl(
+			IndentWriter iwd,
+			D_FundInfo fi,
+			D_FundDPDay dpd,
+			String table) throws Exception {
+		//                    2013 2014 ... MM-DD(YTD)
+		// +/- Kategori
+		// +/- Index
+		// %-rank i kategorin
+		// System.out.println("Yearly table\n" + table);
+		// if (true) return ExtractFromHTML_Helper.RC_SUCCESS;
 
-		// <tr>
-		//   <td title="I ??r*">I ??r*</td>
-		//   <td title="13,5" class="decimal">13,5</td>
-		//   <td title="12,8" class="decimal">12,8</td>
-		//   <td title="13,9" class="decimal">13,9</td>
-  	    // </tr>
+		// Parse Years row
+		StringBuffer strb = new StringBuffer(table);
+		List<String> years = getTDs(strb);
+		if (years == null || years.size() <= 1) {
+			iwd.println("Years == null or had just 1 entry");
+			return ExtractFromHTML_Helper.RC_SUCCESS;
+		}
+		iwd.println("Number of columns in years row: " + years.size());
+		years.remove(0);
 
-		// First get each individual TR tag
-		iwd.println("Now parsing tags");
-		List<String> trTags = new ArrayList<>();
-		found = true;
-		OTuple2G<String, String> otTR = new OTuple2G<>(null, table);
-		do {
-			String tagValue = MM.assignAndReturnNextTagValue(otTR, "<tr");
-			if(tagValue == null) {
-				found = false;
+		List<D_FundDPYear> ys = new ArrayList<>();
+		for (String ystr: years) {
+			if (ystr.length() == 0) {
+				ys.add(null);
+				continue;
 			}
-			else {
-				String trTag = (String)otTR._o1;
-				trTags.add(trTag);
+
+			if (ystr.endsWith("*")) {
+				ystr = ystr.substring(0, ystr.length()-1);
 			}
-		} while(found);
-		iwd.println("...done, size: " + trTags.size());
-
-		// Then parse all TDs within the TR
-		int errorCode = ExtractFromHTML_Helper.RC_SUCCESS;
-		for(int i=0; i < trTags.size(); i++) {
-			iwd.println("Now processing tag: " + i);
-			String trTag = trTags.get(i);
-			OTuple2G<String, String> otTDs = new OTuple2G<>(null, trTag);
-
-			MM.assignAndReturnNextTagValue(otTDs, "<td");
-			String yearStr = (String) otTDs._o1.trim();
-			iwd.println("...yearStr: " + yearStr);
-
-			MM.assignAndReturnNextTagValue(otTDs, "<td");
-			String fundStr = (String) otTDs._o1.trim();
-			iwd.println("...fundStr: " + fundStr);
-
-			MM.assignAndReturnNextTagValue(otTDs, "<td");
-			String categoryStr = (String) otTDs._o1.trim();
-			iwd.println("...categoryStr: " + categoryStr);
-
-			MM.assignAndReturnNextTagValue(otTDs, "<td");
-			String indexStr = (String) otTDs._o1.trim();
-			iwd.println("...indexStr: " + indexStr);
 
 			D_FundDPYear dpy = new D_FundDPYear();
-			short year = -1;
-			boolean error = false;
-			if (yearStr == null || yearStr.length() == 0) {
-				iwd.println("Year was null or had length == 0: " + yearStr);
-				fi._errorCode = D_FundInfo.IC_HTML_MS_YEARLY_TABLE_YEAR;
-				return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
-			} else if (yearStr.startsWith("I ")) {
-				iwd.println("...yearStr started with I , setting to 9999");
-				year = 9999;
-			} else if (yearStr.length() != 4) {
-				iwd.println("Year is incorrect, was not Y2D and did not have length 4: " + yearStr);
-				fi._errorCode = D_FundInfo.IC_HTML_MS_YEARLY_TABLE_YEAR;
-				return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
-			} else {
-				try {
-					year = Short.parseShort(yearStr.substring(0, 4));
-				} catch (NumberFormatException exc) {
-					iwd.println("Year could not be converted to a number: " + yearStr);
+			short year = 9999;  // that is also YTD
+			try {
+				year = (short)Integer.parseInt(ystr);
+			} catch(NumberFormatException exc) {
+				if (!ystr.contains("-")) {
+					iwd.println("Error, expected Y2D but did not contain -: [" + ystr + "]");
+					fi._errorCode = D_FundInfo.IC_HTML_MS_YEARLY_TABLE_YEAR;
+					fi._isValid = false;
 					return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
 				}
 			}
+			iwd.println("Adding D_FundDPYear with year: " + year);
 			dpy._year = year;
+			ys.add(dpy);
+		}
 
-			OTuple2G<Boolean, Float> rv = null;
+		// Parse rows: Avkastning %, +/- Kategori, +/- index, %-rank i kategorin
+		iwd.println("Year row parsed, will now get the floats");
+		boolean foundAvkastning = false;
+		while (true) {
+			List<String> row = getTDs(strb);
+			if (row == null) {
+				iwd.println("No more floats to get");
+				break;
+			}
 
-			rv = ExtractFromHTML_Helper.validFloat(fundStr);
-			if (!rv._o1) {
-				iwd.println("FundDPYear, fund could not be converted to a number: " + fundStr);
-				fi._errorCode = D_FundInfo.IC_HTML_MS_YEARLY_TABLE_FUND;
+			if (ys.size()+1 != row.size()) {
+				iwd.println("Float row count mismatch, ys: " + ys.size() + ", row: " + row.size());
+				fi._errorCode = D_FundInfo.IC_HTML_MS_YEARLY_TABLE_ROW_MISMATCH;
+				fi._isValid = false;
 				return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
 			}
-			dpy._resultFund = rv._o2;
-
-			rv = ExtractFromHTML_Helper.validFloat(categoryStr);
-			if (!rv._o1) {
-				iwd.println("FundDPYear, category could not be converted to a number: " + fundStr);
-				fi._errorCode = D_FundInfo.IC_HTML_MS_YEARLY_TABLE_CATEGORY;
-				return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
-			}
-			dpy._resultCategory = rv._o2;
-
-			rv = ExtractFromHTML_Helper.validFloat(indexStr);
-			if (!rv._o1) {
-				iwd.println("FundDPYear, index could not be converted to a number: " + fundStr);
-				fi._errorCode = D_FundInfo.IC_HTML_MS_YEARLY_TABLE_INDEX;
-				return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
-			}
-			dpy._resultIndex = rv._o2;
-
-			if (dpy.isYearToDate()) {
-				iwd.println("...it's y2d");
-				dpd._rYTDFund = dpy._resultFund;
-				dpd._rYTDCategory = dpy._resultCategory;
-				dpd._rYTDIndex = dpy._resultIndex;
-			} else {
-				iwd.println("...it's not y2d");
-				boolean foundYear = false;
-				for (D_FundDPYear dpyO : fi._dpYears) {
-					if (dpyO._year == dpy._year) {
-						foundYear = true;
-						// If we have a year e.g. 2018 already recorded already
-						// And extracted one differs, then that is a bit weird
-						// But this has actually happened, so this error management code has been removed with a warning
-						if (dpyO._resultFund != dpy._resultFund ||
-								dpyO._resultCategory != dpy._resultCategory ||
-								dpyO._resultIndex != dpy._resultIndex) {
-							log.warning("FundDPYear, existing D_FundInfo differed from extracted\n" +
-									"Existing:  " + dpyO.toString() + "\n" +
-									"Extracted: " + dpy.toString());
-						}
-						// Use the new one anyhow!
-						dpyO._resultFund = dpy._resultFund;
-						dpyO._resultCategory = dpy._resultCategory;
-						dpyO._resultIndex = dpy._resultIndex;
-					}
+			String rtitle = row.remove(0);
+			iwd.println("Parsing row for title: " + rtitle);
+			for (int i=0; i < row.size(); i++) {
+				// Is this a null column, then move on...
+				if (ys.get(i) == null) {
+					continue;
 				}
-				if (!foundYear) {
-					iwd.println("FundDPYear, adding a new year to FundInfo: " + dpy.toString() + ", previously existed");
-					iwd.push();
-					for (D_FundDPYear dpyO : fi._dpYears) {
-						iwd.println(dpyO.toString());
-					}
-					iwd.pop();
 
-					fi._dpYears.add(dpy);
-					Collections.sort(fi._dpYears, D_FundDPYear.COMPARATOR);
+				// Not a null column, get values
+				String col = row.get(i);
+				OTuple2G<Boolean, Float> rv = ExtractFromHTML_Helper.validFloat(col);
+				if (!rv._o1) {
+					iwd.println("Invalid float: " + col);
+					fi._errorCode = D_FundInfo.IC_HTML_MS_YEARLY_TABLE_ROW_MISMATCH;
+					fi._isValid = false;
+					return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
+				}
+				if (rtitle.toLowerCase().contains("avkastning")) {
+					iwd.println("Found avkastning: " + col);
+					foundAvkastning = true;
+					ys.get(i)._resultFund = rv._o2;
+				} else if (rtitle.toLowerCase().contains("+/- kategori")) {
+					iwd.println("Found kategori: " + col);
+					ys.get(i)._resultCategory = rv._o2;
+				} else if (rtitle.toLowerCase().contains("+/- index")) {
+					iwd.println("Found index: " + col);
+					ys.get(i)._resultIndex = rv._o2;
+				} else if (rtitle.toLowerCase().contains("%-rank i kategorin")) {
+					iwd.println("Found rank i kategorin: " + col);
+					// TODO: Add code here
 				}
 			}
 		}
 
-		return errorCode;
+		// At least we must have found Avkastning (otherwise, what's the point)
+		if (!foundAvkastning) {
+			iwd.println("Error: Did not find avkastning");
+			fi._errorCode = D_FundInfo.IC_HTML_MS_YEARLY_TABLE_FUND;
+			fi._isValid = false;
+			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
+		}
+
+		// Filter out null years
+		int index = 0;
+		while (index < ys.size()) {
+			if (ys.get(index) == null) {
+				ys.remove(index);
+			} else {
+				index++;
+			}
+		}
+
+		// Reassign Y2D to DPD
+		for (int i=0; i < ys.size(); i++) {
+			D_FundDPYear dpy = ys.get(i);
+			if (dpy.isYearToDate()) {
+				iwd.println("Found Y2D, converting it to DPD, result");
+				dpd._rYTDFund = dpy._resultFund;
+				dpd._rYTDCategory = dpy._resultCategory;
+				dpd._rYTDIndex = dpy._resultIndex;
+				ys.remove(i);
+				dpd.dumpInfo(iwd);
+				iwd.println();
+				break;
+			}
+		}
+		fi._dpYears = ys;
+		Collections.sort(fi._dpYears, D_FundDPYear.COMPARATOR);
+		return ExtractFromHTML_Helper.RC_SUCCESS;
 	}
 
 	//------------------------------------------------------------------------

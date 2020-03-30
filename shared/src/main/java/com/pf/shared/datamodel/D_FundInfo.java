@@ -27,11 +27,16 @@ public class D_FundInfo implements Cloneable {
     public static final int IC_HTML_MS_DAILY_SEK_CURRENCY = 202;
     public static final int IC_HTML_MS_RATING = 203;
     public static final int IC_HTML_MS_CATEGORY = 204;
-    public static final int IC_HTML_MS_YEARLY_TABLE_YEAR = 205;
-    public static final int IC_HTML_MS_YEARLY_TABLE_FUND = 206;
-    public static final int IC_HTML_MS_YEARLY_TABLE_INDEX = 207;
-    public static final int IC_HTML_MS_YEARLY_TABLE_CATEGORY = 208;
-    public static final int IC_HTML_MS_DPDAY_NULLDATE = 209;
+    public static final int IC_HTML_MS_YEARLY_TABLE_YEAR = 210;
+    public static final int IC_HTML_MS_YEARLY_TABLE_FUND = 211;
+    public static final int IC_HTML_MS_YEARLY_TABLE_INDEX = 212;
+    public static final int IC_HTML_MS_YEARLY_TABLE_CATEGORY = 213;
+    public static final int IC_HTML_MS_YEARLY_TABLE_ROW_MISMATCH = 214;
+    public static final int IC_HTML_MS_YEARLY_TABLE_NOT_FOUND = 215;
+    public static final int IC_HTML_MS_DPDAY_NULLDATE = 220;
+    public static final int IC_HTML_MS_FUNDNAME = 221;
+    public static final int IC_HTML_MS_CURRENCY = 222;
+    public static final int IC_HTML_MS_INDEX = 223;
 
     public static final int IC_VG_NOT_MF_NOR_ETF = 301;
     public static final int IC_HTML_VG_DATA_TICKER_MISMATCH = 302;

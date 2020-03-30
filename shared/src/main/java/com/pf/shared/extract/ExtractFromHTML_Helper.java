@@ -23,14 +23,13 @@ public class ExtractFromHTML_Helper {
 
     private IndentWriter _iwd = new IndentWriter();
 
-    public String _htmlPageContent = "";
-
     public String _dateNow_YYMMDD;
     public String _dateLastFriday_YYMMDD;
 
     public int extractFundDetails(
             D_FundInfo fi,
             IndentWriter iwd) throws IOException {
+
         if (iwd != null) {
             _iwd = iwd;
         }
@@ -83,55 +82,16 @@ public class ExtractFromHTML_Helper {
             _iwd.println("_dpDays was null or had no entries");
         }
 
-        // Get the raw HTML data
-        _iwd.println("Now performing HTTP GET");
-        _iwd.push();
-        byte[] htmlDataRaw = HtmlRetriever.htmlGet(
-                _iwd,
-                fi._url,
-                5000,
-                4);
-        _iwd.println("Done");
-        _iwd.pop();
-
-        boolean error = false;
-        if (htmlDataRaw == null || htmlDataRaw.length == 0) {
-            String s = "HTTP GET call returned null or 0 bytes";
-            _iwd.println(s);
-            fi._errorCode = D_FundInfo.IC_COM_NO_URL_DATA;
-            error = true;
-        }
-        _iwd.println("Now decoding HTTP GET data");
-        String htmlDataString = MM.newString(htmlDataRaw, Constants.ENCODING_FILE_READ);
-        if (htmlDataString == null || htmlDataString.length() == 0) {
-            String s = "Data from HTTP GET could not be decoded with: " + Constants.ENCODING_FILE_READ;
-            _iwd.println(s);
-            fi._errorCode = D_FundInfo.IC_COM_NO_DECODABLE_DATA;
-            error = true;
-        }
-        if (error) {
-            String s = "Exiting extraction with error";
-            _iwd.println(s);
-            fi._lastExtractInfo = "Now: " + MM.getNowAs_YYMMDD(Constants.TIMEZONE_STOCKHOLM)
-                    + ", trying to extract for: " + _dateLastFriday_YYMMDD
-                    + ". HTMLGet error. FundInfo error: " + fi._errorCode;
-            return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
-        }
-
-        _iwd.println("Now stripping HTML comments");
-        _htmlPageContent = MM.stripHTMLComments(htmlDataString);
-        _iwd.println("...Done");
-
         // Contract for extractFundDetails
         // - RC_SUCCESS is returned only if all of parsing went well
         // - In this case fi._dpDays.get(0) has been added and it's _dateYYMMDD_Actual has been set
         int errorCode = ExtractFromHTML_Helper.RC_SUCCESS;
         if (fi._type.equals(D_FundInfo.TYPE_VANGUARD)) {
             _iwd.println("Extracting Vanguard");
-            errorCode = ExtractFromHTML_Vanguard.extractFundDetails(_iwd, fi, _htmlPageContent);
+            errorCode = ExtractFromHTML_Vanguard.extractFundDetails(_iwd, fi);
         } else {
             _iwd.println("Extracting Morningstar");
-            errorCode = ExtractFromHTML_Morningstar.extractFundDetails(_iwd, fi, _htmlPageContent);
+            errorCode = ExtractFromHTML_Morningstar.extractFundDetails(_iwd, fi);
         }
         if (errorCode != ExtractFromHTML_Helper.RC_SUCCESS) {
             _iwd.println("...Encountered error: " + errorCode);
@@ -141,6 +101,14 @@ public class ExtractFromHTML_Helper {
             return errorCode;
         } else {
             _iwd.println("...Successfully extracted fund");
+        }
+
+        // We've seen cases where a DPD table is completely empty
+        if (fi._dpDays.size() == 0) {
+            _iwd.println("_dpDays.size() == 0, this is weird but ok. It means we have no DPDAY");
+            fi._errorCode = D_FundInfo.IC_NO_RECENT_DPDAY;
+            fi._lastExtractInfo = "Extraction completed by _dpDays.size() == 0";
+            return RC_WARNING_NO_DPDAY_FOUND;
         }
 
         D_FundDPDay dpd2 = fi._dpDays.remove(0);  // Lets look at the things just added
@@ -176,6 +144,7 @@ public class ExtractFromHTML_Helper {
         String dateLastSunday_YYMMDD   = MM.tgif_getNextWeekday(dateLastFriday_YYMMDD, Calendar.SUNDAY);
         String dateLastMonday_YYMMDD   = MM.tgif_getNextWeekday(dateLastFriday_YYMMDD, Calendar.MONDAY);
         String dateLastTuesday_YYMMDD   = MM.tgif_getNextWeekday(dateLastFriday_YYMMDD, Calendar.TUESDAY);
+        String dateLastWednesday_YYMMDD   = MM.tgif_getNextWeekday(dateLastFriday_YYMMDD, Calendar.WEDNESDAY);
         String dateLastThursday_YYMMDD = MM.tgif_getPrevWeekday(dateLastFriday_YYMMDD, Calendar.THURSDAY);
 
         // We have a valid extraction if actual date is last Friday or Thursday, or Mon/Tue week after
@@ -184,7 +153,8 @@ public class ExtractFromHTML_Helper {
                 || dpd2._dateYYMMDD_Actual.equals(dateLastSaturday_YYMMDD)
                 || dpd2._dateYYMMDD_Actual.equals(dateLastSunday_YYMMDD)
                 || dpd2._dateYYMMDD_Actual.equals(dateLastMonday_YYMMDD)
-                || dpd2._dateYYMMDD_Actual.equals(dateLastTuesday_YYMMDD)) {
+                || dpd2._dateYYMMDD_Actual.equals(dateLastTuesday_YYMMDD)
+        ) {
             _iwd.println("Success, lastest DPDay was valid: " + dpd2);
             dpd2._dateYYMMDD = dateLastFriday_YYMMDD;
             fi._dpDays.add(0, dpd2);
@@ -236,4 +206,46 @@ public class ExtractFromHTML_Helper {
         }
     }
 
+    // Returns D_FundInfo.IC_SUCCESS (or some error) and string to assign to lastExtractAttempt
+    public static OTuple2G<Integer, String> htmlGet(StringBuffer resultData, IndentWriter iwd, String url) throws Exception {
+        // Get the raw HTML data
+        iwd.println("Now performing HTTP GET of: " + url);
+        iwd.push();
+        byte[] htmlDataRaw = HtmlRetriever.htmlGet(
+                iwd,
+                url,
+                5000,
+                4);
+        iwd.println("Done");
+        iwd.pop();
+
+        boolean error = false;
+        int errorCode = D_FundInfo.IC_NO_ERROR;
+        if (htmlDataRaw == null || htmlDataRaw.length == 0) {
+            String s = "HTTP GET call returned null or 0 bytes";
+            iwd.println(s);
+            errorCode = D_FundInfo.IC_COM_NO_URL_DATA;
+            error = true;
+        }
+        iwd.println("Now decoding HTTP GET data");
+        String htmlDataString = MM.newString(htmlDataRaw, Constants.ENCODING_FILE_READ);
+        if (htmlDataString == null || htmlDataString.length() == 0) {
+            String s = "Data from HTTP GET could not be decoded with: " + Constants.ENCODING_FILE_READ;
+            iwd.println(s);
+            errorCode = D_FundInfo.IC_COM_NO_DECODABLE_DATA;
+            error = true;
+        }
+        if (error) {
+            String s = "Exiting extraction with error";
+            iwd.println(s);
+            String lei = "Now: " + MM.getNowAs_YYMMDD_HHMMSS(Constants.TIMEZONE_STOCKHOLM)
+                    + ". HTMLGet error. FundInfo error: " + errorCode;
+            return new OTuple2G<>(errorCode, lei);
+        }
+        iwd.println("Now stripping HTML comments");
+        String result = MM.stripHTMLComments(htmlDataString);
+        resultData.append(result);
+        iwd.println("...Done");
+        return new OTuple2G<>(D_FundInfo.IC_NO_ERROR, "");
+    }
 }

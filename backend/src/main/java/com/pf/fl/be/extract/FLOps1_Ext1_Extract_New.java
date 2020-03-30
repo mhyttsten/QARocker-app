@@ -13,15 +13,17 @@ import com.pf.shared.utils.MM;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Properties;
+import java.util.Random;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 
+import java.util.Properties;
 import javax.mail.Message;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+
 
 public class FLOps1_Ext1_Extract_New {
     private static final Logger log = Logger.getLogger(FLOps1_Ext1_Extract_New.class.getName());
@@ -29,11 +31,12 @@ public class FLOps1_Ext1_Extract_New {
 
     private IndentWriter _iwdPrefix = new IndentWriter();
     private IndentWriter _iwdExtractionReportBefore = new IndentWriter();
+
+    private boolean _ignoreSchedule = false;
+
+    private boolean _isDebugOnly = false;
     private IndentWriter _iwd = new IndentWriter();
 
-    private boolean _iwdAddSuccessful;
-    private boolean _ignoreSchedule;
-    private boolean _doPostProcessing = true;
     private int _timeInSBeforeDeadline;
 
     private List<D_FundInfo> _argFIToExtract = null;
@@ -60,20 +63,20 @@ public class FLOps1_Ext1_Extract_New {
      */
 
     //------------------------------------------------------------------------
+    // Then ignoreSchedule, don't do postprocessing, force extraction (i.e. if there is alreay
+    // a DPD for this week then remove it just to debug extraction again)
     public FLOps1_Ext1_Extract_New(List<D_FundInfo> argFIToExtract,
+                                   boolean isDebugOnly,
                                    boolean ignoreSchedule,
-                                   boolean doPostProcessing,
                                    int timeInSBeforeDeadline,
-                                   IndentWriter iwd,
-                                   boolean iwdAddSuccessful) {
+                                   IndentWriter iwd) {
         _argFIToExtract = argFIToExtract;
+        _isDebugOnly = isDebugOnly;
         _ignoreSchedule = ignoreSchedule;
-        _doPostProcessing = doPostProcessing;
         _timeInSBeforeDeadline = timeInSBeforeDeadline;
         if (iwd != null) {
             _iwd = iwd;
         }
-        _iwdAddSuccessful = iwdAddSuccessful;
 
         // Set time variables
         Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(Constants.TIMEZONE_STOCKHOLM));
@@ -91,11 +94,10 @@ public class FLOps1_Ext1_Extract_New {
 
         String s = "Starting extraction, constructor with arguments:"
                 + "\n...argFIToExtract.size(): " + (_argFIToExtract != null ? _argFIToExtract.size() : "null")
+                + "\n...isDebugOnly: " + _isDebugOnly
                 + "\n...ignoreSchedule: " + _ignoreSchedule
-                + "\n...doPostProcessing: " + _doPostProcessing
                 + "\n...timeInSBeforeDeadline: " + _timeInSBeforeDeadline
-                + "\n...iwd: " + (_iwd==null ? "null" : "!null")
-                + "\n...iwdAddSuccessful: " + _iwdAddSuccessful;
+                + "\n...iwd: " + (_iwd==null ? "null" : "!null");
         _iwdPrefix.println("\n********************************************************");
         _iwdPrefix.println("### Phase 01" + _phaseTime + ": Initialization Parameters");
         _iwdPrefix.println(s);
@@ -107,7 +109,7 @@ public class FLOps1_Ext1_Extract_New {
         MM.timerStart();
 
         // Check if it is time to extract
-        if (!_ignoreSchedule) {
+        if (!_isDebugOnly && !_ignoreSchedule) {
             boolean scheduledPlay =
                     (_nowDayOfWeek == Calendar.SATURDAY && _nowHourOfDay >= 5)
                             || (_nowYYMMDD.equals(_sunYYMMDD) && _nowHourOfDay >= 5)
@@ -142,12 +144,14 @@ public class FLOps1_Ext1_Extract_New {
             return;
         }
 
-        // Initialize Funds to Extract
+        // We've been provided a fund list to extract
         if (_argFIToExtract != null && _argFIToExtract.size() > 0) {
             _iwdPrefix.println("Extraction only based on give set of funds: " + _argFIToExtract.size());
             _iwdPrefix.println("OBSERVE: The pre-/post-extraction summary reports will not be accurate");
             _fiToExtract = _argFIToExtract;
-        } else {
+        }
+        // There is no explicit lst, extract all funds that are due for extraction
+        else {
             _iwdExtractionReportBefore.println("\n### Phase 05" + _phaseTime + ": Extraction Report Before");
             ExtractStatistics.getExtractSummary(_iwdExtractionReportBefore,
                     -1, -1,
@@ -160,92 +164,70 @@ public class FLOps1_Ext1_Extract_New {
 
         _iwd.println("\n### Phase 03" + _phaseTime + ": Fund Extraction Details");
         _iwd.println("Extracting: " + _fiToExtract.size() + " entries");
+        log.info("Extracting: " + _fiToExtract.size() + " entries");
         if (_fiToExtract.size() == 0) {
             log.info("No entries to extract, extractList was empty: " + _nowYYMMDD + ", " + MM.tgif_getDayOfWeekStr(_nowDayOfWeek) + "@" + _nowHourOfDay + ", lastFriday: " + _fridayLastYYMMDD);
             _iwd.println("No entries to extract, extractList was empty");
             return;
+        } else {
+
         }
 
         // Extract each Fund
         int countTotal = 0;
         while (_fiToExtract.size() > 0) {
             D_FundInfo fi = _fiToExtract.remove(0);
+            _iwd.println("Will now extract: " + fi.getTypeAndName());
 
-            String fundBeforeStr = fi.getOneLiner();
-            int ec_before = fi._errorCode;
-
-            _iwd.println("[" + countTotal + "]. Extracting: " + fi.getOneLiner());
-
-            // Extracting the fund details
-            // Update the attempted date
-            IndentWriter iwdetails = new IndentWriter();
-            iwdetails.setIndentChar('.');
-            iwdetails.push();
-            ExtractFromHTML_Helper eh = new ExtractFromHTML_Helper();
-            int errorCode = eh.extractFundDetails(fi, iwdetails);
-            fi._dateYYMMDD_Update_Attempted = eh._dateNow_YYMMDD;
-
-            // Manage any error condition
-            iwdetails.println("Back in Main Extraction Looper");
-            if (errorCode == ExtractFromHTML_Helper.RC_SUCCESS) {
-                fi._isValid = true;
-                fi._errorCode = D_FundInfo.IC_NO_ERROR;
-                _iwd.println("...SUCCESS: " + fi.getOneLiner());
-                if (_iwdAddSuccessful) {
-                    _iwd.println(iwdetails.getString());
-                }
-            } else {
-                String s = "Error for: " + fi.getOneLiner();
-                iwdetails.println("...ERROR: " + fi.getOneLiner());
-                boolean is_error = false;
-                switch(errorCode) {
-                    case ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND:
-                        log.severe("*** INVALID: " + fi.getOneLiner());
-                        s += "\nFund became invalid";
-                        iwdetails.println("...RC_ERROR_INVALID_FUND, setting it to invalid");
-                        fi._isValid = false;
-                        is_error = true;
-                        break;
-                    case ExtractFromHTML_Helper.RC_SUCCESS_BUT_DATA_WAS_UPDATED:
-                        s += "\nSuccess, but data was updated";
-                        iwdetails.println("...RC_SUCCESS_BUT_DATA_WAS_UPDATED");
-                        break;
-                    case ExtractFromHTML_Helper.RC_WARNING_NO_DPDAY_FOUND:
-                        s += "\nNo DPDay found";
-                        iwdetails.println("...NO DPDAY FOUND");
-                        break;
-                    default:
-                        iwdetails.println("...<UNEXPECTED RETURN CODE>");
-                        is_error = true;
-                        break;
-                }
-                _iwd.println(iwdetails.getString());
-
-                if (is_error) {
-                    log.severe(s + "\n" + iwdetails.getString());
-                } else {
-                    log.info(s);
-                }
+            // No debug. Then just extract the fund!
+            if (!_isDebugOnly) {
+                Random r = new Random();
+                int min = 1;
+                int max = 3;
+                int sleepTime = r.nextInt((max - min) + 1) + min;
+                MM.sleepInMS(sleepTime*1000);
+                extractSingleFund(countTotal, fi);
             }
 
-            // Ensure Fund is still valid after extraction
-            D_FundInfo_Validator fivSingleFund = new D_FundInfo_Validator();
-            fivSingleFund.validateFund(fi);
-            if (fivSingleFund._error) {
-                String valError = "*** Severe. Encountered validation error for a single fund, will not continue\n"
-                        + "\n..." + fivSingleFund._iwErrors.getString()
-                        + "\n..." + fi.toString()
-                        + "\n...Fund before extraction: " + fundBeforeStr;
-                _iwd.println(valError);
-                log.severe(valError);
-                return;
+            // Debugging. Allow for detailed information
+            else {
+                if (fi._dpDays.size() == 0 || !fi._dpDays.get(0)._dateYYMMDD.equals(_fridayLastYYMMDD)) {
+                    String s = fi._dpDays.size() == 0 ? "N/A" : fi._dpDays.get(0)._dateYYMMDD;
+                    _iwd.println("Last DPD in fund (" + s + ") is not last extraction friday (" + _fridayLastYYMMDD + ")");
+                    _iwd.println("This means full extraction is needed, so let's do that!");
+                    extractSingleFund(countTotal, fi);
+                }
+                else {
+                    _iwd.println("Last DPD in fund is last extraction friday");
+                    _iwd.println("Let's try extract with this remaining first");
+                    _iwd.println("*** BEGIN: Extract when DPD[0] == last Friday");
+                    extractSingleFund(countTotal, fi);
+                    _iwd.println("*** END: Extract when DPD[0] == last Friday");
+                    fi._dpDays.remove(0);
+                    _iwd.println("*** BEGIN: Extract when DPD[0] < last Friday");
+                    extractSingleFund(countTotal, fi);
+                    _iwd.println("*** END: Extract when DPD[0] < last Friday");
+                }
             }
 
             // Emit count information regularly
             countTotal++;
-            if (countTotal == 1 || (countTotal % 50) == 0) {
+//            if (countTotal == 1 || (countTotal % 50) == 0) {
                 log.info("Processed: " + countTotal + ", latest: " + fi.getTypeAndName() + ", " + fi._url);
-            }
+//            }
+
+            // For now
+//            if (countTotal >= 20) {
+//                break;
+//            }
+
+            // Wait between 1s and 5s
+//            Random r = new Random();
+//            int min = 1;
+//            int max = 3;
+//            int sleepTime = r.nextInt((max - min) + 1) + min;
+//            MM.sleepInMS(sleepTime*1000);
+            MM.sleepInMS(500);
 
             // Out of time, then break (normal condition for 10min max cron execution)
             if (!MM.timerContinue(_timeInSBeforeDeadline)) {
@@ -262,12 +244,6 @@ public class FLOps1_Ext1_Extract_New {
                 -1, -1,
                 _nowYYMMDD_HHMMSS, DB_FundInfo.getAllFundInfos());
 
-        // Do not save any extraction state
-        if (!_doPostProcessing) {
-            log.warning("Extract session configured to not perform post-processing, returning");
-            return;
-        }
-
         // Validate all funds before restoring DB
         fiv = new D_FundInfo_Validator(fiAllFunds);
         fiv.process();
@@ -275,6 +251,12 @@ public class FLOps1_Ext1_Extract_New {
             log.info("Extraction resulting in a valid fund database");
         } else {
             log.severe("Extraction resulted in invalid fund database. Refuse to save.\n" + fiv._iwErrors.getString());
+            return;
+        }
+
+        // Do not save any extraction state
+        if (_isDebugOnly) {
+            log.info("We're doing debug only, so now exiting without doing post-processing");
             return;
         }
 
@@ -331,7 +313,82 @@ public class FLOps1_Ext1_Extract_New {
         MM.sleepInMS(1000);
     }
 
-    private static void sendMail(String dpday, String content) {
+    private void extractSingleFund(int currentCount,
+                                   D_FundInfo fi) throws IOException {
+        String fundBeforeStr = fi.getOneLiner();
+        int ec_before = fi._errorCode;
+
+        _iwd.println("[" + currentCount + "]. Extracting: " + fi.getOneLiner());
+
+        // Extracting the fund details
+        // Update the attempted date
+        IndentWriter iwdetails = new IndentWriter();
+        iwdetails.setIndentChar('.');
+        iwdetails.push();
+        ExtractFromHTML_Helper eh = new ExtractFromHTML_Helper();
+        int errorCode = eh.extractFundDetails(fi, iwdetails);
+        _iwd.println("Done extraction, lengths of debug details: " + iwdetails.length());
+        fi._dateYYMMDD_Update_Attempted = eh._dateNow_YYMMDD;
+
+        // Manage any error condition
+        iwdetails.println("Back in Main Extraction Looper");
+        if (errorCode == ExtractFromHTML_Helper.RC_SUCCESS) {
+            fi._isValid = true;
+            fi._errorCode = D_FundInfo.IC_NO_ERROR;
+            _iwd.println("...SUCCESS, printing full fund info:\n" + fi.toString());
+            if (_isDebugOnly) {
+                _iwd.println(iwdetails.getString());
+            }
+        } else {
+            String s = "Error for: " + fi.getOneLiner();
+            iwdetails.println("...ERROR: " + fi.getOneLiner());
+            boolean is_error = false;
+            switch(errorCode) {
+                case ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND:
+                    log.severe("*** INVALID: " + fi.getOneLiner());
+                    s += "\nFund became invalid";
+                    iwdetails.println("...RC_ERROR_INVALID_FUND, setting it to invalid");
+                    fi._isValid = false;
+                    is_error = true;
+                    break;
+                case ExtractFromHTML_Helper.RC_SUCCESS_BUT_DATA_WAS_UPDATED:
+                    s += "\nSuccess, but data was updated";
+                    iwdetails.println("...RC_SUCCESS_BUT_DATA_WAS_UPDATED");
+                    break;
+                case ExtractFromHTML_Helper.RC_WARNING_NO_DPDAY_FOUND:
+                    s += "\nNo DPDay found";
+                    iwdetails.println("...NO DPDAY FOUND");
+                    break;
+                default:
+                    iwdetails.println("...<UNEXPECTED RETURN CODE>");
+                    is_error = true;
+                    break;
+            }
+            _iwd.println(iwdetails.getString());
+
+            if (is_error) {
+                log.severe(s + "\n" + iwdetails.getString());
+            } else {
+                log.info(s);
+            }
+        }
+
+        // Ensure Fund is still valid after extraction
+        D_FundInfo_Validator fivSingleFund = new D_FundInfo_Validator();
+        fivSingleFund.validateFund(fi);
+        if (fivSingleFund._error) {
+            String valError = "*** Severe. Encountered validation error for a single fund, will not continue\n"
+                    + "\n..." + fivSingleFund._iwErrors.getString()
+                    + "\n..." + fi.toString()
+                    + "\n...Fund before extraction: " + fundBeforeStr;
+            _iwd.println(valError);
+            log.severe(valError);
+            return;
+        }
+    }
+
+
+    public static void sendMail(String dpday, String content) {
         Properties props = new Properties();
         Session session = Session.getDefaultInstance(props, null);
         try {

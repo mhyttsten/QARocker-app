@@ -42,22 +42,16 @@ public class CronExtractServlet_New extends HttpServlet {
 
     //------------------------------------------------------------------------
     public static final String P_ignoreSchedule = "ignoreSchedule";
-    public static final String P_doPostProcessing = "doPostProcessing";
     public static final String P_timeInSBeforeDeadline = "timeInSBeforeDeadline";
 
     public static void doExtract(HttpServletRequest req, HttpServletResponse resp) throws Exception {
 
-        boolean ignoreSchedule = false;
-        boolean doPostProcessing = false;
         int timeInSBeforeDeadline = 0;
-
-        String s = req.getParameter(P_ignoreSchedule);
-        if (s != null && s.trim().toLowerCase().equals("true"))  {
-            ignoreSchedule = true;
-        }
-        s = req.getParameter(P_doPostProcessing);
-        if (s != null && s.trim().toLowerCase().equals("true"))  {
-            doPostProcessing = true;
+        boolean ignoreSchedule = false;
+        String s = null;
+        s = req.getParameter(P_ignoreSchedule);
+        if (s != null)  {
+            ignoreSchedule = s.trim().toLowerCase().equals("true");
         }
         s = req.getParameter(P_timeInSBeforeDeadline);
         if (s != null)  {
@@ -71,7 +65,6 @@ public class CronExtractServlet_New extends HttpServlet {
 
         log.info("Parameters being passed");
         log.info("...ignoreSchedule: " + ignoreSchedule);
-        log.info("...doPostProcessing: " + doPostProcessing);
         log.info("...timeInSBeforeDeadline: " + timeInSBeforeDeadline);
 
         if (ignoreSchedule) {
@@ -88,11 +81,10 @@ public class CronExtractServlet_New extends HttpServlet {
         log.info("Will now call extraction logic");
         FLOps1_Ext1_Extract_New extract = new FLOps1_Ext1_Extract_New(
                 null,
+                false,
                 ignoreSchedule,
-                doPostProcessing,
                 timeInSBeforeDeadline,
-                null,
-                false);
+                null);
         extract.doIt();
     }
 }

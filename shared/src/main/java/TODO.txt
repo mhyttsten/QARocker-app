@@ -1,3 +1,10 @@
+- New site: Add Fund index to DB (not MS index, but the funds index)
+- New site, Cannot extract Morningstar rating, PPM number (in title of fund name)
+- New site: For yearly numbers, add %-rank i kategorin
+
+
+
+-------
 - Add extraction report after extraction at top of debug file
 - Add clear tags for each section
 

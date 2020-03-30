@@ -13,11 +13,11 @@ public class HtmlRetriever {
 		public String _accountType;
 	}
 
-    public static byte[] htmlGet(
+    public static byte[]  htmlGet(
             IndentWriter iwd,
             String url,
             int retryIntervalInMS, int retryCount) throws IOException {
-        iwd.println("HtmlRetriever, entered with URL: " + url + ", retryIntervalMS: " + retryIntervalInMS + ", retryCount: " + retryCount);
+        iwd.println("HtmlRetriever, entered with URL:   " + url + "    retryIntervalMS: " + retryIntervalInMS + ", retryCount: " + retryCount);
 		byte[] result = htmlGetImpl(iwd, url, retryIntervalInMS, retryCount);
         if (result != null) {
             iwd.println("Returning: " + result.length + " number of bytes");

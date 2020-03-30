@@ -25,8 +25,6 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import static com.pf.fl.be.servlet.CronExtractServlet_New.P_doPostProcessing;
-
 public class JSP_Helper {
     private static final Logger log = Logger.getLogger(JSP_Helper.class.getName());
     private static final String TAG = MM.getClassName(JSP_Helper.class.getName());
@@ -144,13 +142,6 @@ public class JSP_Helper {
         iwd.setIndentChar('.');
         iwd.println("Starting extraction debugger");
 
-        boolean doPostProcessing = false;
-        String s = req.getParameter(P_doPostProcessing);
-        if (s != null && s.trim().toLowerCase().equals("true"))  {
-            doPostProcessing = true;
-        }
-        log.info("Do post processing: " + doPostProcessing);
-
         String fundTypeAndName = req.getParameter(JSP_Constants.PARAM2_TYPEDOTNAME_);
         if (fundTypeAndName == null || fundTypeAndName.trim().length() == 0) {
             iwd.println("Error, missing parameter: " + JSP_Constants.PARAM2_TYPEDOTNAME_);
@@ -179,10 +170,9 @@ public class JSP_Helper {
         FLOps1_Ext1_Extract_New extract = new FLOps1_Ext1_Extract_New(
                 fiToExtract,
                 true,
-                doPostProcessing,
-                30,
-                iwd,
-                true);
+                false,
+                45,
+                iwd);
         extract.doIt();
         return iwd.getString();
     }
