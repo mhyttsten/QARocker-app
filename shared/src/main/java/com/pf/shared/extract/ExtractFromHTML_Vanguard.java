@@ -143,7 +143,10 @@ public class ExtractFromHTML_Vanguard {
         boolean error = false;
         iwd.println("Now finding the index");
         int i = 0;
-        while ((i<=4 && isMutualFund) || (i<=3 && isETF)) {
+
+        // Mutual fund: 0=Index, 1=Category
+        // ETF:         0=NAV, 1=Index, 2=Category
+        while ((i<=1 && isMutualFund) || (i<=2 && isETF)) {
             iwd.println("In parseTR loop with index: " + i);
             error = false;
             nextTR = MM.assignAndReturnNextTagValue(ot, "<tr");
@@ -173,8 +176,8 @@ public class ExtractFromHTML_Vanguard {
                 iwd.println("ETF indexName assigned to: " + indexName);
             }
             else if(isMutualFund && i == 0) {
-                iwd.println("Mutual fund indexName assigned to: " + indexName);
                 indexName = tr_ticker;
+                iwd.println("Mutual fund indexName assigned to: " + indexName);
             }
 
             // Pick up categoryName

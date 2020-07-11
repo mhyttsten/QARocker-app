@@ -42,8 +42,10 @@ public class ExtractFromHTML_Morningstar {
 			return ExtractFromHTML_Helper.RC_ERROR_INVALID_FUND;
 		}
 
-//		iwd.println("*** Here is all the HTML");
-//		iwd.println(pageContent);
+		iwd.println("*** Here is all the HTML");
+		String ds = pageContent.replace("<", "&lt;");
+		ds = ds.replace(">", "&gt;");
+		iwd.println(ds);
 
 		// Fund name
 		iwd.println("Finding fund name");

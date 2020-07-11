@@ -24,8 +24,11 @@
     <cron>
         <url>/cronExtractNew?ignoreSchedule=false&amp;timeInSBeforeDeadline=500</url>
         <description>Cron_Extract_New</description>
-        <schedule>every 10 minutes from 06:00 to 09:00</schedule>
+         <schedule>every 10 minutes from 06:00 to 10:00</schedule>
         <timezone>Europe/Stockholm</timezone>
     </cron>
 
 </cronentries>
+
+
+<!-- <schedule>every 10 minutes from 06:00 to 10:00</schedule> -->

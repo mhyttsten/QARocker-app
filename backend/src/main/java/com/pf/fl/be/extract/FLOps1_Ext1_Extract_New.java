@@ -287,7 +287,9 @@ public class FLOps1_Ext1_Extract_New {
         GCSWrapper.gcsDeleteFiles(Constants.PREFIX_FUNDINFO_LOGS_DEBUG, _fridayLastYYMMDD);  // Delete old files
 
         // We only emit statistics once this entire day is finished
-        if (_fiToExtract.size() == 0) {
+        if (_fiToExtract.size() != 0) {
+            sendMail(_fridayLastYYMMDD, "We're not done yet, remaining extract size is still at: " + _fiToExtract.size());
+        } else {
             log.info("Writing extract details files");
             byte[] thisRound = GCSWrapper.gcsReadFile(Constants.FUNDINFO_DB_MASTER_BIN);
             List<D_FundInfo> fiNow = D_FundInfo_Serializer.decrunchFundList(thisRound);
@@ -369,7 +371,9 @@ public class FLOps1_Ext1_Extract_New {
             if (is_error) {
                 log.severe(s + "\n" + iwdetails.getString());
             } else {
-                log.info(s);
+                // This gets to be a lot of info for No DPD
+                log.info(s + "\n" + iwdetails.getString());
+//                log.info(s);
             }
         }
 
