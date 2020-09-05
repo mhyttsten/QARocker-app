@@ -95,11 +95,29 @@ public class ExtractFromHTML_Morningstar {
 
 		// Currency
 		iwd.println("Finding currency");
-		String currency = MM.getRegExp(null, pageContent,
-				"Andelskurs ",
+//		String currency = MM.getRegExp(null, pageContent,
+//				"Andelskurs ",
+//				"<td class=\"line text\">",
+//				"</td>",
+//				true);
+		int i_cstr = pageContent.indexOf("Andelsklassens storlek");
+		if (i_cstr != -1) {
+			String cdebug = pageContent.substring(i_cstr, i_cstr+1000);
+			cdebug = cdebug.replace("<", "&lt;");
+			cdebug = cdebug.replace(">", "&gt;");
+			iwd.println("DEBUG CURRENCE: " + cdebug);
+		} else {
+			iwd.println("DEBUG CURRENCE: NOT FOUND");
+		}
+
+		IndentWriter iw = new IndentWriter();
+		String currency = MM.getRegExp(iw, pageContent,
+				"Andelsklassens storlek",
 				"<td class=\"line text\">",
 				"</td>",
 				true);
+		iwd.println("Result from getRegExp:\n" + iw.getString());
+
 		if (currency == null || currency.length() < 3) {
 			iwd.println("Error: Could not find currency field");
 			fi._errorCode = D_FundInfo.IC_HTML_MS_CURRENCY;

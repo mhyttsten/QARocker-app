@@ -1,0 +1,14 @@
+cron:
+  - url: '/cronWork'
+    schedule: 'every 1 hours from 09:00 to 11:00'
+    timezone: 'America/Los_Angeles'
+    description: 'Cron_Work'
+  - url: '/cronExtractNew?ignoreSchedule=false&timeInSBeforeDeadline=500'
+    schedule: 'every 10 minutes from 14:50 to 19:00'
+    timezone: 'America/Los_Angeles'
+    description: 'Cron_Extract_New'
+#  - url: '/cronExtractNew?ignoreSchedule=false&timeInSBeforeDeadline=500'
+#    schedule: 'every 10 minutes from 06:00 to 10:00'
+#    timezone: 'Europe/Stockholm'
+#    description: 'Cron_Extract_New'
+    
