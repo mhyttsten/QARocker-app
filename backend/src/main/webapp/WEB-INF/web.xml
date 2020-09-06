@@ -5,17 +5,6 @@
         <welcome-file>JSP_Main.jsp</welcome-file>
     </welcome-file-list>
 
-    <!--<servlet>-->
-        <!--<servlet-name>GetQuizletAccessToken</servlet-name>-->
-        <!--<servlet-class>com.pf.mr.be.GetQuizletAccessToken</servlet-class>-->
-    <!--</servlet>-->
-    <!--<servlet-mapping>-->
-        <!--<servlet-name>GetQuizletAccessToken</servlet-name>-->
-        <!--<url-pattern>/getQuizletAccessToken</url-pattern>-->
-    <!--</servlet-mapping>-->
-
-    <!-- **************** -->
-
     <servlet>
         <servlet-name>cronExtractServlet_New</servlet-name>
         <servlet-class>com.pf.fl.be.servlet.CronExtractServlet_New</servlet-class>
@@ -23,15 +12,6 @@
     <servlet-mapping>
         <servlet-name>cronExtractServlet_New</servlet-name>
         <url-pattern>/cronExtractNew</url-pattern>
-    </servlet-mapping>
-
-    <servlet>
-        <servlet-name>cronWorkServlet</servlet-name>
-        <servlet-class>com.pf.mr.be.CronWorkServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>cronWorkServlet</servlet-name>
-        <url-pattern>/cronWork</url-pattern>
     </servlet-mapping>
 
 </web-app>
