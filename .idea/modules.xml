@@ -2,12 +2,12 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/JavaCode/JavaCode.iml" filepath="$PROJECT_DIR$/JavaCode/JavaCode.iml" group="QARocker-app/JavaCode" />
-      <module fileurl="file://$PROJECT_DIR$/QARocker-app.iml" filepath="$PROJECT_DIR$/QARocker-app.iml" group="QARocker-app" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="QARocker-app/app" />
-      <module fileurl="file://$PROJECT_DIR$/backend/backend.iml" filepath="$PROJECT_DIR$/backend/backend.iml" group="QARocker-app/backend" />
-      <module fileurl="file://$PROJECT_DIR$/photomanager/photomanager.iml" filepath="$PROJECT_DIR$/photomanager/photomanager.iml" group="QARocker-app/photomanager" />
-      <module fileurl="file://$PROJECT_DIR$/shared/shared.iml" filepath="$PROJECT_DIR$/shared/shared.iml" group="QARocker-app/shared" />
+      <module fileurl="file://$PROJECT_DIR$/QARocker-app.iml" filepath="$PROJECT_DIR$/QARocker-app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/JavaCode/QARocker-app.JavaCode.iml" filepath="$PROJECT_DIR$/.idea/modules/JavaCode/QARocker-app.JavaCode.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/QARocker-app.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/QARocker-app.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/backend/QARocker-app.backend.iml" filepath="$PROJECT_DIR$/.idea/modules/backend/QARocker-app.backend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/photomanager/QARocker-app.photomanager.iml" filepath="$PROJECT_DIR$/.idea/modules/photomanager/QARocker-app.photomanager.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/shared/QARocker-app.shared.iml" filepath="$PROJECT_DIR$/.idea/modules/shared/QARocker-app.shared.iml" />
     </modules>
   </component>
 </project>
